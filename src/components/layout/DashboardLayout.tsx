@@ -32,7 +32,7 @@ export default function DashboardLayout() {
       {/* Sidebar */}
       <aside className="w-[260px] bg-primary flex flex-col shrink-0">
         <div className="p-6 pb-8">
-          <img src={logo} alt="HarietAI" className="h-7" />
+          <img src={logo} alt="HarietAI" className="h-12 w-auto" />
         </div>
 
         <nav className="flex-1 px-3">
