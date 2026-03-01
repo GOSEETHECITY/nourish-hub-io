@@ -1,4 +1,4 @@
-import { Outlet, NavLink, useLocation } from "react-router-dom";
+import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Building2,
@@ -19,6 +19,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import logo from "@/assets/logo.png";
 
 const mainNav = [
@@ -48,7 +49,21 @@ const otherNav = [
 
 export default function DashboardLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { profile, signOut } = useAuth();
   const [expandedMenus, setExpandedMenus] = useState<string[]>(["/food-listings"]);
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/login");
+  };
+
+  const initials = profile
+    ? `${(profile.first_name || "")[0] || ""}${(profile.last_name || "")[0] || ""}`.toUpperCase() || "U"
+    : "U";
+  const displayName = profile
+    ? `${profile.first_name || ""} ${profile.last_name || ""}`.trim() || "User"
+    : "User";
 
   const toggleMenu = (path: string) => {
     setExpandedMenus((prev) =>
@@ -161,7 +176,10 @@ export default function DashboardLayout() {
         </nav>
 
         <div className="p-3 mt-auto">
-          <button className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium text-primary-foreground/60 hover:text-primary-foreground w-full hover:bg-primary-foreground/5 transition-all">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium text-primary-foreground/60 hover:text-primary-foreground w-full hover:bg-primary-foreground/5 transition-all"
+          >
             <LogOut className="w-[18px] h-[18px]" />
             Logout
           </button>
@@ -193,10 +211,10 @@ export default function DashboardLayout() {
             </button>
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-accent text-accent-foreground flex items-center justify-center text-sm font-bold">
-                JF
+                {initials}
               </div>
               <div>
-                <p className="text-sm font-semibold text-foreground">Jame Fred</p>
+                <p className="text-sm font-semibold text-foreground">{displayName}</p>
                 <p className="text-xs text-muted-foreground">Admin</p>
               </div>
             </div>
