@@ -1,8 +1,13 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Heart, FileText, Package, BarChart3 } from "lucide-react";
+import { ArrowLeft, Heart, FileText, Package, BarChart3, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
 import type { Nonprofit, FoodListing, ImpactReport, ApprovalStatus } from "@/types/database";
@@ -18,6 +23,8 @@ export default function NonprofitDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [editOpen, setEditOpen] = useState(false);
+  const [form, setForm] = useState<Partial<Nonprofit>>({});
 
   const { data: np } = useQuery({
     queryKey: ["nonprofit", id],
@@ -42,6 +49,24 @@ export default function NonprofitDetail() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["nonprofit", id] }); toast.success("Status updated"); },
   });
 
+  const updateNp = useMutation({
+    mutationFn: async () => { const { error } = await supabase.from("nonprofits").update(form).eq("id", id!); if (error) throw error; },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["nonprofit", id] }); toast.success("Nonprofit updated"); setEditOpen(false); },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const openEdit = () => {
+    if (!np) return;
+    setForm({
+      organization_name: np.organization_name, ein: np.ein, website: np.website,
+      primary_contact: np.primary_contact, address: np.address, city: np.city, state: np.state,
+      zip: np.zip, county: np.county, operating_hours: np.operating_hours,
+      cold_storage: np.cold_storage, refrigeration: np.refrigeration, cabinetry: np.cabinetry,
+      population_served: np.population_served, estimated_weekly_served: np.estimated_weekly_served,
+    });
+    setEditOpen(true);
+  };
+
   if (!np) return <div className="p-12 text-center text-muted-foreground">Loading...</div>;
 
   const totalPounds = claimedListings.reduce((s, l) => s + (l.pounds || 0), 0);
@@ -56,13 +81,14 @@ export default function NonprofitDetail() {
           <p className="text-sm text-muted-foreground">Nonprofit Partner</p>
         </div>
         <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={openEdit}><Pencil className="w-3 h-3 mr-1" />Edit</Button>
           {np.approval_status !== "approved" && <Button size="sm" onClick={() => updateStatus.mutate("approved")} className="bg-success hover:bg-success/90 text-success-foreground">Approve</Button>}
           {np.approval_status !== "rejected" && <Button size="sm" variant="destructive" onClick={() => updateStatus.mutate("rejected")}>Reject</Button>}
           {np.approval_status !== "deactivated" && <Button size="sm" variant="outline" onClick={() => updateStatus.mutate("deactivated")}>Deactivate</Button>}
         </div>
       </div>
 
-      {/* Section 1 - Profile */}
+      {/* Profile */}
       <section className="bg-card rounded-xl border p-6">
         <h2 className="text-lg font-bold text-foreground flex items-center gap-2 mb-4"><Heart className="w-5 h-5" />Organization Profile</h2>
         <div className="flex gap-6">
@@ -81,7 +107,7 @@ export default function NonprofitDetail() {
         </div>
       </section>
 
-      {/* Section 2 - Capacity */}
+      {/* Capacity */}
       <section className="bg-card rounded-xl border p-6">
         <h2 className="text-lg font-bold text-foreground mb-4">Capacity & Capabilities</h2>
         <div className="grid grid-cols-3 gap-6">
@@ -94,7 +120,7 @@ export default function NonprofitDetail() {
         </div>
       </section>
 
-      {/* Section 3 - Documents */}
+      {/* Documents */}
       <section className="bg-card rounded-xl border p-6">
         <h2 className="text-lg font-bold text-foreground flex items-center gap-2 mb-4"><FileText className="w-5 h-5" />Documents</h2>
         <div className="grid grid-cols-2 gap-6">
@@ -103,7 +129,7 @@ export default function NonprofitDetail() {
         </div>
       </section>
 
-      {/* Section 4 - Claim History */}
+      {/* Claim History */}
       <section className="bg-card rounded-xl border p-6">
         <h2 className="text-lg font-bold text-foreground flex items-center gap-2 mb-4"><Package className="w-5 h-5" />Donation Claim History ({claimedListings.length})</h2>
         {claimedListings.length === 0 ? <p className="text-sm text-muted-foreground">No donations claimed yet.</p> : (
@@ -123,7 +149,7 @@ export default function NonprofitDetail() {
         )}
       </section>
 
-      {/* Section 5 - Impact Reports */}
+      {/* Impact Reports */}
       <section className="bg-card rounded-xl border p-6">
         <h2 className="text-lg font-bold text-foreground mb-4">Impact Reports ({reports.length})</h2>
         {reports.length === 0 ? <p className="text-sm text-muted-foreground">No reports submitted.</p> : (
@@ -140,7 +166,7 @@ export default function NonprofitDetail() {
         )}
       </section>
 
-      {/* Section 6 - Impact Summary */}
+      {/* Impact Summary */}
       <section className="bg-card rounded-xl border p-6">
         <h2 className="text-lg font-bold text-foreground flex items-center gap-2 mb-4"><BarChart3 className="w-5 h-5" />Impact Summary</h2>
         <div className="grid grid-cols-3 gap-4">
@@ -149,6 +175,37 @@ export default function NonprofitDetail() {
           <div className="bg-muted/50 rounded-lg p-4"><p className="text-xs text-muted-foreground">Total Pounds Received</p><p className="text-2xl font-bold text-foreground mt-1">{totalPounds.toLocaleString()}</p></div>
         </div>
       </section>
+
+      {/* Edit Dialog */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Edit Nonprofit</DialogTitle></DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div><Label>Organization Name *</Label><Input value={(form.organization_name as string) || ""} onChange={(e) => setForm({ ...form, organization_name: e.target.value })} /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><Label>EIN</Label><Input value={(form.ein as string) || ""} onChange={(e) => setForm({ ...form, ein: e.target.value })} /></div>
+              <div><Label>Website</Label><Input value={(form.website as string) || ""} onChange={(e) => setForm({ ...form, website: e.target.value })} /></div>
+            </div>
+            <div><Label>Primary Contact</Label><Input value={(form.primary_contact as string) || ""} onChange={(e) => setForm({ ...form, primary_contact: e.target.value })} /></div>
+            <div><Label>Address</Label><Input value={(form.address as string) || ""} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
+            <div className="grid grid-cols-3 gap-4">
+              <div><Label>City</Label><Input value={(form.city as string) || ""} onChange={(e) => setForm({ ...form, city: e.target.value })} /></div>
+              <div><Label>State</Label><Input value={(form.state as string) || ""} onChange={(e) => setForm({ ...form, state: e.target.value })} /></div>
+              <div><Label>ZIP</Label><Input value={(form.zip as string) || ""} onChange={(e) => setForm({ ...form, zip: e.target.value })} /></div>
+            </div>
+            <div><Label>Operating Hours</Label><Input value={(form.operating_hours as string) || ""} onChange={(e) => setForm({ ...form, operating_hours: e.target.value })} /></div>
+            <div className="flex gap-6">
+              <label className="flex items-center gap-2 text-sm"><Checkbox checked={!!form.cold_storage} onCheckedChange={(v) => setForm({ ...form, cold_storage: !!v })} />Cold Storage</label>
+              <label className="flex items-center gap-2 text-sm"><Checkbox checked={!!form.refrigeration} onCheckedChange={(v) => setForm({ ...form, refrigeration: !!v })} />Refrigeration</label>
+              <label className="flex items-center gap-2 text-sm"><Checkbox checked={!!form.cabinetry} onCheckedChange={(v) => setForm({ ...form, cabinetry: !!v })} />Cabinetry</label>
+            </div>
+            <div><Label>Population Served</Label><Input value={(form.population_served as string) || ""} onChange={(e) => setForm({ ...form, population_served: e.target.value })} /></div>
+            <Button className="w-full" onClick={() => updateNp.mutate()} disabled={!form.organization_name || updateNp.isPending}>
+              {updateNp.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

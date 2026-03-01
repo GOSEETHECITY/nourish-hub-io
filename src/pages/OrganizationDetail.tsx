@@ -1,11 +1,16 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Building2, MapPin, Users, BarChart3, Package } from "lucide-react";
+import { ArrowLeft, Building2, MapPin, Users, BarChart3, Package, Plus, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import type { Organization, Location, Profile, FoodListing, SustainabilityBaseline, ApprovalStatus } from "@/types/database";
+import type { Organization, Location, Profile, FoodListing, SustainabilityBaseline, ApprovalStatus, OrganizationType } from "@/types/database";
 
 const STATUS_COLORS: Record<ApprovalStatus, string> = {
   pending: "bg-chart-4/15 text-chart-4",
@@ -14,10 +19,42 @@ const STATUS_COLORS: Record<ApprovalStatus, string> = {
   deactivated: "bg-muted text-muted-foreground",
 };
 
+const ORG_TYPES: { value: OrganizationType; label: string }[] = [
+  { value: "restaurant", label: "Restaurant" },
+  { value: "catering_company", label: "Catering Company" },
+  { value: "event", label: "Event" },
+  { value: "hotel", label: "Hotel" },
+  { value: "convention_center", label: "Convention Center" },
+  { value: "stadium", label: "Stadium" },
+  { value: "arena", label: "Arena" },
+  { value: "farm", label: "Farm" },
+  { value: "grocery_store", label: "Grocery Store" },
+  { value: "food_truck", label: "Food Truck" },
+  { value: "airport", label: "Airport" },
+  { value: "festival", label: "Festival" },
+  { value: "municipal_government", label: "Municipal Government" },
+  { value: "county_government", label: "County Government" },
+  { value: "state_government", label: "State Government" },
+];
+
+const emptyLocationForm = {
+  name: "", address: "", city: "", state: "", zip: "", county: "",
+  pickup_address: "", pickup_instructions: "", hours_of_operation: "", estimated_surplus_frequency: "",
+};
+
 export default function OrganizationDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+  // Dialog state
+  const [locationDialogOpen, setLocationDialogOpen] = useState(false);
+  const [editingLocation, setEditingLocation] = useState<Location | null>(null);
+  const [locationForm, setLocationForm] = useState(emptyLocationForm);
+  const [userDialogOpen, setUserDialogOpen] = useState(false);
+  const [userForm, setUserForm] = useState({ email: "" });
+  const [editOrgOpen, setEditOrgOpen] = useState(false);
+  const [orgForm, setOrgForm] = useState<Partial<Organization>>({});
 
   const { data: org } = useQuery({
     queryKey: ["organization", id],
@@ -82,6 +119,83 @@ export default function OrganizationDetail() {
     },
   });
 
+  const updateOrg = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("organizations").update(orgForm).eq("id", id!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["organization", id] });
+      toast.success("Organization updated");
+      setEditOrgOpen(false);
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const createLocation = useMutation({
+    mutationFn: async () => {
+      const payload = {
+        ...locationForm,
+        organization_id: id!,
+        pickup_address: locationForm.pickup_address || [locationForm.address, locationForm.city, locationForm.state].filter(Boolean).join(", "),
+      };
+      if (editingLocation) {
+        const { error } = await supabase.from("locations").update(payload).eq("id", editingLocation.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("locations").insert(payload);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["org-locations", id] });
+      queryClient.invalidateQueries({ queryKey: ["location-counts"] });
+      toast.success(editingLocation ? "Location updated" : "Location added");
+      setLocationDialogOpen(false);
+      setEditingLocation(null);
+      setLocationForm(emptyLocationForm);
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const associateUser = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.from("profiles").select("id").eq("email", userForm.email).single();
+      if (error) throw new Error("User not found with that email");
+      const { error: updateError } = await supabase.from("profiles").update({ organization_id: id }).eq("id", data.id);
+      if (updateError) throw updateError;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["org-users", id] });
+      toast.success("User associated");
+      setUserDialogOpen(false);
+      setUserForm({ email: "" });
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const openEditLocation = (loc: Location) => {
+    setEditingLocation(loc);
+    setLocationForm({
+      name: loc.name, address: loc.address || "", city: loc.city || "", state: loc.state || "",
+      zip: loc.zip || "", county: loc.county || "", pickup_address: loc.pickup_address || "",
+      pickup_instructions: loc.pickup_instructions || "", hours_of_operation: loc.hours_of_operation || "",
+      estimated_surplus_frequency: loc.estimated_surplus_frequency || "",
+    });
+    setLocationDialogOpen(true);
+  };
+
+  const openEditOrg = () => {
+    if (!org) return;
+    setOrgForm({
+      name: org.name, type: org.type,
+      primary_contact_name: org.primary_contact_name, primary_contact_email: org.primary_contact_email,
+      primary_contact_phone: org.primary_contact_phone, billing_contact: org.billing_contact,
+      address: org.address, city: org.city, state: org.state, zip: org.zip, county: org.county,
+    });
+    setEditOrgOpen(true);
+  };
+
   const totalPounds = listings.reduce((s, l) => s + (l.pounds || 0), 0);
   const totalDonations = listings.length;
   const formatType = (t: string) => t.split("_").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
@@ -98,6 +212,7 @@ export default function OrganizationDetail() {
           <p className="text-sm text-muted-foreground">{formatType(org.type)}</p>
         </div>
         <div className="flex gap-2">
+          <Button size="sm" variant="outline" onClick={openEditOrg}><Pencil className="w-3 h-3 mr-1" />Edit</Button>
           {org.approval_status !== "approved" && <Button size="sm" onClick={() => updateStatus.mutate("approved")} className="bg-success hover:bg-success/90 text-success-foreground">Approve</Button>}
           {org.approval_status !== "rejected" && <Button size="sm" variant="destructive" onClick={() => updateStatus.mutate("rejected")}>Reject</Button>}
           {org.approval_status !== "deactivated" && <Button size="sm" variant="outline" onClick={() => updateStatus.mutate("deactivated")}>Deactivate</Button>}
@@ -143,7 +258,10 @@ export default function OrganizationDetail() {
 
       {/* Section 3 - Locations */}
       <section className="bg-card rounded-xl border p-6">
-        <h2 className="text-lg font-bold text-foreground flex items-center gap-2 mb-4"><MapPin className="w-5 h-5" />Locations ({locations.length})</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold text-foreground flex items-center gap-2"><MapPin className="w-5 h-5" />Locations ({locations.length})</h2>
+          <Button size="sm" onClick={() => { setEditingLocation(null); setLocationForm(emptyLocationForm); setLocationDialogOpen(true); }}><Plus className="w-4 h-4 mr-1" />Add Location</Button>
+        </div>
         {locations.length === 0 ? (
           <p className="text-sm text-muted-foreground">No locations added yet.</p>
         ) : (
@@ -156,6 +274,7 @@ export default function OrganizationDetail() {
                 <TableHead>Hours</TableHead>
                 <TableHead>Marketplace</TableHead>
                 <TableHead>Stripe Status</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -167,6 +286,7 @@ export default function OrganizationDetail() {
                   <TableCell>{loc.hours_of_operation || "—"}</TableCell>
                   <TableCell><span className={`px-2 py-0.5 rounded text-xs font-medium ${loc.marketplace_enabled ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>{loc.marketplace_enabled ? "Enabled" : "Disabled"}</span></TableCell>
                   <TableCell>{loc.stripe_onboarding_status || "Not started"}</TableCell>
+                  <TableCell><Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); openEditLocation(loc); }}><Pencil className="w-3 h-3" /></Button></TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -176,7 +296,10 @@ export default function OrganizationDetail() {
 
       {/* Section 4 - Users */}
       <section className="bg-card rounded-xl border p-6">
-        <h2 className="text-lg font-bold text-foreground flex items-center gap-2 mb-4"><Users className="w-5 h-5" />Users ({users.length})</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold text-foreground flex items-center gap-2"><Users className="w-5 h-5" />Users ({users.length})</h2>
+          <Button size="sm" onClick={() => setUserDialogOpen(true)}><Plus className="w-4 h-4 mr-1" />Add User</Button>
+        </div>
         {users.length === 0 ? (
           <p className="text-sm text-muted-foreground">No users associated.</p>
         ) : (
@@ -241,6 +364,79 @@ export default function OrganizationDetail() {
           </Table>
         )}
       </section>
+
+      {/* Add/Edit Location Dialog */}
+      <Dialog open={locationDialogOpen} onOpenChange={(open) => { setLocationDialogOpen(open); if (!open) setEditingLocation(null); }}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{editingLocation ? "Edit Location" : "Add Location"}</DialogTitle></DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div><Label>Location Name *</Label><Input value={locationForm.name} onChange={(e) => setLocationForm({ ...locationForm, name: e.target.value })} /></div>
+            <div><Label>Address</Label><Input value={locationForm.address} onChange={(e) => setLocationForm({ ...locationForm, address: e.target.value })} /></div>
+            <div className="grid grid-cols-3 gap-4">
+              <div><Label>City</Label><Input value={locationForm.city} onChange={(e) => setLocationForm({ ...locationForm, city: e.target.value })} /></div>
+              <div><Label>State</Label><Input value={locationForm.state} onChange={(e) => setLocationForm({ ...locationForm, state: e.target.value })} /></div>
+              <div><Label>ZIP</Label><Input value={locationForm.zip} onChange={(e) => setLocationForm({ ...locationForm, zip: e.target.value })} /></div>
+            </div>
+            <div><Label>County</Label><Input value={locationForm.county} onChange={(e) => setLocationForm({ ...locationForm, county: e.target.value })} /></div>
+            <div><Label>Pickup Address</Label><Input value={locationForm.pickup_address} onChange={(e) => setLocationForm({ ...locationForm, pickup_address: e.target.value })} placeholder="Defaults to location address" /></div>
+            <div><Label>Pickup Instructions</Label><Input value={locationForm.pickup_instructions} onChange={(e) => setLocationForm({ ...locationForm, pickup_instructions: e.target.value })} /></div>
+            <div><Label>Hours of Operation</Label><Input value={locationForm.hours_of_operation} onChange={(e) => setLocationForm({ ...locationForm, hours_of_operation: e.target.value })} /></div>
+            <div><Label>Estimated Surplus Frequency</Label><Input value={locationForm.estimated_surplus_frequency} onChange={(e) => setLocationForm({ ...locationForm, estimated_surplus_frequency: e.target.value })} /></div>
+            <Button className="w-full" onClick={() => createLocation.mutate()} disabled={!locationForm.name || createLocation.isPending}>
+              {createLocation.isPending ? "Saving..." : editingLocation ? "Update Location" : "Add Location"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add User Dialog */}
+      <Dialog open={userDialogOpen} onOpenChange={setUserDialogOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Associate User</DialogTitle></DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div><Label>User Email *</Label><Input type="email" value={userForm.email} onChange={(e) => setUserForm({ email: e.target.value })} placeholder="Enter user's email address" /></div>
+            <p className="text-xs text-muted-foreground">The user must already have an account. This will link their profile to this organization.</p>
+            <Button className="w-full" onClick={() => associateUser.mutate()} disabled={!userForm.email || associateUser.isPending}>
+              {associateUser.isPending ? "Linking..." : "Associate User"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Organization Dialog */}
+      <Dialog open={editOrgOpen} onOpenChange={setEditOrgOpen}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Edit Organization</DialogTitle></DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div><Label>Organization Name *</Label><Input value={orgForm.name || ""} onChange={(e) => setOrgForm({ ...orgForm, name: e.target.value })} /></div>
+            <div>
+              <Label>Organization Type *</Label>
+              <Select value={orgForm.type || ""} onValueChange={(v) => setOrgForm({ ...orgForm, type: v as OrganizationType })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{ORG_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><Label>Contact Name</Label><Input value={orgForm.primary_contact_name || ""} onChange={(e) => setOrgForm({ ...orgForm, primary_contact_name: e.target.value })} /></div>
+              <div><Label>Contact Email</Label><Input value={orgForm.primary_contact_email || ""} onChange={(e) => setOrgForm({ ...orgForm, primary_contact_email: e.target.value })} /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><Label>Contact Phone</Label><Input value={orgForm.primary_contact_phone || ""} onChange={(e) => setOrgForm({ ...orgForm, primary_contact_phone: e.target.value })} /></div>
+              <div><Label>Billing Contact</Label><Input value={orgForm.billing_contact || ""} onChange={(e) => setOrgForm({ ...orgForm, billing_contact: e.target.value })} /></div>
+            </div>
+            <div><Label>Address</Label><Input value={orgForm.address || ""} onChange={(e) => setOrgForm({ ...orgForm, address: e.target.value })} /></div>
+            <div className="grid grid-cols-3 gap-4">
+              <div><Label>City</Label><Input value={orgForm.city || ""} onChange={(e) => setOrgForm({ ...orgForm, city: e.target.value })} /></div>
+              <div><Label>State</Label><Input value={orgForm.state || ""} onChange={(e) => setOrgForm({ ...orgForm, state: e.target.value })} /></div>
+              <div><Label>ZIP</Label><Input value={orgForm.zip || ""} onChange={(e) => setOrgForm({ ...orgForm, zip: e.target.value })} /></div>
+            </div>
+            <div><Label>County</Label><Input value={orgForm.county || ""} onChange={(e) => setOrgForm({ ...orgForm, county: e.target.value })} /></div>
+            <Button className="w-full" onClick={() => updateOrg.mutate()} disabled={!orgForm.name || updateOrg.isPending}>
+              {updateOrg.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -10,7 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
+import SustainabilityBaselineForm, { emptySustainabilityBaseline, type SustainabilityBaselineData } from "@/components/forms/SustainabilityBaselineForm";
 import type { Organization, OrganizationType, ApprovalStatus } from "@/types/database";
 
 const ORG_TYPES: { value: OrganizationType; label: string }[] = [
@@ -38,6 +40,12 @@ const STATUS_COLORS: Record<ApprovalStatus, string> = {
   deactivated: "bg-muted text-muted-foreground",
 };
 
+const emptyForm = {
+  name: "", type: "restaurant" as OrganizationType,
+  primary_contact_name: "", primary_contact_email: "", primary_contact_phone: "",
+  billing_contact: "", address: "", city: "", state: "", zip: "", county: "",
+};
+
 export default function Organizations() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -47,13 +55,11 @@ export default function Organizations() {
   const [filterCity, setFilterCity] = useState<string>("all");
   const [filterState, setFilterState] = useState<string>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingOrg, setEditingOrg] = useState<Organization | null>(null);
 
-  // Form state
-  const [form, setForm] = useState({
-    name: "", type: "restaurant" as OrganizationType,
-    primary_contact_name: "", primary_contact_email: "", primary_contact_phone: "",
-    billing_contact: "", address: "", city: "", state: "", zip: "", county: "",
-  });
+  const [form, setForm] = useState(emptyForm);
+  const [baseline, setBaseline] = useState<SustainabilityBaselineData>(emptySustainabilityBaseline);
+  const [showBaseline, setShowBaseline] = useState(false);
 
   const { data: orgs = [], isLoading } = useQuery({
     queryKey: ["organizations"],
@@ -75,19 +81,70 @@ export default function Organizations() {
     },
   });
 
-  const createOrg = useMutation({
+  const saveOrg = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("organizations").insert({ ...form, approval_status: "pending" as ApprovalStatus });
-      if (error) throw error;
+      if (editingOrg) {
+        const { error } = await supabase.from("organizations").update(form).eq("id", editingOrg.id);
+        if (error) throw error;
+      } else {
+        // Create org
+        const { data: newOrg, error } = await supabase.from("organizations").insert({ ...form, approval_status: "pending" as ApprovalStatus }).select().single();
+        if (error) throw error;
+
+        // If baseline data filled, create a location and baseline
+        if (showBaseline && baseline.generates_surplus) {
+          const { data: loc, error: locError } = await supabase.from("locations").insert({
+            organization_id: newOrg.id,
+            name: form.name + " — Primary",
+            address: form.address, city: form.city, state: form.state, zip: form.zip, county: form.county,
+          }).select().single();
+          if (!locError && loc) {
+            const outcomes = [...baseline.priority_outcomes];
+            if (baseline.priority_other && outcomes.includes("Other")) {
+              const idx = outcomes.indexOf("Other");
+              outcomes[idx] = baseline.priority_other;
+            }
+            await supabase.from("sustainability_baseline").insert({
+              location_id: loc.id,
+              generates_surplus: baseline.generates_surplus,
+              estimated_daily_surplus: baseline.estimated_daily_surplus || null,
+              surplus_types: baseline.surplus_types.length ? baseline.surplus_types : null,
+              current_handling: baseline.current_handling || null,
+              donation_frequency: baseline.donation_frequency || null,
+              priority_outcomes: outcomes.length ? outcomes : null,
+            });
+          }
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["organizations"] });
-      toast.success("Organization created successfully");
-      setDialogOpen(false);
-      setForm({ name: "", type: "restaurant", primary_contact_name: "", primary_contact_email: "", primary_contact_phone: "", billing_contact: "", address: "", city: "", state: "", zip: "", county: "" });
+      queryClient.invalidateQueries({ queryKey: ["location-counts"] });
+      toast.success(editingOrg ? "Organization updated" : "Organization created");
+      closeDialog();
     },
     onError: (e) => toast.error(e.message),
   });
+
+  const closeDialog = () => {
+    setDialogOpen(false);
+    setEditingOrg(null);
+    setForm(emptyForm);
+    setBaseline(emptySustainabilityBaseline);
+    setShowBaseline(false);
+  };
+
+  const openEdit = (org: Organization) => {
+    setEditingOrg(org);
+    setForm({
+      name: org.name, type: org.type,
+      primary_contact_name: org.primary_contact_name || "", primary_contact_email: org.primary_contact_email || "",
+      primary_contact_phone: org.primary_contact_phone || "", billing_contact: org.billing_contact || "",
+      address: org.address || "", city: org.city || "", state: org.state || "", zip: org.zip || "", county: org.county || "",
+    });
+    setShowBaseline(false);
+    setDialogOpen(true);
+  };
 
   const cities = useMemo(() => [...new Set(orgs.map((o) => o.city).filter(Boolean))].sort(), [orgs]);
   const states = useMemo(() => [...new Set(orgs.map((o) => o.state).filter(Boolean))].sort(), [orgs]);
@@ -112,45 +169,9 @@ export default function Organizations() {
           <h1 className="text-2xl font-bold text-foreground">Organizations</h1>
           <p className="text-sm text-muted-foreground mt-1">Manage all registered organizations</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button><Plus className="w-4 h-4 mr-2" />Add Organization</Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
-            <DialogHeader><DialogTitle>Add Organization</DialogTitle></DialogHeader>
-            <div className="space-y-4 pt-4">
-              <div>
-                <Label>Organization Name *</Label>
-                <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-              </div>
-              <div>
-                <Label>Organization Type *</Label>
-                <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v as OrganizationType })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{ORG_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div><Label>Contact Name</Label><Input value={form.primary_contact_name} onChange={(e) => setForm({ ...form, primary_contact_name: e.target.value })} /></div>
-                <div><Label>Contact Email</Label><Input type="email" value={form.primary_contact_email} onChange={(e) => setForm({ ...form, primary_contact_email: e.target.value })} /></div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div><Label>Contact Phone</Label><Input value={form.primary_contact_phone} onChange={(e) => setForm({ ...form, primary_contact_phone: e.target.value })} /></div>
-                <div><Label>Billing Contact</Label><Input value={form.billing_contact} onChange={(e) => setForm({ ...form, billing_contact: e.target.value })} /></div>
-              </div>
-              <div><Label>Address</Label><Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
-              <div className="grid grid-cols-3 gap-4">
-                <div><Label>City</Label><Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} /></div>
-                <div><Label>State</Label><Input value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} /></div>
-                <div><Label>ZIP</Label><Input value={form.zip} onChange={(e) => setForm({ ...form, zip: e.target.value })} /></div>
-              </div>
-              <div><Label>County</Label><Input value={form.county} onChange={(e) => setForm({ ...form, county: e.target.value })} /></div>
-              <Button className="w-full" onClick={() => createOrg.mutate()} disabled={!form.name || createOrg.isPending}>
-                {createOrg.isPending ? "Creating..." : "Create Organization"}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <Button onClick={() => { setEditingOrg(null); setForm(emptyForm); setBaseline(emptySustainabilityBaseline); setShowBaseline(false); setDialogOpen(true); }}>
+          <Plus className="w-4 h-4 mr-2" />Add Organization
+        </Button>
       </div>
 
       {/* Filters */}
@@ -233,6 +254,59 @@ export default function Organizations() {
           </TableBody>
         </Table>
       </div>
+
+      {/* Create/Edit Org Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) closeDialog(); else setDialogOpen(true); }}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{editingOrg ? "Edit Organization" : "Add Organization"}</DialogTitle></DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div><Label>Organization Name *</Label><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+            <div>
+              <Label>Organization Type *</Label>
+              <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v as OrganizationType })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>{ORG_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><Label>Contact Name</Label><Input value={form.primary_contact_name} onChange={(e) => setForm({ ...form, primary_contact_name: e.target.value })} /></div>
+              <div><Label>Contact Email</Label><Input type="email" value={form.primary_contact_email} onChange={(e) => setForm({ ...form, primary_contact_email: e.target.value })} /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><Label>Contact Phone</Label><Input value={form.primary_contact_phone} onChange={(e) => setForm({ ...form, primary_contact_phone: e.target.value })} /></div>
+              <div><Label>Billing Contact</Label><Input value={form.billing_contact} onChange={(e) => setForm({ ...form, billing_contact: e.target.value })} /></div>
+            </div>
+            <div><Label>Address</Label><Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
+            <div className="grid grid-cols-3 gap-4">
+              <div><Label>City</Label><Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} /></div>
+              <div><Label>State</Label><Input value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} /></div>
+              <div><Label>ZIP</Label><Input value={form.zip} onChange={(e) => setForm({ ...form, zip: e.target.value })} /></div>
+            </div>
+            <div><Label>County</Label><Input value={form.county} onChange={(e) => setForm({ ...form, county: e.target.value })} /></div>
+
+            {/* Sustainability Baseline (only for new orgs) */}
+            {!editingOrg && (
+              <>
+                <Separator />
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Sustainability Baseline</p>
+                    <p className="text-xs text-muted-foreground">Optional — fill out if known</p>
+                  </div>
+                  <Button variant="ghost" size="sm" onClick={() => setShowBaseline(!showBaseline)}>
+                    {showBaseline ? "Hide" : "Show"}
+                  </Button>
+                </div>
+                {showBaseline && <SustainabilityBaselineForm data={baseline} onChange={setBaseline} />}
+              </>
+            )}
+
+            <Button className="w-full" onClick={() => saveOrg.mutate()} disabled={!form.name || saveOrg.isPending}>
+              {saveOrg.isPending ? "Saving..." : editingOrg ? "Save Changes" : "Create Organization"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

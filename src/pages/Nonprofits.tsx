@@ -2,11 +2,11 @@ import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -20,18 +20,21 @@ const STATUS_COLORS: Record<ApprovalStatus, string> = {
   deactivated: "bg-muted text-muted-foreground",
 };
 
+const emptyForm = {
+  organization_name: "", ein: "", website: "", primary_contact: "",
+  address: "", city: "", state: "", zip: "", county: "",
+  operating_hours: "", cold_storage: false, refrigeration: false, cabinetry: false,
+  estimated_weekly_served: 0, population_served: "",
+};
+
 export default function Nonprofits() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterCity, setFilterCity] = useState("all");
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({
-    organization_name: "", ein: "", website: "", primary_contact: "",
-    address: "", city: "", state: "", zip: "", county: "",
-    operating_hours: "", cold_storage: false, refrigeration: false, cabinetry: false,
-    estimated_weekly_served: 0, population_served: "",
-  });
+  const [editingNp, setEditingNp] = useState<Nonprofit | null>(null);
+  const [form, setForm] = useState(emptyForm);
 
   const { data: nonprofits = [], isLoading } = useQuery({
     queryKey: ["nonprofits"],
@@ -42,18 +45,38 @@ export default function Nonprofits() {
     },
   });
 
-  const createNonprofit = useMutation({
+  const saveNonprofit = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("nonprofits").insert({ ...form, approval_status: "pending" as ApprovalStatus });
-      if (error) throw error;
+      if (editingNp) {
+        const { error } = await supabase.from("nonprofits").update(form).eq("id", editingNp.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("nonprofits").insert({ ...form, approval_status: "pending" as ApprovalStatus });
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["nonprofits"] });
-      toast.success("Nonprofit added");
-      setDialogOpen(false);
+      toast.success(editingNp ? "Nonprofit updated" : "Nonprofit added");
+      closeDialog();
     },
     onError: (e) => toast.error(e.message),
   });
+
+  const closeDialog = () => { setDialogOpen(false); setEditingNp(null); setForm(emptyForm); };
+
+  const openEdit = (np: Nonprofit) => {
+    setEditingNp(np);
+    setForm({
+      organization_name: np.organization_name, ein: np.ein || "", website: np.website || "",
+      primary_contact: np.primary_contact || "", address: np.address || "", city: np.city || "",
+      state: np.state || "", zip: np.zip || "", county: np.county || "",
+      operating_hours: np.operating_hours || "", cold_storage: np.cold_storage, refrigeration: np.refrigeration,
+      cabinetry: np.cabinetry, estimated_weekly_served: np.estimated_weekly_served || 0,
+      population_served: np.population_served || "",
+    });
+    setDialogOpen(true);
+  };
 
   const cities = useMemo(() => [...new Set(nonprofits.map((n) => n.city).filter(Boolean))].sort(), [nonprofits]);
 
@@ -72,36 +95,7 @@ export default function Nonprofits() {
           <h1 className="text-2xl font-bold text-foreground">Nonprofits</h1>
           <p className="text-sm text-muted-foreground mt-1">Manage nonprofit partner applications and approvals</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild><Button><Plus className="w-4 h-4 mr-2" />Add Nonprofit</Button></DialogTrigger>
-          <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
-            <DialogHeader><DialogTitle>Add Nonprofit</DialogTitle></DialogHeader>
-            <div className="space-y-4 pt-4">
-              <div><Label>Organization Name *</Label><Input value={form.organization_name} onChange={(e) => setForm({ ...form, organization_name: e.target.value })} /></div>
-              <div className="grid grid-cols-2 gap-4">
-                <div><Label>EIN</Label><Input value={form.ein} onChange={(e) => setForm({ ...form, ein: e.target.value })} /></div>
-                <div><Label>Website</Label><Input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} /></div>
-              </div>
-              <div><Label>Primary Contact</Label><Input value={form.primary_contact} onChange={(e) => setForm({ ...form, primary_contact: e.target.value })} /></div>
-              <div><Label>Address</Label><Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
-              <div className="grid grid-cols-3 gap-4">
-                <div><Label>City</Label><Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} /></div>
-                <div><Label>State</Label><Input value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} /></div>
-                <div><Label>ZIP</Label><Input value={form.zip} onChange={(e) => setForm({ ...form, zip: e.target.value })} /></div>
-              </div>
-              <div><Label>Operating Hours</Label><Input value={form.operating_hours} onChange={(e) => setForm({ ...form, operating_hours: e.target.value })} /></div>
-              <div className="flex gap-6">
-                <label className="flex items-center gap-2 text-sm"><Checkbox checked={form.cold_storage} onCheckedChange={(v) => setForm({ ...form, cold_storage: !!v })} />Cold Storage</label>
-                <label className="flex items-center gap-2 text-sm"><Checkbox checked={form.refrigeration} onCheckedChange={(v) => setForm({ ...form, refrigeration: !!v })} />Refrigeration</label>
-                <label className="flex items-center gap-2 text-sm"><Checkbox checked={form.cabinetry} onCheckedChange={(v) => setForm({ ...form, cabinetry: !!v })} />Cabinetry</label>
-              </div>
-              <div><Label>Population Served</Label><Input value={form.population_served} onChange={(e) => setForm({ ...form, population_served: e.target.value })} /></div>
-              <Button className="w-full" onClick={() => createNonprofit.mutate()} disabled={!form.organization_name || createNonprofit.isPending}>
-                {createNonprofit.isPending ? "Creating..." : "Create Nonprofit"}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <Button onClick={() => { setEditingNp(null); setForm(emptyForm); setDialogOpen(true); }}><Plus className="w-4 h-4 mr-2" />Add Nonprofit</Button>
       </div>
 
       <div className="flex gap-3">
@@ -134,13 +128,14 @@ export default function Nonprofits() {
               <TableHead>State</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Date Applied</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-12 text-muted-foreground">Loading...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground">Loading...</TableCell></TableRow>
             ) : filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-12 text-muted-foreground">No nonprofits found</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground">No nonprofits found</TableCell></TableRow>
             ) : filtered.map((n) => (
               <TableRow key={n.id} className="cursor-pointer" onClick={() => navigate(`/nonprofits/${n.id}`)}>
                 <TableCell className="font-medium">{n.organization_name}</TableCell>
@@ -149,11 +144,42 @@ export default function Nonprofits() {
                 <TableCell>{n.state || "—"}</TableCell>
                 <TableCell><span className={`px-2.5 py-0.5 text-xs font-semibold rounded capitalize ${STATUS_COLORS[n.approval_status]}`}>{n.approval_status}</span></TableCell>
                 <TableCell>{new Date(n.created_at).toLocaleDateString()}</TableCell>
+                <TableCell><Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); openEdit(n); }}><Pencil className="w-3 h-3" /></Button></TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </div>
+
+      <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) closeDialog(); else setDialogOpen(true); }}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{editingNp ? "Edit Nonprofit" : "Add Nonprofit"}</DialogTitle></DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div><Label>Organization Name *</Label><Input value={form.organization_name} onChange={(e) => setForm({ ...form, organization_name: e.target.value })} /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><Label>EIN</Label><Input value={form.ein} onChange={(e) => setForm({ ...form, ein: e.target.value })} /></div>
+              <div><Label>Website</Label><Input value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} /></div>
+            </div>
+            <div><Label>Primary Contact</Label><Input value={form.primary_contact} onChange={(e) => setForm({ ...form, primary_contact: e.target.value })} /></div>
+            <div><Label>Address</Label><Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
+            <div className="grid grid-cols-3 gap-4">
+              <div><Label>City</Label><Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} /></div>
+              <div><Label>State</Label><Input value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} /></div>
+              <div><Label>ZIP</Label><Input value={form.zip} onChange={(e) => setForm({ ...form, zip: e.target.value })} /></div>
+            </div>
+            <div><Label>Operating Hours</Label><Input value={form.operating_hours} onChange={(e) => setForm({ ...form, operating_hours: e.target.value })} /></div>
+            <div className="flex gap-6">
+              <label className="flex items-center gap-2 text-sm"><Checkbox checked={form.cold_storage} onCheckedChange={(v) => setForm({ ...form, cold_storage: !!v })} />Cold Storage</label>
+              <label className="flex items-center gap-2 text-sm"><Checkbox checked={form.refrigeration} onCheckedChange={(v) => setForm({ ...form, refrigeration: !!v })} />Refrigeration</label>
+              <label className="flex items-center gap-2 text-sm"><Checkbox checked={form.cabinetry} onCheckedChange={(v) => setForm({ ...form, cabinetry: !!v })} />Cabinetry</label>
+            </div>
+            <div><Label>Population Served</Label><Input value={form.population_served} onChange={(e) => setForm({ ...form, population_served: e.target.value })} /></div>
+            <Button className="w-full" onClick={() => saveNonprofit.mutate()} disabled={!form.organization_name || saveNonprofit.isPending}>
+              {saveNonprofit.isPending ? "Saving..." : editingNp ? "Save Changes" : "Create Nonprofit"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
