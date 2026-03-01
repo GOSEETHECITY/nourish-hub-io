@@ -1,49 +1,86 @@
-import { TrendingUp, Package, Utensils, Users, ArrowUpRight } from "lucide-react";
+import { Utensils, Package, Heart, Building2, ArrowUpRight, TrendingUp } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell,
+  ResponsiveContainer, PieChart, Pie, Cell,
 } from "recharts";
 
+/* ── KPI Data ── */
 const stats = [
-  { title: "Total Pounds Diverted", value: "12,847", change: "+2.4%", sub: "+312 this week", icon: TrendingUp },
-  { title: "Active Listings", value: "24", change: "+8.3%", sub: "+3 today", icon: Package },
-  { title: "Meals Served", value: "38,541", change: "+5.1%", sub: "+890 this week", icon: Utensils },
-  { title: "Partner Organizations", value: "156", change: "+1.9%", sub: "+4 this month", icon: Users },
+  { title: "Total Meals Served", value: "38,541", change: "+5.1%", sub: "+890 this week", icon: Utensils },
+  { title: "Active Donations", value: "24", change: "+8.3%", sub: "Posted, Claimed & Picked Up", icon: Package },
+  { title: "Total Nonprofits", value: "42", change: "+2.4%", sub: "Approved only", icon: Heart },
+  { title: "Total Organizations", value: "156", change: "+1.9%", sub: "Excl. nonprofits", icon: Building2 },
 ];
 
-const monthlyData = [
-  { month: "Mar", donations: 61000 },
-  { month: "Apr", donations: 78000 },
-  { month: "May", donations: 92000 },
-  { month: "Jun", donations: 85000 },
-  { month: "Jul", donations: 110000 },
-  { month: "Aug", donations: 135000 },
-  { month: "Sep", donations: 98000 },
-  { month: "Oct", donations: 88000 },
-  { month: "Nov", donations: 105000 },
-  { month: "Dec", donations: 115000 },
+/* ── Chart 1: Pounds of Food Diverted (monthly) ── */
+const poundsData = [
+  { month: "Jan", pounds: 4200 },
+  { month: "Feb", pounds: 5800 },
+  { month: "Mar", pounds: 6100 },
+  { month: "Apr", pounds: 7800 },
+  { month: "May", pounds: 9200 },
+  { month: "Jun", pounds: 8500 },
+  { month: "Jul", pounds: 11000 },
+  { month: "Aug", pounds: 13500 },
+  { month: "Sep", pounds: 10200 },
+  { month: "Oct", pounds: 8800 },
+  { month: "Nov", pounds: 10500 },
+  { month: "Dec", pounds: 11500 },
 ];
+const totalPounds = poundsData.reduce((s, d) => s + d.pounds, 0);
 
-const impactData = [
-  { month: "Jan", value: 5200 },
-  { month: "Feb", value: 6800 },
-  { month: "Mar", value: 9100 },
-  { month: "Apr", value: 10500 },
+/* ── Chart 2: Donations Over Time (count) ── */
+const donationsCountData = [
+  { month: "Jan", count: 12 },
+  { month: "Feb", count: 18 },
+  { month: "Mar", count: 24 },
+  { month: "Apr", count: 31 },
+  { month: "May", count: 28 },
+  { month: "Jun", count: 35 },
+  { month: "Jul", count: 42 },
+  { month: "Aug", count: 38 },
+  { month: "Sep", count: 30 },
+  { month: "Oct", count: 26 },
+  { month: "Nov", count: 33 },
+  { month: "Dec", count: 37 },
 ];
+const totalDonations = donationsCountData.reduce((s, d) => s + d.count, 0);
 
+/* ── Chart 3: Food Type Breakdown (7 global types) ── */
 const foodTypes = [
-  { name: "Prepared", value: 42, color: "hsl(18, 44%, 30%)" },
-  { name: "Produce", value: 28, color: "hsl(142, 71%, 45%)" },
-  { name: "Frozen", value: 18, color: "hsl(199, 89%, 48%)" },
-  { name: "Perishable", value: 12, color: "hsl(38, 92%, 50%)" },
+  { name: "Prepared Meals", value: 32, color: "hsl(var(--chart-5))" },
+  { name: "Produce", value: 22, color: "hsl(var(--chart-2))" },
+  { name: "Dairy", value: 10, color: "hsl(var(--chart-1))" },
+  { name: "Meat / Protein", value: 9, color: "hsl(var(--chart-4))" },
+  { name: "Baked Goods", value: 12, color: "hsl(var(--chart-3))" },
+  { name: "Shelf-Stable", value: 8, color: "hsl(199, 60%, 65%)" },
+  { name: "Frozen", value: 7, color: "hsl(220, 14%, 60%)" },
 ];
 
-const wasteData = [
-  { day: "Week 1", value: 65 },
-  { day: "Week 2", value: 72 },
-  { day: "Week 3", value: 58 },
-  { day: "Week 4", value: 80 },
-];
+/* ── Custom Tooltip ── */
+const PoundsTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="bg-card border rounded-lg shadow-lg px-4 py-2.5">
+      <p className="text-sm font-medium text-foreground">{label}</p>
+      <p className="text-sm text-muted-foreground">
+        Pounds: <span className="font-semibold text-foreground">{payload[0].value.toLocaleString()} lbs</span>
+      </p>
+    </div>
+  );
+};
+
+const DonationsTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="bg-card border rounded-lg shadow-lg px-4 py-2.5">
+      <p className="text-sm font-medium text-foreground">{label}</p>
+      <p className="text-sm text-muted-foreground">
+        Donations: <span className="font-semibold text-foreground">{payload[0].value}</span>
+      </p>
+    </div>
+  );
+};
 
 export default function Dashboard() {
   return (
@@ -51,18 +88,18 @@ export default function Dashboard() {
       <div>
         <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Overview of your food diversion impact
+          Platform-wide overview of food diversion impact
         </p>
       </div>
 
-      {/* Stats */}
+      {/* ── KPI Cards ── */}
       <div className="grid grid-cols-4 gap-4">
         {stats.map((stat) => (
-          <div key={stat.title} className="bg-card rounded-xl border p-5">
+          <div key={stat.title} className="bg-card rounded-xl border p-5 shadow-sm">
             <div className="flex items-center justify-between mb-3">
               <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
-              <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
-                <stat.icon className="w-4 h-4 text-accent" />
+              <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                <stat.icon className="w-4 h-4 text-muted-foreground" />
               </div>
             </div>
             <p className="text-3xl font-bold text-foreground">{stat.value}</p>
@@ -77,110 +114,77 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-3 gap-4">
-        {/* Bar Chart */}
-        <div className="col-span-2 bg-card rounded-xl border p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h3 className="font-semibold text-foreground">Donations Over Time</h3>
-              <p className="text-2xl font-bold text-foreground mt-1">$248,502</p>
-            </div>
-            <select className="text-sm border rounded-lg px-3 py-1.5 bg-background text-foreground">
-              <option>This Year</option>
-            </select>
+      {/* ── Charts Row ── */}
+      <div className="grid grid-cols-2 gap-4">
+        {/* Chart 1 — Pounds Diverted */}
+        <div className="bg-card rounded-xl border p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-sm font-medium text-muted-foreground">Pounds of Food Diverted</p>
+            <button className="text-xs font-medium text-muted-foreground border rounded-full px-3 py-1 hover:bg-muted transition-colors">
+              This Year
+            </button>
           </div>
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={monthlyData}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(30, 10%, 90%)" />
-              <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "hsl(25, 10%, 45%)", fontSize: 12 }} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fill: "hsl(25, 10%, 45%)", fontSize: 12 }} tickFormatter={(v) => `${v / 1000}k`} />
-              <Tooltip formatter={(value: number) => [`$${value.toLocaleString()}`, "Value"]} />
-              <Bar dataKey="donations" fill="hsl(199, 89%, 48%)" radius={[4, 4, 0, 0]} />
+          <p className="text-2xl font-bold text-foreground mb-6">{totalPounds.toLocaleString()} lbs</p>
+          <ResponsiveContainer width="100%" height={260}>
+            <BarChart data={poundsData}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+              <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} tickFormatter={(v) => `${v / 1000}k`} />
+              <Tooltip content={<PoundsTooltip />} cursor={{ fill: "hsl(var(--muted))" }} />
+              <Bar dataKey="pounds" fill="hsl(var(--foreground))" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Impact Card */}
-        <div className="bg-card rounded-xl border p-6">
-          <h3 className="font-semibold text-foreground">Total Impact</h3>
-          <div className="flex items-center gap-2 mt-1">
-            <p className="text-2xl font-bold text-foreground">14,902</p>
-            <span className="text-xs font-medium text-success flex items-center gap-0.5">
-              <ArrowUpRight className="w-3 h-3" />
-              12.8%
-            </span>
+        {/* Chart 2 — Donations Over Time (count) */}
+        <div className="bg-card rounded-xl border p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-sm font-medium text-muted-foreground">Donations Over Time</p>
+            <button className="text-xs font-medium text-muted-foreground border rounded-full px-3 py-1 hover:bg-muted transition-colors">
+              This Year
+            </button>
           </div>
-          <p className="text-[11px] text-muted-foreground uppercase tracking-wider mt-1 mb-4">
-            Meals served over time
-          </p>
-          <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={impactData}>
-              <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "hsl(25, 10%, 45%)", fontSize: 11 }} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fill: "hsl(25, 10%, 45%)", fontSize: 11 }} />
-              <Line type="monotone" dataKey="value" stroke="hsl(199, 89%, 48%)" strokeWidth={2} dot={false} />
-            </LineChart>
+          <p className="text-2xl font-bold text-foreground mb-6">{totalDonations} completed</p>
+          <ResponsiveContainer width="100%" height={260}>
+            <BarChart data={donationsCountData}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+              <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
+              <Tooltip content={<DonationsTooltip />} cursor={{ fill: "hsl(var(--muted))" }} />
+              <Bar dataKey="count" fill="hsl(var(--foreground))" radius={[4, 4, 0, 0]} />
+            </BarChart>
           </ResponsiveContainer>
-          <button className="text-sm font-medium text-foreground hover:text-accent mt-2 flex items-center gap-1">
-            View Details <ArrowUpRight className="w-3.5 h-3.5" />
-          </button>
         </div>
       </div>
 
-      {/* Bottom Row */}
-      <div className="grid grid-cols-2 gap-4">
-        {/* Donut */}
-        <div className="bg-card rounded-xl border p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-foreground">Food Type Breakdown</h3>
-            <button className="text-sm font-medium text-accent flex items-center gap-1">
-              View Details <ArrowUpRight className="w-3.5 h-3.5" />
-            </button>
+      {/* ── Chart 3 — Food Type Breakdown (Donut) ── */}
+      <div className="bg-card rounded-xl border p-6 shadow-sm">
+        <p className="text-sm font-medium text-muted-foreground mb-4">Food Type Breakdown</p>
+        <div className="flex items-center gap-12">
+          <div className="w-52 h-52 relative">
+            <ResponsiveContainer>
+              <PieChart>
+                <Pie data={foodTypes} innerRadius={60} outerRadius={85} dataKey="value" stroke="none">
+                  {foodTypes.map((entry, i) => (
+                    <Cell key={i} fill={entry.color} />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <p className="text-2xl font-bold text-foreground">{totalDonations}</p>
+              <p className="text-xs text-muted-foreground">Total</p>
+            </div>
           </div>
-          <div className="flex items-center gap-8">
-            <div className="w-40 h-40 relative">
-              <ResponsiveContainer>
-                <PieChart>
-                  <Pie data={foodTypes} innerRadius={50} outerRadius={70} dataKey="value" stroke="none">
-                    {foodTypes.map((entry, i) => (
-                      <Cell key={i} fill={entry.color} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <p className="text-2xl font-bold text-foreground">204</p>
-                <p className="text-xs text-muted-foreground">Total</p>
+          <div className="grid grid-cols-2 gap-x-10 gap-y-3">
+            {foodTypes.map((type) => (
+              <div key={type.name} className="flex items-center gap-2.5">
+                <div className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: type.color }} />
+                <span className="text-sm text-muted-foreground">{type.name}</span>
+                <span className="text-sm font-semibold text-foreground ml-auto">{type.value}%</span>
               </div>
-            </div>
-            <div className="space-y-3">
-              {foodTypes.map((type) => (
-                <div key={type.name} className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: type.color }} />
-                  <span className="text-sm text-muted-foreground">{type.name}</span>
-                  <span className="text-sm font-semibold text-foreground ml-1">— {type.value}%</span>
-                </div>
-              ))}
-            </div>
+            ))}
           </div>
-        </div>
-
-        {/* Waste Line */}
-        <div className="bg-card rounded-xl border p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-foreground">Food Waste Reduced</h3>
-            <select className="text-sm border rounded-lg px-3 py-1.5 bg-background text-foreground">
-              <option>Last 30 Days</option>
-            </select>
-          </div>
-          <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={wasteData}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(30, 10%, 90%)" />
-              <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: "hsl(25, 10%, 45%)", fontSize: 12 }} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fill: "hsl(25, 10%, 45%)", fontSize: 12 }} tickFormatter={(v) => `${v}%`} />
-              <Line type="monotone" dataKey="value" stroke="hsl(18, 44%, 30%)" strokeWidth={2} dot={false} />
-            </LineChart>
-          </ResponsiveContainer>
         </div>
       </div>
     </div>

@@ -1,32 +1,64 @@
-import { Outlet, NavLink } from "react-router-dom";
+import { Outlet, NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard,
-  Store,
+  Building2,
+  UtensilsCrossed,
   Heart,
+  CalendarDays,
+  Store,
   BarChart3,
-  Phone,
+  Users,
+  CreditCard,
+  Headphones,
   Settings,
   LogOut,
   Search,
   Bell,
   MapPin,
   ChevronDown,
+  ChevronRight,
 } from "lucide-react";
+import { useState } from "react";
 import logo from "@/assets/logo.png";
 
 const mainNav = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
-  { icon: Store, label: "Restaurant", path: "/restaurant" },
-  { icon: Heart, label: "Donations", path: "/donations" },
-  { icon: BarChart3, label: "Analytics", path: "/analytics" },
+  { icon: Building2, label: "Organizations", path: "/organizations" },
+  {
+    icon: UtensilsCrossed,
+    label: "Food Listings",
+    path: "/food-listings",
+    children: [
+      { label: "Donations", path: "/food-listings/donations" },
+      { label: "Discounted Sale", path: "/food-listings/discounted-sale" },
+    ],
+  },
+  { icon: Heart, label: "Nonprofits", path: "/nonprofits" },
+  { icon: CalendarDays, label: "Events", path: "/events" },
+  { icon: Store, label: "Marketplace", path: "/marketplace" },
+  { icon: BarChart3, label: "Impact", path: "/impact" },
+  { icon: Users, label: "Users", path: "/users" },
+  { icon: CreditCard, label: "Billing", path: "/billing" },
 ];
 
 const otherNav = [
-  { icon: Phone, label: "Support", path: "/support" },
+  { icon: Headphones, label: "Support", path: "/support" },
   { icon: Settings, label: "Settings", path: "/settings" },
 ];
 
 export default function DashboardLayout() {
+  const location = useLocation();
+  const [expandedMenus, setExpandedMenus] = useState<string[]>(["/food-listings"]);
+
+  const toggleMenu = (path: string) => {
+    setExpandedMenus((prev) =>
+      prev.includes(path) ? prev.filter((p) => p !== path) : [...prev, path]
+    );
+  };
+
+  const isChildActive = (children: { path: string }[]) =>
+    children.some((child) => location.pathname === child.path);
+
   return (
     <div className="flex h-screen bg-background">
       {/* Sidebar */}
@@ -35,28 +67,72 @@ export default function DashboardLayout() {
           <img src={logo} alt="HarietAI" className="h-12 w-auto" />
         </div>
 
-        <nav className="flex-1 px-3">
+        <nav className="flex-1 px-3 overflow-y-auto">
           <p className="text-[11px] font-semibold tracking-wider text-primary-foreground/40 px-3 mb-2">
-            CITY
+            MAIN
           </p>
           <div className="space-y-0.5">
-            {mainNav.map(({ icon: Icon, label, path }) => (
-              <NavLink
-                key={path}
-                to={path}
-                end={path === "/"}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all ${
-                    isActive
-                      ? "bg-accent text-accent-foreground"
-                      : "text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/5"
-                  }`
-                }
-              >
-                <Icon className="w-[18px] h-[18px]" />
-                {label}
-              </NavLink>
-            ))}
+            {mainNav.map(({ icon: Icon, label, path, children }) => {
+              if (children) {
+                const isExpanded = expandedMenus.includes(path);
+                const childActive = isChildActive(children);
+                return (
+                  <div key={path}>
+                    <button
+                      onClick={() => toggleMenu(path)}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all w-full ${
+                        childActive
+                          ? "text-primary-foreground"
+                          : "text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/5"
+                      }`}
+                    >
+                      <Icon className="w-[18px] h-[18px]" />
+                      <span className="flex-1 text-left">{label}</span>
+                      <ChevronRight
+                        className={`w-3.5 h-3.5 transition-transform ${isExpanded ? "rotate-90" : ""}`}
+                      />
+                    </button>
+                    {isExpanded && (
+                      <div className="ml-[30px] mt-0.5 space-y-0.5">
+                        {children.map((child) => (
+                          <NavLink
+                            key={child.path}
+                            to={child.path}
+                            className={({ isActive }) =>
+                              `block px-3 py-2 rounded-lg text-[13px] font-medium transition-all ${
+                                isActive
+                                  ? "bg-accent text-accent-foreground"
+                                  : "text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/5"
+                              }`
+                            }
+                          >
+                            {child.label}
+                          </NavLink>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
+              return (
+                <NavLink
+                  key={path}
+                  to={path}
+                  end={path === "/"}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all ${
+                      isActive
+                        ? "bg-accent text-accent-foreground"
+                        : "text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/5"
+                    }`
+                  }
+                >
+                  <Icon className="w-[18px] h-[18px]" />
+                  {label}
+                </NavLink>
+              );
+            })}
           </div>
 
           <div className="my-6 border-t border-primary-foreground/10" />
@@ -69,7 +145,13 @@ export default function DashboardLayout() {
               <NavLink
                 key={path}
                 to={path}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/5 transition-all"
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all ${
+                    isActive
+                      ? "bg-accent text-accent-foreground"
+                      : "text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/5"
+                  }`
+                }
               >
                 <Icon className="w-[18px] h-[18px]" />
                 {label}
