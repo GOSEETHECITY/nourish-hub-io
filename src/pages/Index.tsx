@@ -119,7 +119,7 @@ export default function Dashboard() {
         {/* Chart 1 — Pounds Diverted */}
         <div className="bg-card rounded-xl border p-6 shadow-sm">
           <div className="flex items-center justify-between mb-1">
-            <p className="text-sm font-medium text-muted-foreground">Pounds of Food Diverted</p>
+            <p className="text-sm font-medium font-serif text-sidebar-primary">Pounds of Food Diverted</p>
             <button className="text-xs font-medium text-muted-foreground border rounded-full px-3 py-1 hover:bg-muted transition-colors">
               This Year
             </button>
