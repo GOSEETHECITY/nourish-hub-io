@@ -125,7 +125,7 @@ export default function Dashboard() {
             </button>
           </div>
           <p className="text-2xl font-bold text-foreground mb-6">{totalPounds.toLocaleString()} lbs</p>
-          <ResponsiveContainer width="100%" height={260}>
+          <ResponsiveContainer width="100%" height={260} className="text-sky-400">
             <BarChart data={poundsData}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
               <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
