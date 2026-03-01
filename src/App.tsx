@@ -8,11 +8,17 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Dashboard from "./pages/Index";
 import Organizations from "./pages/Organizations";
+import OrganizationDetail from "./pages/OrganizationDetail";
+import LocationDetail from "./pages/LocationDetail";
 import FoodListingsDonations from "./pages/FoodListingsDonations";
+import DonationDetail from "./pages/DonationDetail";
 import FoodListingsDiscounted from "./pages/FoodListingsDiscounted";
+import CouponDetail from "./pages/CouponDetail";
 import Nonprofits from "./pages/Nonprofits";
+import NonprofitDetail from "./pages/NonprofitDetail";
 import Events from "./pages/Events";
 import Marketplace from "./pages/Marketplace";
+import MarketplacePartnerDetail from "./pages/MarketplacePartnerDetail";
 import Impact from "./pages/Impact";
 import UsersPage from "./pages/UsersPage";
 import Billing from "./pages/Billing";
@@ -51,11 +57,17 @@ const App = () => (
             >
               <Route path="/" element={<Dashboard />} />
               <Route path="/organizations" element={<Organizations />} />
+              <Route path="/organizations/:id" element={<OrganizationDetail />} />
+              <Route path="/organizations/:id/locations/:locationId" element={<LocationDetail />} />
               <Route path="/food-listings/donations" element={<FoodListingsDonations />} />
+              <Route path="/food-listings/donations/:listingId" element={<DonationDetail />} />
               <Route path="/food-listings/discounted-sale" element={<FoodListingsDiscounted />} />
+              <Route path="/food-listings/discounted-sale/:couponId" element={<CouponDetail />} />
               <Route path="/nonprofits" element={<Nonprofits />} />
+              <Route path="/nonprofits/:id" element={<NonprofitDetail />} />
               <Route path="/events" element={<Events />} />
               <Route path="/marketplace" element={<Marketplace />} />
+              <Route path="/marketplace/:orgId" element={<MarketplacePartnerDetail />} />
               <Route path="/impact" element={<Impact />} />
               <Route path="/users" element={<UsersPage />} />
               <Route path="/billing" element={<Billing />} />
@@ -64,34 +76,11 @@ const App = () => (
             </Route>
 
             {/* Venue Partner routes */}
-            <Route
-              path="/venue"
-              element={
-                <ProtectedRoute allowedRoles={["venue_partner"]}>
-                  <VenueDashboard />
-                </ProtectedRoute>
-              }
-            />
-
+            <Route path="/venue" element={<ProtectedRoute allowedRoles={["venue_partner"]}><VenueDashboard /></ProtectedRoute>} />
             {/* Nonprofit Partner routes */}
-            <Route
-              path="/nonprofit"
-              element={
-                <ProtectedRoute allowedRoles={["nonprofit_partner"]}>
-                  <NonprofitDashboard />
-                </ProtectedRoute>
-              }
-            />
-
+            <Route path="/nonprofit" element={<ProtectedRoute allowedRoles={["nonprofit_partner"]}><NonprofitDashboard /></ProtectedRoute>} />
             {/* Government Partner routes */}
-            <Route
-              path="/government"
-              element={
-                <ProtectedRoute allowedRoles={["government_partner"]}>
-                  <GovernmentDashboard />
-                </ProtectedRoute>
-              }
-            />
+            <Route path="/government" element={<ProtectedRoute allowedRoles={["government_partner"]}><GovernmentDashboard /></ProtectedRoute>} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
