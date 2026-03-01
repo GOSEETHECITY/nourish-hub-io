@@ -28,6 +28,7 @@ import Login from "./pages/auth/Login";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import VenueDashboard from "./pages/venue/VenueDashboard";
+import VenueOnboarding from "./pages/venue/VenueOnboarding";
 import NonprofitDashboard from "./pages/nonprofit/NonprofitDashboard";
 import GovernmentDashboard from "./pages/government/GovernmentDashboard";
 import NotFound from "./pages/NotFound";
@@ -77,6 +78,7 @@ const App = () => (
 
             {/* Venue Partner routes */}
             <Route path="/venue" element={<ProtectedRoute allowedRoles={["venue_partner"]}><VenueDashboard /></ProtectedRoute>} />
+            <Route path="/venue/onboarding" element={<ProtectedRoute allowedRoles={["venue_partner"]}><VenueOnboarding /></ProtectedRoute>} />
             {/* Nonprofit Partner routes */}
             <Route path="/nonprofit" element={<ProtectedRoute allowedRoles={["nonprofit_partner"]}><NonprofitDashboard /></ProtectedRoute>} />
             {/* Government Partner routes */}

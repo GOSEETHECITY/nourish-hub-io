@@ -1,12 +1,12 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, ArrowUpDown } from "lucide-react";
+import { Plus, ArrowUpDown, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
@@ -19,18 +19,20 @@ const STATUS_COLORS: Record<EventStatus, string> = {
   archived: "bg-chart-4/15 text-chart-4",
 };
 
+const emptyForm = {
+  title: "", description: "", event_date: "", start_time: "", end_time: "",
+  address: "", city: "", state: "", external_link: "", status: "draft" as EventStatus,
+};
+
 export default function Events() {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<HarietEvent | null>(null);
   const [publishConfirm, setPublishConfirm] = useState<string | null>(null);
   const [notifyPrompt, setNotifyPrompt] = useState<string | null>(null);
   const [sortField, setSortField] = useState("created_at");
   const [sortAsc, setSortAsc] = useState(false);
-
-  const [form, setForm] = useState({
-    title: "", description: "", event_date: "", start_time: "", end_time: "",
-    address: "", city: "", state: "", external_link: "", status: "draft" as EventStatus,
-  });
+  const [form, setForm] = useState(emptyForm);
 
   const { data: events = [], isLoading } = useQuery({
     queryKey: ["events"],
@@ -41,16 +43,20 @@ export default function Events() {
     },
   });
 
-  const createEvent = useMutation({
+  const saveEvent = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("events").insert(form);
-      if (error) throw error;
+      if (editingEvent) {
+        const { error } = await supabase.from("events").update(form).eq("id", editingEvent.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("events").insert(form);
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["events"] });
-      toast.success("Event created");
-      setDialogOpen(false);
-      setForm({ title: "", description: "", event_date: "", start_time: "", end_time: "", address: "", city: "", state: "", external_link: "", status: "draft" });
+      toast.success(editingEvent ? "Event updated" : "Event created");
+      closeDialog();
     },
     onError: (e) => toast.error(e.message),
   });
@@ -60,10 +66,7 @@ export default function Events() {
       const { error } = await supabase.from("events").update({ status: "published" as EventStatus }).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["events"] });
-      toast.success("Event published");
-    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["events"] }); toast.success("Event published"); },
   });
 
   const archiveEvent = useMutation({
@@ -71,22 +74,24 @@ export default function Events() {
       const { error } = await supabase.from("events").update({ status: "archived" as EventStatus }).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["events"] });
-      toast.success("Event archived");
-    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["events"] }); toast.success("Event archived"); },
   });
 
-  const handlePublishConfirm = (id: string) => {
-    publishEvent.mutate(id);
-    setPublishConfirm(null);
-    setNotifyPrompt(id);
+  const closeDialog = () => { setDialogOpen(false); setEditingEvent(null); setForm(emptyForm); };
+
+  const openEdit = (ev: HarietEvent) => {
+    setEditingEvent(ev);
+    setForm({
+      title: ev.title, description: ev.description || "", event_date: ev.event_date || "",
+      start_time: ev.start_time || "", end_time: ev.end_time || "", address: ev.address || "",
+      city: ev.city || "", state: ev.state || "", external_link: ev.external_link || "", status: ev.status,
+    });
+    setDialogOpen(true);
   };
 
+  const handlePublishConfirm = (id: string) => { publishEvent.mutate(id); setPublishConfirm(null); setNotifyPrompt(id); };
   const handleNotify = (option: string) => {
-    if (option !== "none") {
-      toast.success(`Push notification sent to ${option === "all" ? "all users" : `users in selected city`}`);
-    }
+    if (option !== "none") toast.success(`Push notification sent to ${option === "all" ? "all users" : "users in selected city"}`);
     setNotifyPrompt(null);
   };
 
@@ -112,41 +117,7 @@ export default function Events() {
           <h1 className="text-2xl font-bold text-foreground">Events</h1>
           <p className="text-sm text-muted-foreground mt-1">Create and manage platform events</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild><Button><Plus className="w-4 h-4 mr-2" />Add Event</Button></DialogTrigger>
-          <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
-            <DialogHeader><DialogTitle>Create Event</DialogTitle></DialogHeader>
-            <div className="space-y-4 pt-4">
-              <div><Label>Title *</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
-              <div><Label>Description</Label><Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
-              <div className="grid grid-cols-3 gap-4">
-                <div><Label>Event Date</Label><Input type="date" value={form.event_date} onChange={(e) => setForm({ ...form, event_date: e.target.value })} /></div>
-                <div><Label>Start Time</Label><Input type="time" value={form.start_time} onChange={(e) => setForm({ ...form, start_time: e.target.value })} /></div>
-                <div><Label>End Time</Label><Input type="time" value={form.end_time} onChange={(e) => setForm({ ...form, end_time: e.target.value })} /></div>
-              </div>
-              <div><Label>Address</Label><Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
-              <div className="grid grid-cols-2 gap-4">
-                <div><Label>City</Label><Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} /></div>
-                <div><Label>State</Label><Input value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} /></div>
-              </div>
-              <div><Label>External Link</Label><Input value={form.external_link} onChange={(e) => setForm({ ...form, external_link: e.target.value })} /></div>
-              <div>
-                <Label>Status</Label>
-                <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v as EventStatus })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="published">Published</SelectItem>
-                    <SelectItem value="archived">Archived</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button className="w-full" onClick={() => createEvent.mutate()} disabled={!form.title || createEvent.isPending}>
-                {createEvent.isPending ? "Creating..." : "Create Event"}
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <Button onClick={() => { setEditingEvent(null); setForm(emptyForm); setDialogOpen(true); }}><Plus className="w-4 h-4 mr-2" />Add Event</Button>
       </div>
 
       <div className="bg-card rounded-xl border">
@@ -179,6 +150,7 @@ export default function Events() {
                 <TableCell>{new Date(ev.created_at).toLocaleDateString()}</TableCell>
                 <TableCell>
                   <div className="flex gap-2">
+                    <Button size="sm" variant="ghost" onClick={() => openEdit(ev)}><Pencil className="w-3 h-3" /></Button>
                     {ev.status === "draft" && <Button size="sm" variant="outline" onClick={() => setPublishConfirm(ev.id)}>Publish</Button>}
                     {ev.status === "published" && <Button size="sm" variant="outline" onClick={() => archiveEvent.mutate(ev.id)}>Archive</Button>}
                   </div>
@@ -189,27 +161,52 @@ export default function Events() {
         </Table>
       </div>
 
-      {/* Publish Confirmation */}
+      {/* Create/Edit Dialog */}
+      <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) closeDialog(); else setDialogOpen(true); }}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{editingEvent ? "Edit Event" : "Create Event"}</DialogTitle></DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div><Label>Title *</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
+            <div><Label>Description</Label><Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
+            <div className="grid grid-cols-3 gap-4">
+              <div><Label>Event Date</Label><Input type="date" value={form.event_date} onChange={(e) => setForm({ ...form, event_date: e.target.value })} /></div>
+              <div><Label>Start Time</Label><Input type="time" value={form.start_time} onChange={(e) => setForm({ ...form, start_time: e.target.value })} /></div>
+              <div><Label>End Time</Label><Input type="time" value={form.end_time} onChange={(e) => setForm({ ...form, end_time: e.target.value })} /></div>
+            </div>
+            <div><Label>Address</Label><Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><Label>City</Label><Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} /></div>
+              <div><Label>State</Label><Input value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} /></div>
+            </div>
+            <div><Label>External Link</Label><Input value={form.external_link} onChange={(e) => setForm({ ...form, external_link: e.target.value })} /></div>
+            <div>
+              <Label>Status</Label>
+              <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v as EventStatus })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="published">Published</SelectItem>
+                  <SelectItem value="archived">Archived</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button className="w-full" onClick={() => saveEvent.mutate()} disabled={!form.title || saveEvent.isPending}>
+              {saveEvent.isPending ? "Saving..." : editingEvent ? "Save Changes" : "Create Event"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <AlertDialog open={!!publishConfirm} onOpenChange={() => setPublishConfirm(null)}>
         <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Publish Event</AlertDialogTitle>
-            <AlertDialogDescription>Publishing this event will make it visible in the GO See The City app. Are you sure?</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => publishConfirm && handlePublishConfirm(publishConfirm)}>Publish</AlertDialogAction>
-          </AlertDialogFooter>
+          <AlertDialogHeader><AlertDialogTitle>Publish Event</AlertDialogTitle><AlertDialogDescription>Publishing this event will make it visible in the GO See The City app. Are you sure?</AlertDialogDescription></AlertDialogHeader>
+          <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction onClick={() => publishConfirm && handlePublishConfirm(publishConfirm)}>Publish</AlertDialogAction></AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Notification Prompt */}
       <AlertDialog open={!!notifyPrompt} onOpenChange={() => setNotifyPrompt(null)}>
         <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Send Push Notification?</AlertDialogTitle>
-            <AlertDialogDescription>Would you like to send a push notification for this event?</AlertDialogDescription>
-          </AlertDialogHeader>
+          <AlertDialogHeader><AlertDialogTitle>Send Push Notification?</AlertDialogTitle><AlertDialogDescription>Would you like to send a push notification for this event?</AlertDialogDescription></AlertDialogHeader>
           <AlertDialogFooter className="flex-col sm:flex-row gap-2">
             <Button variant="outline" onClick={() => handleNotify("all")}>All Users</Button>
             <Button variant="outline" onClick={() => handleNotify("city")}>Users in City</Button>

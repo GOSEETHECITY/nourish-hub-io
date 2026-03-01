@@ -1,66 +1,69 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, MapPin, Leaf, Package, BarChart3, Store } from "lucide-react";
+import { ArrowLeft, MapPin, Leaf, Package, BarChart3, Store, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { toast } from "sonner";
 import type { Location, FoodListing, SustainabilityBaseline, ImpactReport, Coupon } from "@/types/database";
 
 export default function LocationDetail() {
   const { id, locationId } = useParams<{ id: string; locationId: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [editOpen, setEditOpen] = useState(false);
+  const [form, setForm] = useState<Partial<Location>>({});
 
   const { data: location } = useQuery({
     queryKey: ["location", locationId],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("locations").select("*").eq("id", locationId!).single();
-      if (error) throw error;
-      return data as Location;
-    },
+    queryFn: async () => { const { data, error } = await supabase.from("locations").select("*").eq("id", locationId!).single(); if (error) throw error; return data as Location; },
     enabled: !!locationId,
   });
 
   const { data: baseline } = useQuery({
     queryKey: ["location-baseline", locationId],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("sustainability_baseline").select("*").eq("location_id", locationId!).maybeSingle();
-      if (error) throw error;
-      return data as SustainabilityBaseline | null;
-    },
+    queryFn: async () => { const { data, error } = await supabase.from("sustainability_baseline").select("*").eq("location_id", locationId!).maybeSingle(); if (error) throw error; return data as SustainabilityBaseline | null; },
     enabled: !!locationId,
   });
 
   const { data: listings = [] } = useQuery({
     queryKey: ["location-listings", locationId],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("food_listings").select("*").eq("location_id", locationId!).order("created_at", { ascending: false });
-      if (error) throw error;
-      return data as FoodListing[];
-    },
+    queryFn: async () => { const { data, error } = await supabase.from("food_listings").select("*").eq("location_id", locationId!).order("created_at", { ascending: false }); if (error) throw error; return data as FoodListing[]; },
     enabled: !!locationId,
   });
 
   const { data: reports = [] } = useQuery({
     queryKey: ["location-reports", locationId],
-    queryFn: async () => {
-      const listingIds = listings.map((l) => l.id);
-      if (!listingIds.length) return [];
-      const { data, error } = await supabase.from("impact_reports").select("*").in("food_listing_id", listingIds);
-      if (error) throw error;
-      return data as ImpactReport[];
-    },
+    queryFn: async () => { const listingIds = listings.map((l) => l.id); if (!listingIds.length) return []; const { data, error } = await supabase.from("impact_reports").select("*").in("food_listing_id", listingIds); if (error) throw error; return data as ImpactReport[]; },
     enabled: listings.length > 0,
   });
 
   const { data: coupons = [] } = useQuery({
     queryKey: ["location-coupons", locationId],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("coupons").select("*").eq("location_id", locationId!).order("created_at", { ascending: false });
-      if (error) throw error;
-      return data as Coupon[];
-    },
+    queryFn: async () => { const { data, error } = await supabase.from("coupons").select("*").eq("location_id", locationId!).order("created_at", { ascending: false }); if (error) throw error; return data as Coupon[]; },
     enabled: !!locationId,
   });
+
+  const updateLocation = useMutation({
+    mutationFn: async () => { const { error } = await supabase.from("locations").update(form).eq("id", locationId!); if (error) throw error; },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["location", locationId] }); toast.success("Location updated"); setEditOpen(false); },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const openEdit = () => {
+    if (!location) return;
+    setForm({
+      name: location.name, address: location.address, city: location.city, state: location.state,
+      zip: location.zip, county: location.county, pickup_address: location.pickup_address,
+      pickup_instructions: location.pickup_instructions, hours_of_operation: location.hours_of_operation,
+      estimated_surplus_frequency: location.estimated_surplus_frequency,
+    });
+    setEditOpen(true);
+  };
 
   if (!location) return <div className="p-12 text-center text-muted-foreground">Loading...</div>;
 
@@ -74,13 +77,14 @@ export default function LocationDetail() {
     <div className="space-y-8">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => navigate(`/organizations/${id}`)}><ArrowLeft className="w-4 h-4" /></Button>
-        <div>
+        <div className="flex-1">
           <h1 className="text-2xl font-bold text-foreground">{location.name}</h1>
           <p className="text-sm text-muted-foreground">{[location.address, location.city, location.state].filter(Boolean).join(", ")}</p>
         </div>
+        <Button size="sm" variant="outline" onClick={openEdit}><Pencil className="w-3 h-3 mr-1" />Edit</Button>
       </div>
 
-      {/* Section 1 - Location Profile */}
+      {/* Location Profile */}
       <section className="bg-card rounded-xl border p-6">
         <h2 className="text-lg font-bold text-foreground flex items-center gap-2 mb-4"><MapPin className="w-5 h-5" />Location Profile</h2>
         <div className="grid grid-cols-3 gap-6">
@@ -96,12 +100,10 @@ export default function LocationDetail() {
         </div>
       </section>
 
-      {/* Section 2 - Sustainability Baseline */}
+      {/* Sustainability Baseline */}
       <section className="bg-card rounded-xl border p-6">
         <h2 className="text-lg font-bold text-foreground flex items-center gap-2 mb-4"><Leaf className="w-5 h-5" />Sustainability Baseline</h2>
-        {!baseline ? (
-          <p className="text-sm text-muted-foreground">No baseline data submitted.</p>
-        ) : (
+        {!baseline ? <p className="text-sm text-muted-foreground">No baseline data submitted.</p> : (
           <div className="grid grid-cols-3 gap-4">
             <div><p className="text-xs text-muted-foreground uppercase tracking-wider">Generates Surplus</p><p className="text-sm text-foreground mt-1">{baseline.generates_surplus ? "Yes" : "No"}</p></div>
             <div><p className="text-xs text-muted-foreground uppercase tracking-wider">Est. Daily Surplus</p><p className="text-sm text-foreground mt-1">{baseline.estimated_daily_surplus || "—"}</p></div>
@@ -113,7 +115,7 @@ export default function LocationDetail() {
         )}
       </section>
 
-      {/* Section 3 - Donation History */}
+      {/* Donation History */}
       <section className="bg-card rounded-xl border p-6">
         <h2 className="text-lg font-bold text-foreground flex items-center gap-2 mb-4"><Package className="w-5 h-5" />Donation History ({listings.length})</h2>
         {listings.length === 0 ? <p className="text-sm text-muted-foreground">No donations yet.</p> : (
@@ -133,7 +135,7 @@ export default function LocationDetail() {
         )}
       </section>
 
-      {/* Section 4 - Impact Metrics */}
+      {/* Impact Metrics */}
       <section className="bg-card rounded-xl border p-6">
         <h2 className="text-lg font-bold text-foreground flex items-center gap-2 mb-4"><BarChart3 className="w-5 h-5" />Impact Metrics</h2>
         <div className="grid grid-cols-4 gap-4">
@@ -144,14 +146,10 @@ export default function LocationDetail() {
         </div>
       </section>
 
-      {/* Section 5 - Marketplace Sales */}
+      {/* Marketplace Sales */}
       <section className="bg-card rounded-xl border p-6">
         <h2 className="text-lg font-bold text-foreground flex items-center gap-2 mb-4"><Store className="w-5 h-5" />Marketplace Sales</h2>
-        {!location.marketplace_enabled ? (
-          <p className="text-sm text-muted-foreground">Marketplace not enabled for this location.</p>
-        ) : coupons.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No marketplace sales yet.</p>
-        ) : (
+        {!location.marketplace_enabled ? <p className="text-sm text-muted-foreground">Marketplace not enabled for this location.</p> : coupons.length === 0 ? <p className="text-sm text-muted-foreground">No marketplace sales yet.</p> : (
           <>
             <div className="grid grid-cols-3 gap-4 mb-4">
               <div className="bg-muted/50 rounded-lg p-4"><p className="text-xs text-muted-foreground">Total Revenue</p><p className="text-xl font-bold text-foreground mt-1">${totalRevenue.toFixed(2)}</p></div>
@@ -174,6 +172,30 @@ export default function LocationDetail() {
           </>
         )}
       </section>
+
+      {/* Edit Location Dialog */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Edit Location</DialogTitle></DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div><Label>Location Name *</Label><Input value={(form.name as string) || ""} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+            <div><Label>Address</Label><Input value={(form.address as string) || ""} onChange={(e) => setForm({ ...form, address: e.target.value })} /></div>
+            <div className="grid grid-cols-3 gap-4">
+              <div><Label>City</Label><Input value={(form.city as string) || ""} onChange={(e) => setForm({ ...form, city: e.target.value })} /></div>
+              <div><Label>State</Label><Input value={(form.state as string) || ""} onChange={(e) => setForm({ ...form, state: e.target.value })} /></div>
+              <div><Label>ZIP</Label><Input value={(form.zip as string) || ""} onChange={(e) => setForm({ ...form, zip: e.target.value })} /></div>
+            </div>
+            <div><Label>County</Label><Input value={(form.county as string) || ""} onChange={(e) => setForm({ ...form, county: e.target.value })} /></div>
+            <div><Label>Pickup Address</Label><Input value={(form.pickup_address as string) || ""} onChange={(e) => setForm({ ...form, pickup_address: e.target.value })} /></div>
+            <div><Label>Pickup Instructions</Label><Input value={(form.pickup_instructions as string) || ""} onChange={(e) => setForm({ ...form, pickup_instructions: e.target.value })} /></div>
+            <div><Label>Hours of Operation</Label><Input value={(form.hours_of_operation as string) || ""} onChange={(e) => setForm({ ...form, hours_of_operation: e.target.value })} /></div>
+            <div><Label>Estimated Surplus Frequency</Label><Input value={(form.estimated_surplus_frequency as string) || ""} onChange={(e) => setForm({ ...form, estimated_surplus_frequency: e.target.value })} /></div>
+            <Button className="w-full" onClick={() => updateLocation.mutate()} disabled={!form.name || updateLocation.isPending}>
+              {updateLocation.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
