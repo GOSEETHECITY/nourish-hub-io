@@ -25,6 +25,7 @@ import Billing from "./pages/Billing";
 import Support from "./pages/Support";
 import SettingsPage from "./pages/SettingsPage";
 import Login from "./pages/auth/Login";
+import Signup from "./pages/auth/Signup";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import VenueDashboard from "./pages/venue/VenueDashboard";
@@ -45,6 +46,7 @@ const App = () => (
           <Routes>
             {/* Public auth routes */}
             <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
 

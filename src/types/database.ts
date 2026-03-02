@@ -29,6 +29,7 @@ export type OrganizationType =
   | "catering_company"
   | "event"
   | "hotel"
+  | "resort"
   | "convention_center"
   | "stadium"
   | "arena"
