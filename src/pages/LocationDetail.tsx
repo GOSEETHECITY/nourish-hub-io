@@ -2,14 +2,15 @@ import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, MapPin, Leaf, Package, BarChart3, Store, Pencil } from "lucide-react";
+import { ArrowLeft, MapPin, Leaf, Package, BarChart3, Store, Pencil, Users, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import type { Location, FoodListing, SustainabilityBaseline, ImpactReport, Coupon } from "@/types/database";
+import type { Location, FoodListing, SustainabilityBaseline, ImpactReport, Coupon, Profile } from "@/types/database";
+import AddLocationUserDialog from "@/components/invitations/AddLocationUserDialog";
 
 export default function LocationDetail() {
   const { id, locationId } = useParams<{ id: string; locationId: string }>();
@@ -17,6 +18,7 @@ export default function LocationDetail() {
   const queryClient = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
   const [form, setForm] = useState<Partial<Location>>({});
+  const [locUserDialogOpen, setLocUserDialogOpen] = useState(false);
 
   const { data: location } = useQuery({
     queryKey: ["location", locationId],
@@ -45,6 +47,12 @@ export default function LocationDetail() {
   const { data: coupons = [] } = useQuery({
     queryKey: ["location-coupons", locationId],
     queryFn: async () => { const { data, error } = await supabase.from("coupons").select("*").eq("location_id", locationId!).order("created_at", { ascending: false }); if (error) throw error; return data as Coupon[]; },
+    enabled: !!locationId,
+  });
+
+  const { data: locationUsers = [] } = useQuery({
+    queryKey: ["location-users", locationId],
+    queryFn: async () => { const { data, error } = await supabase.from("profiles").select("*").eq("location_id", locationId!); if (error) throw error; return data as Profile[]; },
     enabled: !!locationId,
   });
 
@@ -98,6 +106,31 @@ export default function LocationDetail() {
           <div><p className="text-xs text-muted-foreground uppercase tracking-wider">Marketplace</p><span className={`inline-block mt-1 px-2.5 py-0.5 rounded text-xs font-medium ${location.marketplace_enabled ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>{location.marketplace_enabled ? "Enabled" : "Disabled"}</span></div>
           <div><p className="text-xs text-muted-foreground uppercase tracking-wider">Stripe Status</p><p className="text-sm text-foreground mt-1">{location.stripe_onboarding_status || "Not started"}</p></div>
         </div>
+      </section>
+
+      {/* Location Users */}
+      <section className="bg-card rounded-xl border p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold text-foreground flex items-center gap-2"><Users className="w-5 h-5" />Location Users ({locationUsers.length})</h2>
+          <Button size="sm" onClick={() => setLocUserDialogOpen(true)}><UserPlus className="w-4 h-4 mr-1" />Add Location User</Button>
+        </div>
+        {locationUsers.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No users associated with this location.</p>
+        ) : (
+          <Table>
+            <TableHeader><TableRow><TableHead>First Name</TableHead><TableHead>Last Name</TableHead><TableHead>Email</TableHead><TableHead>Phone</TableHead></TableRow></TableHeader>
+            <TableBody>
+              {locationUsers.map((u) => (
+                <TableRow key={u.id}>
+                  <TableCell>{u.first_name || "—"}</TableCell>
+                  <TableCell>{u.last_name || "—"}</TableCell>
+                  <TableCell>{u.email || "—"}</TableCell>
+                  <TableCell>{u.phone || "—"}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </section>
 
       {/* Sustainability Baseline */}
@@ -196,6 +229,14 @@ export default function LocationDetail() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <AddLocationUserDialog
+        open={locUserDialogOpen}
+        onOpenChange={setLocUserDialogOpen}
+        locationId={locationId!}
+        locationType="venue"
+        invalidateKey={["location-users", locationId!]}
+      />
     </div>
   );
 }
