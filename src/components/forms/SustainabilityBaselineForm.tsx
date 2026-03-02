@@ -1,15 +1,16 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Switch } from "@/components/ui/switch";
+import { AlertCircle } from "lucide-react";
 
 const SURPLUS_TYPES = [
-  "Prepared Meals",
-  "Produce",
+  "Prepared Meals / Cooked Food",
+  "Produce / Fresh Fruits and Vegetables",
   "Dairy",
-  "Meat/Protein",
+  "Meat / Protein",
   "Baked Goods",
-  "Shelf-Stable",
+  "Shelf-Stable / Packaged / Non-Perishable",
   "Frozen",
 ];
 
@@ -54,33 +55,37 @@ export default function SustainabilityBaselineForm({ data, onChange }: Props) {
     onChange({ ...data, surplus_types: next });
   };
 
+  const selectedNonOther = data.priority_outcomes.filter((o) => o !== "Other");
+  const hasOther = data.priority_outcomes.includes("Other");
+  const totalSelected = selectedNonOther.length + (hasOther ? 1 : 0);
+
   const toggleOutcome = (outcome: string) => {
-    const current = data.priority_outcomes.filter((o) => o !== "Other");
-    if (current.includes(outcome)) {
-      onChange({ ...data, priority_outcomes: current.filter((o) => o !== outcome) });
-    } else if (current.length < 2) {
-      onChange({ ...data, priority_outcomes: [...current, outcome, ...(data.priority_other ? ["Other"] : [])] });
+    if (selectedNonOther.includes(outcome)) {
+      onChange({ ...data, priority_outcomes: data.priority_outcomes.filter((o) => o !== outcome) });
+    } else if (totalSelected < 2) {
+      onChange({ ...data, priority_outcomes: [...data.priority_outcomes, outcome] });
     }
   };
 
-  const selectedNonOther = data.priority_outcomes.filter((o) => o !== "Other");
+  const toggleOther = (checked: boolean) => {
+    if (checked && totalSelected < 2) {
+      onChange({ ...data, priority_outcomes: [...data.priority_outcomes, "Other"] });
+    } else if (!checked) {
+      onChange({ ...data, priority_outcomes: data.priority_outcomes.filter((o) => o !== "Other"), priority_other: "" });
+    }
+  };
 
   return (
     <div className="space-y-4">
-      <div>
+      <div className="flex items-center justify-between">
         <Label>Do you regularly generate surplus food?</Label>
-        <RadioGroup
-          value={data.generates_surplus ? "yes" : "no"}
-          onValueChange={(v) => onChange({ ...data, generates_surplus: v === "yes" })}
-          className="flex gap-4 mt-2"
-        >
-          <label className="flex items-center gap-2 text-sm">
-            <RadioGroupItem value="yes" /> Yes
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <RadioGroupItem value="no" /> No
-          </label>
-        </RadioGroup>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">{data.generates_surplus ? "Yes" : "No"}</span>
+          <Switch
+            checked={data.generates_surplus}
+            onCheckedChange={(v) => onChange({ ...data, generates_surplus: v })}
+          />
+        </div>
       </div>
 
       <div>
@@ -127,32 +132,33 @@ export default function SustainabilityBaselineForm({ data, onChange }: Props) {
 
       <div>
         <Label>Priority outcomes (select up to 2)</Label>
+        {totalSelected >= 2 && (
+          <div className="flex items-center gap-1.5 mt-1 text-amber-600">
+            <AlertCircle className="w-3.5 h-3.5" />
+            <span className="text-xs">Please select up to 2 outcomes only.</span>
+          </div>
+        )}
         <div className="flex flex-wrap gap-3 mt-2">
           {PRIORITY_OUTCOMES.map((outcome) => (
             <label key={outcome} className="flex items-center gap-2 text-sm">
               <Checkbox
                 checked={selectedNonOther.includes(outcome)}
                 onCheckedChange={() => toggleOutcome(outcome)}
-                disabled={!selectedNonOther.includes(outcome) && selectedNonOther.length >= 2}
+                disabled={!selectedNonOther.includes(outcome) && totalSelected >= 2}
               />
               {outcome}
             </label>
           ))}
           <label className="flex items-center gap-2 text-sm">
             <Checkbox
-              checked={data.priority_outcomes.includes("Other")}
-              onCheckedChange={(checked) => {
-                if (checked) {
-                  onChange({ ...data, priority_outcomes: [...data.priority_outcomes, "Other"] });
-                } else {
-                  onChange({ ...data, priority_outcomes: data.priority_outcomes.filter((o) => o !== "Other"), priority_other: "" });
-                }
-              }}
+              checked={hasOther}
+              onCheckedChange={(checked) => toggleOther(!!checked)}
+              disabled={!hasOther && totalSelected >= 2}
             />
             Other
           </label>
         </div>
-        {data.priority_outcomes.includes("Other") && (
+        {hasOther && (
           <Input
             className="mt-2"
             placeholder="Describe other outcome..."

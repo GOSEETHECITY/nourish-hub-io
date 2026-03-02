@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
+import PasswordInput from "@/components/ui/password-input";
 import SignupShell from "./SignupShell";
 import ConfirmationScreen from "./ConfirmationScreen";
 
@@ -28,6 +29,7 @@ export default function GovernmentSignup({ onBack }: Props) {
 
   const handleSubmit = async () => {
     if (account.password !== account.confirmPassword) { toast.error("Passwords do not match"); return; }
+    if (account.password.length < 6) { toast.error("Password must be at least 6 characters"); return; }
     setLoading(true);
     try {
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -84,7 +86,7 @@ export default function GovernmentSignup({ onBack }: Props) {
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <button onClick={onBack} className="text-muted-foreground hover:text-foreground"><ArrowLeft className="w-5 h-5" /></button>
-            <h2 className="text-lg font-semibold text-foreground">Account Information</h2>
+            <h2 className="text-lg font-semibold text-foreground">Your Account</h2>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div><Label>First Name *</Label><Input value={account.firstName} onChange={(e) => setAccount({ ...account, firstName: e.target.value })} /></div>
@@ -92,8 +94,8 @@ export default function GovernmentSignup({ onBack }: Props) {
           </div>
           <div><Label>Email *</Label><Input type="email" value={account.email} onChange={(e) => setAccount({ ...account, email: e.target.value })} /></div>
           <div><Label>Phone</Label><Input type="tel" value={account.phone} onChange={(e) => setAccount({ ...account, phone: e.target.value })} /></div>
-          <div><Label>Password *</Label><Input type="password" value={account.password} onChange={(e) => setAccount({ ...account, password: e.target.value })} /></div>
-          <div><Label>Confirm Password *</Label><Input type="password" value={account.confirmPassword} onChange={(e) => setAccount({ ...account, confirmPassword: e.target.value })} /></div>
+          <div><Label>Password *</Label><PasswordInput value={account.password} onChange={(e) => setAccount({ ...account, password: e.target.value })} placeholder="••••••••" /></div>
+          <div><Label>Confirm Password *</Label><PasswordInput value={account.confirmPassword} onChange={(e) => setAccount({ ...account, confirmPassword: e.target.value })} placeholder="••••••••" /></div>
           <Button className="w-full" onClick={() => setStep(2)} disabled={!account.firstName || !account.lastName || !account.email || !account.password || !account.confirmPassword}>
             Continue
           </Button>
@@ -102,7 +104,7 @@ export default function GovernmentSignup({ onBack }: Props) {
 
       {step === 2 && (
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-foreground">Government Information</h2>
+          <h2 className="text-lg font-semibold text-foreground">Government Info</h2>
           <div><Label>Organization Name *</Label><Input value={gov.name} onChange={(e) => setGov({ ...gov, name: e.target.value })} /></div>
           <div>
             <Label>Government Type *</Label>

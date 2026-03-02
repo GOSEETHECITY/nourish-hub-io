@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
+import PasswordInput from "@/components/ui/password-input";
 import type { OrgCategory } from "../Signup";
 import SignupShell from "./SignupShell";
 import ConfirmationScreen from "./ConfirmationScreen";
@@ -16,6 +17,7 @@ const ORG_TYPE_OPTIONS: Record<string, { value: string; label: string }[]> = {
     { value: "restaurant", label: "Restaurant" },
     { value: "food_truck", label: "Food Truck" },
     { value: "catering_company", label: "Catering Company" },
+    { value: "cafe", label: "Cafe" },
   ],
   hospitality: [
     { value: "hotel", label: "Hotel" },
@@ -34,34 +36,35 @@ const ORG_TYPE_OPTIONS: Record<string, { value: string; label: string }[]> = {
   ],
 };
 
+function generateJoinCode(): string {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let code = "";
+  for (let i = 0; i < 4; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+  return `HAR-${code}`;
+}
+
 interface Props {
   category: OrgCategory;
   onBack: () => void;
 }
 
 export default function VenueSignup({ category, onBack }: Props) {
+  const isIndependent = category === "restaurant";
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
 
-  // Step 1 — Account
   const [account, setAccount] = useState({ firstName: "", lastName: "", email: "", phone: "", password: "", confirmPassword: "" });
-  // Step 2 — Organization
   const [org, setOrg] = useState({ name: "", type: "", address: "", city: "", state: "", zip: "", county: "", contactName: "", contactEmail: "", contactPhone: "", billingContact: "" });
-  // Step 3 — Location
   const [loc, setLoc] = useState({ name: "", address: "", city: "", state: "", zip: "", county: "", pickupAddress: "", pickupInstructions: "", hours: "", surplusFrequency: "" });
-  // Step 4 — Sustainability
   const [baseline, setBaseline] = useState<SustainabilityBaselineData>(emptySustainabilityBaseline);
 
   const typeOptions = ORG_TYPE_OPTIONS[category] || [];
 
   const handleSubmit = async () => {
-    if (account.password !== account.confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
-    }
+    if (account.password !== account.confirmPassword) { toast.error("Passwords do not match"); return; }
+    if (account.password.length < 6) { toast.error("Password must be at least 6 characters"); return; }
     setLoading(true);
     try {
-      // 1. Create user
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: account.email,
         password: account.password,
@@ -71,10 +74,10 @@ export default function VenueSignup({ category, onBack }: Props) {
       if (!authData.user) throw new Error("Signup failed");
       const userId = authData.user.id;
 
-      // 2. Assign role
       await supabase.from("user_roles").insert({ user_id: userId, role: "venue_partner" });
 
-      // 3. Create organization
+      const joinCode = isIndependent ? null : generateJoinCode();
+
       const { data: orgData, error: orgError } = await supabase.from("organizations").insert({
         name: org.name,
         type: org.type as any,
@@ -88,10 +91,10 @@ export default function VenueSignup({ category, onBack }: Props) {
         zip: org.zip || null,
         county: org.county || null,
         approval_status: "pending",
+        join_code: joinCode,
       }).select().single();
       if (orgError) throw orgError;
 
-      // 4. Update profile
       await supabase.from("profiles").update({
         first_name: account.firstName,
         last_name: account.lastName,
@@ -99,7 +102,6 @@ export default function VenueSignup({ category, onBack }: Props) {
         organization_id: orgData.id,
       }).eq("id", userId);
 
-      // 5. Create location
       const { data: locData, error: locError } = await supabase.from("locations").insert({
         organization_id: orgData.id,
         name: loc.name,
@@ -115,7 +117,6 @@ export default function VenueSignup({ category, onBack }: Props) {
       }).select().single();
       if (locError) throw locError;
 
-      // 6. Sustainability baseline
       const outcomes = [...baseline.priority_outcomes];
       if (baseline.priority_other && outcomes.includes("Other")) {
         const idx = outcomes.indexOf("Other");
@@ -131,7 +132,6 @@ export default function VenueSignup({ category, onBack }: Props) {
         priority_outcomes: outcomes.length ? outcomes : null,
       });
 
-      // Sign out so user logs in fresh
       await supabase.auth.signOut();
       setStep(5);
     } catch (e: any) {
@@ -143,7 +143,13 @@ export default function VenueSignup({ category, onBack }: Props) {
 
   if (step === 5) {
     return (
-      <ConfirmationScreen message="Your account has been submitted and is pending approval. We will notify you once your account has been reviewed. Thank you for joining the HarietAI network." />
+      <ConfirmationScreen
+        message={
+          isIndependent
+            ? "Your account has been submitted and is pending approval. We will notify you once your account has been reviewed. Thank you for joining the HarietAI network."
+            : "Your organization has been submitted and is pending approval. We will notify you once your account has been reviewed. Thank you for joining the HarietAI network."
+        }
+      />
     );
   }
 
@@ -153,7 +159,7 @@ export default function VenueSignup({ category, onBack }: Props) {
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <button onClick={onBack} className="text-muted-foreground hover:text-foreground"><ArrowLeft className="w-5 h-5" /></button>
-            <h2 className="text-lg font-semibold text-foreground">Account Information</h2>
+            <h2 className="text-lg font-semibold text-foreground">Your Account</h2>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div><Label>First Name *</Label><Input value={account.firstName} onChange={(e) => setAccount({ ...account, firstName: e.target.value })} /></div>
@@ -161,8 +167,8 @@ export default function VenueSignup({ category, onBack }: Props) {
           </div>
           <div><Label>Email *</Label><Input type="email" value={account.email} onChange={(e) => setAccount({ ...account, email: e.target.value })} /></div>
           <div><Label>Phone</Label><Input type="tel" value={account.phone} onChange={(e) => setAccount({ ...account, phone: e.target.value })} /></div>
-          <div><Label>Password *</Label><Input type="password" value={account.password} onChange={(e) => setAccount({ ...account, password: e.target.value })} /></div>
-          <div><Label>Confirm Password *</Label><Input type="password" value={account.confirmPassword} onChange={(e) => setAccount({ ...account, confirmPassword: e.target.value })} /></div>
+          <div><Label>Password *</Label><PasswordInput value={account.password} onChange={(e) => setAccount({ ...account, password: e.target.value })} placeholder="••••••••" /></div>
+          <div><Label>Confirm Password *</Label><PasswordInput value={account.confirmPassword} onChange={(e) => setAccount({ ...account, confirmPassword: e.target.value })} placeholder="••••••••" /></div>
           <Button className="w-full" onClick={() => setStep(2)} disabled={!account.firstName || !account.lastName || !account.email || !account.password || !account.confirmPassword}>
             Continue
           </Button>
@@ -171,10 +177,10 @@ export default function VenueSignup({ category, onBack }: Props) {
 
       {step === 2 && (
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-foreground">Organization Information</h2>
-          <div><Label>Organization Name *</Label><Input value={org.name} onChange={(e) => setOrg({ ...org, name: e.target.value })} /></div>
+          <h2 className="text-lg font-semibold text-foreground">{isIndependent ? "Your Business" : "Organization Info"}</h2>
+          <div><Label>{isIndependent ? "Business Name *" : "Organization Name *"}</Label><Input value={org.name} onChange={(e) => setOrg({ ...org, name: e.target.value })} /></div>
           <div>
-            <Label>Organization Type *</Label>
+            <Label>{isIndependent ? "Business Type *" : "Organization Type *"}</Label>
             <Select value={org.type} onValueChange={(v) => setOrg({ ...org, type: v })}>
               <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
               <SelectContent>
@@ -197,14 +203,19 @@ export default function VenueSignup({ category, onBack }: Props) {
           <div><Label>Billing Contact</Label><Input value={org.billingContact} onChange={(e) => setOrg({ ...org, billingContact: e.target.value })} /></div>
           <div className="flex gap-3">
             <Button variant="outline" className="flex-1" onClick={() => setStep(1)}>Back</Button>
-            <Button className="flex-1" onClick={() => setStep(3)} disabled={!org.name || !org.type}>Continue</Button>
+            <Button className="flex-1" onClick={() => {
+              if (!isIndependent) {
+                setLoc((l) => ({ ...l, address: l.address || org.address, city: l.city || org.city, state: l.state || org.state, zip: l.zip || org.zip, county: l.county || org.county }));
+              }
+              setStep(3);
+            }} disabled={!org.name || !org.type}>Continue</Button>
           </div>
         </div>
       )}
 
       {step === 3 && (
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-foreground">Location Information</h2>
+          <h2 className="text-lg font-semibold text-foreground">{isIndependent ? "Your Location" : "First Location"}</h2>
           <div><Label>Location Name *</Label><Input value={loc.name} onChange={(e) => setLoc({ ...loc, name: e.target.value })} placeholder="e.g. Main Kitchen" /></div>
           <div><Label>Address</Label><Input value={loc.address} onChange={(e) => setLoc({ ...loc, address: e.target.value })} /></div>
           <div className="grid grid-cols-3 gap-4">
@@ -217,6 +228,11 @@ export default function VenueSignup({ category, onBack }: Props) {
           <div><Label>Pickup Instructions</Label><Input value={loc.pickupInstructions} onChange={(e) => setLoc({ ...loc, pickupInstructions: e.target.value })} /></div>
           <div><Label>Hours of Operation</Label><Input value={loc.hours} onChange={(e) => setLoc({ ...loc, hours: e.target.value })} /></div>
           <div><Label>Estimated Surplus Frequency</Label><Input value={loc.surplusFrequency} onChange={(e) => setLoc({ ...loc, surplusFrequency: e.target.value })} /></div>
+          {!isIndependent && (
+            <p className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-3">
+              You can add more locations after your account is approved using your Location Join Code.
+            </p>
+          )}
           <div className="flex gap-3">
             <Button variant="outline" className="flex-1" onClick={() => setStep(2)}>Back</Button>
             <Button className="flex-1" onClick={() => setStep(4)} disabled={!loc.name}>Continue</Button>

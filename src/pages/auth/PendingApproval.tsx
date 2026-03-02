@@ -1,7 +1,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/logo.png";
-import { LogOut, XCircle } from "lucide-react";
+import { LogOut, XCircle, Clock } from "lucide-react";
 
 interface Props {
   status: "pending" | "rejected";
@@ -12,9 +12,9 @@ export default function PendingApproval({ status, type }: Props) {
   const { signOut } = useAuth();
 
   const pendingMessages: Record<string, string> = {
-    venue: "Your account is pending approval. We will notify you once you have been approved.",
-    nonprofit: "Your application is pending approval. We will notify you once you have been approved.",
-    government: "Your account is pending approval. We will notify you once you have been approved.",
+    venue: "Your account is pending approval. We will notify you once your account has been reviewed.",
+    nonprofit: "Your application is pending approval. We will notify you once your application has been reviewed.",
+    government: "Your account is pending approval. We will notify you once your account has been reviewed.",
   };
 
   return (
@@ -37,8 +37,8 @@ export default function PendingApproval({ status, type }: Props) {
           </>
         ) : (
           <>
-            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto">
-              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mx-auto">
+              <Clock className="w-8 h-8 text-amber-600" />
             </div>
             <p className="text-foreground text-lg font-medium leading-relaxed">
               {pendingMessages[type || "venue"]}
