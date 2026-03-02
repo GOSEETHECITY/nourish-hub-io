@@ -29,6 +29,13 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
   const { data: nonprofitStatus, isLoading: nonprofitLoading } = useQuery({
     queryKey: ["nonprofit-approval", user?.id],
     queryFn: async () => {
+      // Check via profile.nonprofit_id first
+      const { data: profile } = await supabase.from("profiles").select("nonprofit_id").eq("id", user!.id).single();
+      if (profile?.nonprofit_id) {
+        const { data } = await supabase.from("nonprofits").select("approval_status").eq("id", profile.nonprofit_id).single();
+        return data?.approval_status ?? null;
+      }
+      // Fallback: legacy check via user_id
       const { data } = await supabase.from("nonprofits").select("approval_status").eq("user_id", user!.id).single();
       return data?.approval_status ?? null;
     },

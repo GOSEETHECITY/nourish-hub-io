@@ -4,6 +4,7 @@ import logo from "@/assets/logo.png";
 import VenueSignup from "./signup/VenueSignup";
 import NonprofitSignup from "./signup/NonprofitSignup";
 import GovernmentSignup from "./signup/GovernmentSignup";
+import JoinSignup from "./signup/JoinSignup";
 
 export type OrgCategory =
   | "restaurant"
@@ -11,7 +12,8 @@ export type OrgCategory =
   | "venue_events"
   | "farm_grocery"
   | "government"
-  | "nonprofit";
+  | "nonprofit"
+  | "join_existing";
 
 const CATEGORIES: { id: OrgCategory; emoji: string; title: string; subtitle: string }[] = [
   { id: "restaurant", emoji: "🍽️", title: "Restaurant or Food Service", subtitle: "Restaurants, food trucks, catering companies, cafes" },
@@ -20,6 +22,7 @@ const CATEGORIES: { id: OrgCategory; emoji: string; title: string; subtitle: str
   { id: "farm_grocery", emoji: "🌱", title: "Farm or Grocery", subtitle: "Farms, grocery stores, food distributors" },
   { id: "government", emoji: "🏛️", title: "Government", subtitle: "Municipal, county, or state government" },
   { id: "nonprofit", emoji: "💚", title: "Nonprofit", subtitle: "Nonprofit organizations that distribute food" },
+  { id: "join_existing", emoji: "🔗", title: "Join Existing Organization", subtitle: "I have a Location Join Code" },
 ];
 
 export default function Signup() {
@@ -27,6 +30,7 @@ export default function Signup() {
 
   if (selected === "government") return <GovernmentSignup onBack={() => setSelected(null)} />;
   if (selected === "nonprofit") return <NonprofitSignup onBack={() => setSelected(null)} />;
+  if (selected === "join_existing") return <JoinSignup onBack={() => setSelected(null)} />;
   if (selected && ["restaurant", "hospitality", "venue_events", "farm_grocery"].includes(selected)) {
     return <VenueSignup category={selected} onBack={() => setSelected(null)} />;
   }
@@ -40,8 +44,8 @@ export default function Signup() {
               <img src={logo} alt="HarietAI" className="h-10 w-auto" />
             </div>
           </div>
-          <h1 className="text-2xl font-bold font-display text-foreground">Create your account</h1>
-          <p className="text-sm text-muted-foreground mt-1">What best describes your organization?</p>
+          <h1 className="text-2xl font-bold font-display text-foreground">Join the HarietAI Network</h1>
+          <p className="text-sm text-muted-foreground mt-1">What best describes you?</p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

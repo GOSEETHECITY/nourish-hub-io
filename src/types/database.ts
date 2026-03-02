@@ -40,7 +40,8 @@ export type OrganizationType =
   | "festival"
   | "municipal_government"
   | "county_government"
-  | "state_government";
+  | "state_government"
+  | "cafe";
 
 export type FoodType =
   | "prepared_meals"
@@ -58,6 +59,9 @@ export interface Profile {
   email: string | null;
   phone: string | null;
   organization_id: string | null;
+  location_id: string | null;
+  nonprofit_id: string | null;
+  nonprofit_location_id: string | null;
   created_at: string;
 }
 
@@ -74,6 +78,7 @@ export interface Organization {
   state: string | null;
   zip: string | null;
   county: string | null;
+  join_code: string | null;
   approval_status: ApprovalStatus;
   created_at: string;
 }
@@ -97,6 +102,10 @@ export interface Location {
   platform_fee_percentage: number;
   latitude: number | null;
   longitude: number | null;
+  contact_name: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
+  approval_status: ApprovalStatus;
   created_at: string;
 }
 
@@ -161,6 +170,8 @@ export interface Nonprofit {
   proof_of_insurance_url: string | null;
   signed_agreement_url: string | null;
   primary_contact: string | null;
+  primary_contact_email: string | null;
+  primary_contact_phone: string | null;
   address: string | null;
   city: string | null;
   state: string | null;
@@ -173,6 +184,31 @@ export interface Nonprofit {
   food_types_accepted: FoodType[] | null;
   estimated_weekly_served: number | null;
   population_served: string | null;
+  join_code: string | null;
+  approval_status: ApprovalStatus;
+  created_at: string;
+}
+
+export interface NonprofitLocation {
+  id: string;
+  nonprofit_id: string;
+  name: string;
+  address: string | null;
+  city: string | null;
+  state: string | null;
+  zip: string | null;
+  county: string | null;
+  operating_hours: string | null;
+  pickup_dropoff_instructions: string | null;
+  cold_storage: boolean;
+  refrigeration: boolean;
+  cabinetry: boolean;
+  food_types_accepted: FoodType[] | null;
+  estimated_weekly_served: number | null;
+  population_served: string | null;
+  contact_name: string | null;
+  contact_email: string | null;
+  contact_phone: string | null;
   approval_status: ApprovalStatus;
   created_at: string;
 }

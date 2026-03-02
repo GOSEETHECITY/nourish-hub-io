@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import PasswordInput from "@/components/ui/password-input";
 import logo from "@/assets/logo.png";
 
 export default function Login() {
@@ -27,7 +28,6 @@ export default function Login() {
     }
 
     if (data.user) {
-      // Fetch role to determine redirect
       const { data: roleData } = await supabase
         .from("user_roles")
         .select("role")
@@ -91,9 +91,8 @@ export default function Login() {
                 Forgot password?
               </Link>
             </div>
-            <Input
+            <PasswordInput
               id="password"
-              type="password"
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
