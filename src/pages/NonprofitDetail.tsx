@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Heart, FileText, Package, BarChart3, Pencil } from "lucide-react";
+import { ArrowLeft, Heart, FileText, Package, BarChart3, Pencil, MapPin, Users, Plus, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +10,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import type { Nonprofit, FoodListing, ImpactReport, ApprovalStatus } from "@/types/database";
+import type { Nonprofit, NonprofitLocation, FoodListing, ImpactReport, ApprovalStatus } from "@/types/database";
+import AddOrganizationUserDialog from "@/components/invitations/AddOrganizationUserDialog";
+import AddLocationUserDialog from "@/components/invitations/AddLocationUserDialog";
+import AddNonprofitLocationDialog from "@/components/invitations/AddNonprofitLocationDialog";
+import JoinCodeDisplay from "@/components/invitations/JoinCodeDisplay";
 
 const STATUS_COLORS: Record<ApprovalStatus, string> = {
   pending: "bg-chart-4/15 text-chart-4",
@@ -25,10 +29,26 @@ export default function NonprofitDetail() {
   const queryClient = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
   const [form, setForm] = useState<Partial<Nonprofit>>({});
+  const [orgUserDialogOpen, setOrgUserDialogOpen] = useState(false);
+  const [locUserDialogOpen, setLocUserDialogOpen] = useState(false);
+  const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null);
+  const [addLocationOpen, setAddLocationOpen] = useState(false);
 
   const { data: np } = useQuery({
     queryKey: ["nonprofit", id],
     queryFn: async () => { const { data, error } = await supabase.from("nonprofits").select("*").eq("id", id!).single(); if (error) throw error; return data as Nonprofit; },
+    enabled: !!id,
+  });
+
+  const { data: npLocations = [] } = useQuery({
+    queryKey: ["np-locations", id],
+    queryFn: async () => { const { data, error } = await supabase.from("nonprofit_locations").select("*").eq("nonprofit_id", id!).order("created_at", { ascending: false }); if (error) throw error; return data as NonprofitLocation[]; },
+    enabled: !!id,
+  });
+
+  const { data: npUsers = [] } = useQuery({
+    queryKey: ["np-users", id],
+    queryFn: async () => { const { data, error } = await supabase.from("profiles").select("*").eq("nonprofit_id", id!); if (error) throw error; return data as any[]; },
     enabled: !!id,
   });
 
@@ -67,6 +87,11 @@ export default function NonprofitDetail() {
     setEditOpen(true);
   };
 
+  const openAddLocUser = (locId: string) => {
+    setSelectedLocationId(locId);
+    setLocUserDialogOpen(true);
+  };
+
   if (!np) return <div className="p-12 text-center text-muted-foreground">Loading...</div>;
 
   const totalPounds = claimedListings.reduce((s, l) => s + (l.pounds || 0), 0);
@@ -88,6 +113,13 @@ export default function NonprofitDetail() {
         </div>
       </div>
 
+      {/* Join Code */}
+      <section className="bg-card rounded-xl border p-6">
+        <h2 className="text-lg font-bold text-foreground mb-4">Nonprofit Location Join Code</h2>
+        <JoinCodeDisplay code={np.join_code} entityId={np.id} entityType="nonprofit" invalidateKey={["nonprofit", id!]} />
+        <p className="text-xs text-muted-foreground mt-2">Share this code with distribution location operators so they can join your nonprofit during signup.</p>
+      </section>
+
       {/* Profile */}
       <section className="bg-card rounded-xl border p-6">
         <h2 className="text-lg font-bold text-foreground flex items-center gap-2 mb-4"><Heart className="w-5 h-5" />Organization Profile</h2>
@@ -105,6 +137,67 @@ export default function NonprofitDetail() {
             <div><p className="text-xs text-muted-foreground uppercase tracking-wider">Date Applied</p><p className="text-sm text-foreground mt-1">{new Date(np.created_at).toLocaleDateString()}</p></div>
           </div>
         </div>
+      </section>
+
+      {/* Distribution Locations */}
+      <section className="bg-card rounded-xl border p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold text-foreground flex items-center gap-2"><MapPin className="w-5 h-5" />Distribution Locations ({npLocations.length})</h2>
+          <Button size="sm" onClick={() => setAddLocationOpen(true)}><Plus className="w-4 h-4 mr-1" />Add Location</Button>
+        </div>
+        {npLocations.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No distribution locations added yet.</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Address</TableHead>
+                <TableHead>Hours</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {npLocations.map((loc) => (
+                <TableRow key={loc.id}>
+                  <TableCell className="font-medium">{loc.name}</TableCell>
+                  <TableCell>{[loc.address, loc.city, loc.state].filter(Boolean).join(", ") || "—"}</TableCell>
+                  <TableCell>{loc.operating_hours || "—"}</TableCell>
+                  <TableCell><span className={`px-2.5 py-0.5 text-xs font-semibold rounded capitalize ${STATUS_COLORS[loc.approval_status]}`}>{loc.approval_status}</span></TableCell>
+                  <TableCell>
+                    <Button size="sm" variant="ghost" onClick={() => openAddLocUser(loc.id)}><UserPlus className="w-3 h-3" /></Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </section>
+
+      {/* Organization Users */}
+      <section className="bg-card rounded-xl border p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold text-foreground flex items-center gap-2"><Users className="w-5 h-5" />Organization Users ({npUsers.length})</h2>
+          <Button size="sm" onClick={() => setOrgUserDialogOpen(true)}><UserPlus className="w-4 h-4 mr-1" />Add Organization User</Button>
+        </div>
+        {npUsers.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No users associated.</p>
+        ) : (
+          <Table>
+            <TableHeader><TableRow><TableHead>First Name</TableHead><TableHead>Last Name</TableHead><TableHead>Email</TableHead><TableHead>Phone</TableHead></TableRow></TableHeader>
+            <TableBody>
+              {npUsers.map((u: any) => (
+                <TableRow key={u.id}>
+                  <TableCell>{u.first_name || "—"}</TableCell>
+                  <TableCell>{u.last_name || "—"}</TableCell>
+                  <TableCell>{u.email || "—"}</TableCell>
+                  <TableCell>{u.phone || "—"}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </section>
 
       {/* Capacity */}
@@ -129,6 +222,16 @@ export default function NonprofitDetail() {
         </div>
       </section>
 
+      {/* Impact Summary */}
+      <section className="bg-card rounded-xl border p-6">
+        <h2 className="text-lg font-bold text-foreground flex items-center gap-2 mb-4"><BarChart3 className="w-5 h-5" />Impact Summary</h2>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="bg-muted/50 rounded-lg p-4"><p className="text-xs text-muted-foreground">Total Donations Claimed</p><p className="text-2xl font-bold text-foreground mt-1">{claimedListings.length}</p></div>
+          <div className="bg-muted/50 rounded-lg p-4"><p className="text-xs text-muted-foreground">Total Meals Served</p><p className="text-2xl font-bold text-foreground mt-1">{totalMeals.toLocaleString()}</p></div>
+          <div className="bg-muted/50 rounded-lg p-4"><p className="text-xs text-muted-foreground">Total Pounds Received</p><p className="text-2xl font-bold text-foreground mt-1">{totalPounds.toLocaleString()}</p></div>
+        </div>
+      </section>
+
       {/* Claim History */}
       <section className="bg-card rounded-xl border p-6">
         <h2 className="text-lg font-bold text-foreground flex items-center gap-2 mb-4"><Package className="w-5 h-5" />Donation Claim History ({claimedListings.length})</h2>
@@ -147,33 +250,6 @@ export default function NonprofitDetail() {
             </TableBody>
           </Table>
         )}
-      </section>
-
-      {/* Impact Reports */}
-      <section className="bg-card rounded-xl border p-6">
-        <h2 className="text-lg font-bold text-foreground mb-4">Impact Reports ({reports.length})</h2>
-        {reports.length === 0 ? <p className="text-sm text-muted-foreground">No reports submitted.</p> : (
-          <div className="space-y-4">
-            {reports.map((r) => (
-              <div key={r.id} className="p-4 bg-muted/50 rounded-lg grid grid-cols-4 gap-4">
-                <div><p className="text-xs text-muted-foreground">Meals Served</p><p className="text-sm font-medium text-foreground mt-1">{r.meals_served || "—"}</p></div>
-                <div><p className="text-xs text-muted-foreground">Date Distributed</p><p className="text-sm text-foreground mt-1">{r.date_distributed ? new Date(r.date_distributed).toLocaleDateString() : "—"}</p></div>
-                <div><p className="text-xs text-muted-foreground">Notes</p><p className="text-sm text-foreground mt-1">{r.notes || "—"}</p></div>
-                {r.photo_url && <img src={r.photo_url} alt="Impact" className="w-16 h-16 rounded object-cover" />}
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* Impact Summary */}
-      <section className="bg-card rounded-xl border p-6">
-        <h2 className="text-lg font-bold text-foreground flex items-center gap-2 mb-4"><BarChart3 className="w-5 h-5" />Impact Summary</h2>
-        <div className="grid grid-cols-3 gap-4">
-          <div className="bg-muted/50 rounded-lg p-4"><p className="text-xs text-muted-foreground">Total Donations Claimed</p><p className="text-2xl font-bold text-foreground mt-1">{claimedListings.length}</p></div>
-          <div className="bg-muted/50 rounded-lg p-4"><p className="text-xs text-muted-foreground">Total Meals Served</p><p className="text-2xl font-bold text-foreground mt-1">{totalMeals.toLocaleString()}</p></div>
-          <div className="bg-muted/50 rounded-lg p-4"><p className="text-xs text-muted-foreground">Total Pounds Received</p><p className="text-2xl font-bold text-foreground mt-1">{totalPounds.toLocaleString()}</p></div>
-        </div>
       </section>
 
       {/* Edit Dialog */}
@@ -206,6 +282,32 @@ export default function NonprofitDetail() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Invitation Dialogs */}
+      <AddOrganizationUserDialog
+        open={orgUserDialogOpen}
+        onOpenChange={setOrgUserDialogOpen}
+        organizationId={id!}
+        organizationType="nonprofit"
+        invalidateKey={["np-users", id!]}
+      />
+
+      {selectedLocationId && (
+        <AddLocationUserDialog
+          open={locUserDialogOpen}
+          onOpenChange={(v) => { setLocUserDialogOpen(v); if (!v) setSelectedLocationId(null); }}
+          locationId={selectedLocationId}
+          locationType="nonprofit"
+          invalidateKey={["np-users", id!]}
+        />
+      )}
+
+      <AddNonprofitLocationDialog
+        open={addLocationOpen}
+        onOpenChange={setAddLocationOpen}
+        nonprofitId={id!}
+        invalidateKey={["np-locations", id!]}
+      />
     </div>
   );
 }

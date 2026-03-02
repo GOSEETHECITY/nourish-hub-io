@@ -2,7 +2,10 @@ import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Building2, MapPin, Users, BarChart3, Package, Plus, Pencil } from "lucide-react";
+import { ArrowLeft, Building2, MapPin, Users, BarChart3, Package, Plus, Pencil, UserPlus } from "lucide-react";
+import AddOrganizationUserDialog from "@/components/invitations/AddOrganizationUserDialog";
+import AddLocationUserDialog from "@/components/invitations/AddLocationUserDialog";
+import JoinCodeDisplay from "@/components/invitations/JoinCodeDisplay";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,8 +54,9 @@ export default function OrganizationDetail() {
   const [locationDialogOpen, setLocationDialogOpen] = useState(false);
   const [editingLocation, setEditingLocation] = useState<Location | null>(null);
   const [locationForm, setLocationForm] = useState(emptyLocationForm);
-  const [userDialogOpen, setUserDialogOpen] = useState(false);
-  const [userForm, setUserForm] = useState({ email: "" });
+  const [orgUserDialogOpen, setOrgUserDialogOpen] = useState(false);
+  const [locUserDialogOpen, setLocUserDialogOpen] = useState(false);
+  const [selectedLocationId, setSelectedLocationId] = useState<string | null>(null);
   const [editOrgOpen, setEditOrgOpen] = useState(false);
   const [orgForm, setOrgForm] = useState<Partial<Organization>>({});
 
@@ -158,21 +162,10 @@ export default function OrganizationDetail() {
     onError: (e) => toast.error(e.message),
   });
 
-  const associateUser = useMutation({
-    mutationFn: async () => {
-      const { data, error } = await supabase.from("profiles").select("id").eq("email", userForm.email).single();
-      if (error) throw new Error("User not found with that email");
-      const { error: updateError } = await supabase.from("profiles").update({ organization_id: id }).eq("id", data.id);
-      if (updateError) throw updateError;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["org-users", id] });
-      toast.success("User associated");
-      setUserDialogOpen(false);
-      setUserForm({ email: "" });
-    },
-    onError: (e) => toast.error(e.message),
-  });
+  const openAddLocUser = (locId: string) => {
+    setSelectedLocationId(locId);
+    setLocUserDialogOpen(true);
+  };
 
   const openEditLocation = (loc: Location) => {
     setEditingLocation(loc);
@@ -235,6 +228,13 @@ export default function OrganizationDetail() {
         </div>
       </section>
 
+      {/* Join Code */}
+      <section className="bg-card rounded-xl border p-6">
+        <h2 className="text-lg font-bold text-foreground mb-4">Location Join Code</h2>
+        <JoinCodeDisplay code={org.join_code} entityId={org.id} entityType="organization" invalidateKey={["organization", id!]} />
+        <p className="text-xs text-muted-foreground mt-2">Share this code with location operators so they can join your organization during signup.</p>
+      </section>
+
       {/* Section 2 - Onboarding / Sustainability Baseline */}
       <section className="bg-card rounded-xl border p-6">
         <h2 className="text-lg font-bold text-foreground mb-4">Onboarding Information</h2>
@@ -286,7 +286,12 @@ export default function OrganizationDetail() {
                   <TableCell>{loc.hours_of_operation || "—"}</TableCell>
                   <TableCell><span className={`px-2 py-0.5 rounded text-xs font-medium ${loc.marketplace_enabled ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>{loc.marketplace_enabled ? "Enabled" : "Disabled"}</span></TableCell>
                   <TableCell>{loc.stripe_onboarding_status || "Not started"}</TableCell>
-                  <TableCell><Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); openEditLocation(loc); }}><Pencil className="w-3 h-3" /></Button></TableCell>
+                  <TableCell>
+                    <div className="flex gap-1">
+                      <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); openEditLocation(loc); }}><Pencil className="w-3 h-3" /></Button>
+                      <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); openAddLocUser(loc.id); }}><UserPlus className="w-3 h-3" /></Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -298,7 +303,7 @@ export default function OrganizationDetail() {
       <section className="bg-card rounded-xl border p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-foreground flex items-center gap-2"><Users className="w-5 h-5" />Users ({users.length})</h2>
-          <Button size="sm" onClick={() => setUserDialogOpen(true)}><Plus className="w-4 h-4 mr-1" />Add User</Button>
+          <Button size="sm" onClick={() => setOrgUserDialogOpen(true)}><UserPlus className="w-4 h-4 mr-1" />Add Organization User</Button>
         </div>
         {users.length === 0 ? (
           <p className="text-sm text-muted-foreground">No users associated.</p>
@@ -389,19 +394,25 @@ export default function OrganizationDetail() {
         </DialogContent>
       </Dialog>
 
-      {/* Add User Dialog */}
-      <Dialog open={userDialogOpen} onOpenChange={setUserDialogOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Associate User</DialogTitle></DialogHeader>
-          <div className="space-y-4 pt-4">
-            <div><Label>User Email *</Label><Input type="email" value={userForm.email} onChange={(e) => setUserForm({ email: e.target.value })} placeholder="Enter user's email address" /></div>
-            <p className="text-xs text-muted-foreground">The user must already have an account. This will link their profile to this organization.</p>
-            <Button className="w-full" onClick={() => associateUser.mutate()} disabled={!userForm.email || associateUser.isPending}>
-              {associateUser.isPending ? "Linking..." : "Associate User"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Add Organization User Dialog */}
+      <AddOrganizationUserDialog
+        open={orgUserDialogOpen}
+        onOpenChange={setOrgUserDialogOpen}
+        organizationId={id!}
+        organizationType="venue"
+        invalidateKey={["org-users", id!]}
+      />
+
+      {/* Add Location User Dialog */}
+      {selectedLocationId && (
+        <AddLocationUserDialog
+          open={locUserDialogOpen}
+          onOpenChange={(v) => { setLocUserDialogOpen(v); if (!v) setSelectedLocationId(null); }}
+          locationId={selectedLocationId}
+          locationType="venue"
+          invalidateKey={["org-users", id!]}
+        />
+      )}
 
       {/* Edit Organization Dialog */}
       <Dialog open={editOrgOpen} onOpenChange={setEditOrgOpen}>

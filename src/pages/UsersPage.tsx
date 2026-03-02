@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Pencil } from "lucide-react";
+import { Plus, Pencil, UserCog, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -10,22 +10,57 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import type { Profile, InvitationCode, InvitationCodeStatus } from "@/types/database";
+import type { Profile, InvitationCode, InvitationCodeStatus, AppRole } from "@/types/database";
 
 export default function UsersPage() {
   const queryClient = useQueryClient();
+  // Invitation codes state
   const [codeDialogOpen, setCodeDialogOpen] = useState(false);
   const [editingCode, setEditingCode] = useState<InvitationCode | null>(null);
   const [codeFilterCity, setCodeFilterCity] = useState("all");
   const [codeFilterStatus, setCodeFilterStatus] = useState("all");
   const [codeForm, setCodeForm] = useState({ code: "", label: "", city: "", expiration_date: "", status: "active" as InvitationCodeStatus });
 
-  const { data: users = [], isLoading: usersLoading } = useQuery({
-    queryKey: ["consumer-users"],
+  // User management state
+  const [editUserOpen, setEditUserOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<(Profile & { role?: AppRole }) | null>(null);
+  const [userEditForm, setUserEditForm] = useState({ first_name: "", last_name: "", email: "", phone: "", organization_id: "", location_id: "", nonprofit_id: "", nonprofit_location_id: "" });
+  const [userSearch, setUserSearch] = useState("");
+
+  // All platform users (not just consumers)
+  const { data: allUsers = [], isLoading: usersLoading } = useQuery({
+    queryKey: ["all-platform-users"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("profiles").select("*").is("organization_id", null).order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
       if (error) throw error;
       return data as Profile[];
+    },
+  });
+
+  const { data: userRoles = [] } = useQuery({
+    queryKey: ["all-user-roles"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("user_roles").select("*");
+      if (error) throw error;
+      return data as { user_id: string; role: AppRole }[];
+    },
+  });
+
+  const { data: organizations = [] } = useQuery({
+    queryKey: ["all-orgs-list"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("organizations").select("id, name").order("name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: nonprofits = [] } = useQuery({
+    queryKey: ["all-nps-list"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("nonprofits").select("id, organization_name").order("organization_name");
+      if (error) throw error;
+      return data;
     },
   });
 
@@ -38,6 +73,59 @@ export default function UsersPage() {
     },
   });
 
+  const roleMap = useMemo(() => {
+    const map = new Map<string, AppRole>();
+    userRoles.forEach((r) => map.set(r.user_id, r.role));
+    return map;
+  }, [userRoles]);
+
+  const filteredUsers = useMemo(() => {
+    if (!userSearch.trim()) return allUsers;
+    const q = userSearch.toLowerCase();
+    return allUsers.filter((u) =>
+      [u.first_name, u.last_name, u.email].filter(Boolean).some((f) => f!.toLowerCase().includes(q))
+    );
+  }, [allUsers, userSearch]);
+
+  const updateUser = useMutation({
+    mutationFn: async () => {
+      if (!editingUser) return;
+      const { error } = await supabase.from("profiles").update({
+        first_name: userEditForm.first_name || null,
+        last_name: userEditForm.last_name || null,
+        email: userEditForm.email || null,
+        phone: userEditForm.phone || null,
+        organization_id: userEditForm.organization_id || null,
+        location_id: userEditForm.location_id || null,
+        nonprofit_id: userEditForm.nonprofit_id || null,
+        nonprofit_location_id: userEditForm.nonprofit_location_id || null,
+      }).eq("id", editingUser.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["all-platform-users"] });
+      toast.success("User updated");
+      setEditUserOpen(false);
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const openEditUser = (u: Profile) => {
+    setEditingUser(u);
+    setUserEditForm({
+      first_name: u.first_name || "",
+      last_name: u.last_name || "",
+      email: u.email || "",
+      phone: u.phone || "",
+      organization_id: u.organization_id || "",
+      location_id: u.location_id || "",
+      nonprofit_id: u.nonprofit_id || "",
+      nonprofit_location_id: u.nonprofit_location_id || "",
+    });
+    setEditUserOpen(true);
+  };
+
+  // Invitation code mutations
   const saveCode = useMutation({
     mutationFn: async () => {
       if (editingCode) {
@@ -56,20 +144,20 @@ export default function UsersPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["invitation-codes"] });
       toast.success(editingCode ? "Code updated" : "Code created");
-      closeDialog();
+      closeCodeDialog();
     },
     onError: (e) => toast.error(e.message),
   });
 
   const deactivateCode = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("invitation_codes").update({ status: "inactive" as InvitationCodeStatus }).eq("id", id);
+    mutationFn: async (codeId: string) => {
+      const { error } = await supabase.from("invitation_codes").update({ status: "inactive" as InvitationCodeStatus }).eq("id", codeId);
       if (error) throw error;
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["invitation-codes"] }); toast.success("Code deactivated"); },
   });
 
-  const closeDialog = () => { setCodeDialogOpen(false); setEditingCode(null); setCodeForm({ code: "", label: "", city: "", expiration_date: "", status: "active" }); };
+  const closeCodeDialog = () => { setCodeDialogOpen(false); setEditingCode(null); setCodeForm({ code: "", label: "", city: "", expiration_date: "", status: "active" }); };
 
   const openEditCode = (c: InvitationCode) => {
     setEditingCode(c);
@@ -78,7 +166,6 @@ export default function UsersPage() {
   };
 
   const codeCities = useMemo(() => [...new Set(codes.map((c) => c.city).filter(Boolean))].sort(), [codes]);
-
   const filteredCodes = useMemo(() => {
     return codes.filter((c) => {
       if (codeFilterCity !== "all" && c.city !== codeFilterCity) return false;
@@ -87,11 +174,41 @@ export default function UsersPage() {
     });
   }, [codes, codeFilterCity, codeFilterStatus]);
 
+  const getRoleBadge = (userId: string) => {
+    const role = roleMap.get(userId);
+    if (!role) return <span className="text-xs text-muted-foreground">Consumer</span>;
+    const colors: Record<string, string> = {
+      admin: "bg-destructive/15 text-destructive",
+      venue_partner: "bg-chart-1/15 text-chart-1",
+      nonprofit_partner: "bg-success/15 text-success",
+      government_partner: "bg-chart-4/15 text-chart-4",
+    };
+    return <span className={`px-2 py-0.5 text-xs font-semibold rounded capitalize ${colors[role] || "bg-muted text-muted-foreground"}`}>{role.replace(/_/g, " ")}</span>;
+  };
+
+  const getAssociation = (u: Profile) => {
+    if (u.organization_id) {
+      const org = organizations.find((o) => o.id === u.organization_id);
+      return org ? `Org: ${org.name}` : "Org (unknown)";
+    }
+    if (u.nonprofit_id) {
+      const np = nonprofits.find((n) => n.id === u.nonprofit_id);
+      return np ? `NP: ${np.organization_name}` : "NP (unknown)";
+    }
+    return "—";
+  };
+
+  const getLevel = (u: Profile) => {
+    if (u.location_id || u.nonprofit_location_id) return "Location";
+    if (u.organization_id || u.nonprofit_id) return "Organization";
+    return "—";
+  };
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Users</h1>
-        <p className="text-sm text-muted-foreground mt-1">Consumer users and invitation codes for GO See The City</p>
+        <p className="text-sm text-muted-foreground mt-1">Manage all platform users and invitation codes</p>
       </div>
 
       <Tabs defaultValue="users">
@@ -101,29 +218,39 @@ export default function UsersPage() {
         </TabsList>
 
         <TabsContent value="users" className="space-y-4 mt-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input className="pl-9" placeholder="Search by name or email..." value={userSearch} onChange={(e) => setUserSearch(e.target.value)} />
+          </div>
           <div className="bg-card rounded-xl border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>First Name</TableHead>
-                  <TableHead>Last Name</TableHead>
+                  <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Date Joined</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Association</TableHead>
+                  <TableHead>Level</TableHead>
+                  <TableHead>Joined</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {usersLoading ? (
-                  <TableRow><TableCell colSpan={5} className="text-center py-12 text-muted-foreground">Loading...</TableCell></TableRow>
-                ) : users.length === 0 ? (
-                  <TableRow><TableCell colSpan={5} className="text-center py-12 text-muted-foreground">No consumer users yet</TableCell></TableRow>
-                ) : users.map((u) => (
+                  <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground">Loading...</TableCell></TableRow>
+                ) : filteredUsers.length === 0 ? (
+                  <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground">No users found</TableCell></TableRow>
+                ) : filteredUsers.map((u) => (
                   <TableRow key={u.id}>
-                    <TableCell>{u.first_name || "—"}</TableCell>
-                    <TableCell>{u.last_name || "—"}</TableCell>
+                    <TableCell className="font-medium">{[u.first_name, u.last_name].filter(Boolean).join(" ") || "—"}</TableCell>
                     <TableCell>{u.email || "—"}</TableCell>
-                    <TableCell>{u.phone || "—"}</TableCell>
+                    <TableCell>{getRoleBadge(u.id)}</TableCell>
+                    <TableCell className="text-sm">{getAssociation(u)}</TableCell>
+                    <TableCell className="text-sm">{getLevel(u)}</TableCell>
                     <TableCell>{new Date(u.created_at).toLocaleDateString()}</TableCell>
+                    <TableCell>
+                      <Button size="sm" variant="ghost" onClick={() => openEditUser(u)}><UserCog className="w-3 h-3" /></Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -139,19 +266,11 @@ export default function UsersPage() {
             </div>
             <Button onClick={() => { setEditingCode(null); setCodeForm({ code: "", label: "", city: "", expiration_date: "", status: "active" }); setCodeDialogOpen(true); }}><Plus className="w-4 h-4 mr-2" />Create Code</Button>
           </div>
-
           <div className="bg-card rounded-xl border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Code</TableHead>
-                  <TableHead>Label</TableHead>
-                  <TableHead>City</TableHead>
-                  <TableHead>Times Used</TableHead>
-                  <TableHead>Expiration</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead>Actions</TableHead>
+                  <TableHead>Code</TableHead><TableHead>Label</TableHead><TableHead>City</TableHead><TableHead>Times Used</TableHead><TableHead>Expiration</TableHead><TableHead>Status</TableHead><TableHead>Created</TableHead><TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -182,7 +301,51 @@ export default function UsersPage() {
         </TabsContent>
       </Tabs>
 
-      <Dialog open={codeDialogOpen} onOpenChange={(open) => { if (!open) closeDialog(); else setCodeDialogOpen(true); }}>
+      {/* Edit User Dialog */}
+      <Dialog open={editUserOpen} onOpenChange={setEditUserOpen}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Edit User</DialogTitle></DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div><Label>First Name</Label><Input value={userEditForm.first_name} onChange={(e) => setUserEditForm({ ...userEditForm, first_name: e.target.value })} /></div>
+              <div><Label>Last Name</Label><Input value={userEditForm.last_name} onChange={(e) => setUserEditForm({ ...userEditForm, last_name: e.target.value })} /></div>
+            </div>
+            <div><Label>Email</Label><Input value={userEditForm.email} onChange={(e) => setUserEditForm({ ...userEditForm, email: e.target.value })} /></div>
+            <div><Label>Phone</Label><Input value={userEditForm.phone} onChange={(e) => setUserEditForm({ ...userEditForm, phone: e.target.value })} /></div>
+
+            <div className="border-t pt-4">
+              <p className="text-sm font-medium text-foreground mb-3">Association</p>
+              <div>
+                <Label>Organization</Label>
+                <Select value={userEditForm.organization_id || "none"} onValueChange={(v) => setUserEditForm({ ...userEditForm, organization_id: v === "none" ? "" : v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {organizations.map((o) => <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="mt-3">
+                <Label>Nonprofit</Label>
+                <Select value={userEditForm.nonprofit_id || "none"} onValueChange={(v) => setUserEditForm({ ...userEditForm, nonprofit_id: v === "none" ? "" : v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None</SelectItem>
+                    {nonprofits.map((n) => <SelectItem key={n.id} value={n.id}>{n.organization_name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <Button className="w-full" onClick={() => updateUser.mutate()} disabled={updateUser.isPending}>
+              {updateUser.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Invitation Code Dialog */}
+      <Dialog open={codeDialogOpen} onOpenChange={(open) => { if (!open) closeCodeDialog(); else setCodeDialogOpen(true); }}>
         <DialogContent>
           <DialogHeader><DialogTitle>{editingCode ? "Edit Invitation Code" : "Create Invitation Code"}</DialogTitle></DialogHeader>
           <div className="space-y-4 pt-4">
