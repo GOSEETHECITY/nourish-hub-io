@@ -94,6 +94,59 @@ export default function NonprofitDetail() {
 
   if (!np) return <div className="p-12 text-center text-muted-foreground">Loading...</div>;
 
+  // Component for document viewing with signed URLs
+  function NonprofitDocuments({ np }: { np: Nonprofit }) {
+    const [insUrl, setInsUrl] = useState<string | null>(null);
+    const [agrUrl, setAgrUrl] = useState<string | null>(null);
+    const [loadingDocs, setLoadingDocs] = useState(false);
+
+    const loadSignedUrls = async () => {
+      setLoadingDocs(true);
+      try {
+        const urls: { ins?: string; agr?: string } = {};
+        if (np.proof_of_insurance_url) {
+          const { data } = await supabase.storage.from("nonprofit-documents").createSignedUrl(np.proof_of_insurance_url, 300);
+          if (data?.signedUrl) urls.ins = data.signedUrl;
+        }
+        if (np.signed_agreement_url) {
+          const { data } = await supabase.storage.from("nonprofit-documents").createSignedUrl(np.signed_agreement_url, 300);
+          if (data?.signedUrl) urls.agr = data.signedUrl;
+        }
+        setInsUrl(urls.ins || null);
+        setAgrUrl(urls.agr || null);
+      } catch {
+        toast.error("Failed to load document URLs");
+      } finally {
+        setLoadingDocs(false);
+      }
+    };
+
+    return (
+      <section className="bg-card rounded-xl border p-6">
+        <h2 className="text-lg font-bold text-foreground flex items-center gap-2 mb-4"><FileText className="w-5 h-5" />Documents</h2>
+        {!insUrl && !agrUrl && (np.proof_of_insurance_url || np.signed_agreement_url) && (
+          <Button size="sm" variant="outline" onClick={loadSignedUrls} disabled={loadingDocs} className="mb-4">
+            {loadingDocs ? "Loading..." : "Load Secure Documents"}
+          </Button>
+        )}
+        <div className="grid grid-cols-2 gap-6">
+          <div>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">Proof of Insurance</p>
+            {insUrl ? <a href={insUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-accent underline mt-1 inline-block">View Document (expires in 5 min)</a>
+              : np.proof_of_insurance_url ? <p className="text-sm text-muted-foreground mt-1">Click "Load Secure Documents" to view</p>
+              : <p className="text-sm text-muted-foreground mt-1">Not uploaded</p>}
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">Signed Agreement</p>
+            {agrUrl ? <a href={agrUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-accent underline mt-1 inline-block">View Document (expires in 5 min)</a>
+              : np.signed_agreement_url ? <p className="text-sm text-muted-foreground mt-1">Click "Load Secure Documents" to view</p>
+              : <p className="text-sm text-muted-foreground mt-1">Not uploaded</p>}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   const totalPounds = claimedListings.reduce((s, l) => s + (l.pounds || 0), 0);
   const totalMeals = reports.reduce((s, r) => s + (r.meals_served || 0), 0);
 
@@ -214,13 +267,7 @@ export default function NonprofitDetail() {
       </section>
 
       {/* Documents */}
-      <section className="bg-card rounded-xl border p-6">
-        <h2 className="text-lg font-bold text-foreground flex items-center gap-2 mb-4"><FileText className="w-5 h-5" />Documents</h2>
-        <div className="grid grid-cols-2 gap-6">
-          <div><p className="text-xs text-muted-foreground uppercase tracking-wider">Proof of Insurance</p>{np.proof_of_insurance_url ? <a href={np.proof_of_insurance_url} target="_blank" className="text-sm text-accent underline mt-1 inline-block">View Document</a> : <p className="text-sm text-muted-foreground mt-1">Not uploaded</p>}</div>
-          <div><p className="text-xs text-muted-foreground uppercase tracking-wider">Signed Agreement</p>{np.signed_agreement_url ? <a href={np.signed_agreement_url} target="_blank" className="text-sm text-accent underline mt-1 inline-block">View Document</a> : <p className="text-sm text-muted-foreground mt-1">Not uploaded</p>}</div>
-        </div>
-      </section>
+      <NonprofitDocuments np={np} />
 
       {/* Impact Summary */}
       <section className="bg-card rounded-xl border p-6">

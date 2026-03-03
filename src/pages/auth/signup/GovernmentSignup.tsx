@@ -34,6 +34,22 @@ export default function GovernmentSignup({ onBack }: Props) {
     if (pwError) { toast.error(pwError); return; }
     setLoading(true);
     try {
+      // Server-side validation
+      const { data: valResult, error: valError } = await supabase.functions.invoke("validate-signup", {
+        body: {
+          signup_type: "government",
+          account: { firstName: account.firstName, lastName: account.lastName, email: account.email, phone: account.phone, password: account.password, confirmPassword: account.confirmPassword },
+          gov: { name: gov.name, type: gov.type, contactEmail: gov.contactEmail, contactPhone: gov.contactPhone },
+        },
+      });
+      if (valError) throw valError;
+      if (valResult && !valResult.valid) {
+        const msgs = valResult.errors?.join("; ") || valResult.error || "Validation failed";
+        toast.error(msgs);
+        setLoading(false);
+        return;
+      }
+
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: account.email,
         password: account.password,

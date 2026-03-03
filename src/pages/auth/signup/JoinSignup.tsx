@@ -107,6 +107,25 @@ export default function JoinSignup({ onBack }: Props) {
     if (!orgMatch) return;
     setLoading(true);
     try {
+      // Server-side validation
+      const locData = orgMatch.type === "venue" ? { name: venueLoc.name } : { name: npLoc.name };
+      const { data: valResult, error: valError } = await supabase.functions.invoke("validate-signup", {
+        body: {
+          signup_type: "join",
+          account: { firstName: account.firstName, lastName: account.lastName, email: account.email, phone: account.phone, password: account.password, confirmPassword: account.confirmPassword },
+          joinCode: joinCode,
+          orgType: orgMatch.type,
+          loc: locData,
+        },
+      });
+      if (valError) throw valError;
+      if (valResult && !valResult.valid) {
+        const msgs = valResult.errors?.join("; ") || valResult.error || "Validation failed";
+        toast.error(msgs);
+        setLoading(false);
+        return;
+      }
+
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: account.email,
         password: account.password,
