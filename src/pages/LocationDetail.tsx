@@ -15,6 +15,13 @@ import { LOCATION_TYPES } from "@/lib/constants";
 import type { Location, FoodListing, SustainabilityBaseline, ImpactReport, Coupon, Profile } from "@/types/database";
 import AddLocationUserDialog from "@/components/invitations/AddLocationUserDialog";
 
+function formatStripeStatus(status: string | null): string {
+  if (!status || status === "not_started") return "Not Started";
+  if (status === "connected" || status === "complete") return "Connected";
+  if (status === "pending" || status === "pending_verification") return "Pending Verification";
+  return status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 export default function LocationDetail() {
   const { id, locationId } = useParams<{ id: string; locationId: string }>();
   const navigate = useNavigate();
@@ -114,7 +121,7 @@ export default function LocationDetail() {
           <div><p className="text-xs text-muted-foreground uppercase tracking-wider">Pickup Instructions</p><p className="text-sm text-foreground mt-1">{location.pickup_instructions || "—"}</p></div>
           <div><p className="text-xs text-muted-foreground uppercase tracking-wider">Hours</p><p className="text-sm text-foreground mt-1">{location.hours_of_operation || "—"}</p></div>
           <div><p className="text-xs text-muted-foreground uppercase tracking-wider">Marketplace</p><span className={`inline-block mt-1 px-2.5 py-0.5 rounded text-xs font-medium ${location.marketplace_enabled ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>{location.marketplace_enabled ? "Enabled" : "Disabled"}</span></div>
-          <div><p className="text-xs text-muted-foreground uppercase tracking-wider">Stripe Status</p><p className="text-sm text-foreground mt-1">{location.stripe_onboarding_status || "Not started"}</p></div>
+          <div><p className="text-xs text-muted-foreground uppercase tracking-wider">Stripe Status</p><p className="text-sm text-foreground mt-1">{formatStripeStatus(location.stripe_onboarding_status)}</p></div>
         </div>
       </section>
 

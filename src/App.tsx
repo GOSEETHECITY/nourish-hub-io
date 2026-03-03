@@ -28,6 +28,7 @@ import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
+import AcceptInvitation from "./pages/auth/AcceptInvitation";
 import VenueDashboard from "./pages/venue/VenueDashboard";
 import VenueOnboarding from "./pages/venue/VenueOnboarding";
 import NonprofitDashboard from "./pages/nonprofit/NonprofitDashboard";
@@ -49,6 +50,7 @@ const App = () => (
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/accept-invitation" element={<AcceptInvitation />} />
 
             {/* Admin routes */}
             <Route

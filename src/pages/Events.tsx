@@ -22,6 +22,7 @@ const STATUS_COLORS: Record<EventStatus, string> = {
 const emptyForm = {
   title: "", description: "", event_date: "", start_time: "", end_time: "",
   address: "", city: "", state: "", external_link: "", status: "draft" as EventStatus,
+  image_url: "",
 };
 
 export default function Events() {
@@ -33,6 +34,7 @@ export default function Events() {
   const [sortField, setSortField] = useState("created_at");
   const [sortAsc, setSortAsc] = useState(false);
   const [form, setForm] = useState(emptyForm);
+  const [uploading, setUploading] = useState(false);
 
   const { data: events = [], isLoading } = useQuery({
     queryKey: ["events"],
@@ -43,13 +45,30 @@ export default function Events() {
     },
   });
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { toast.error("File must be under 5MB"); return; }
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) { toast.error("Only JPG, PNG, and WebP files accepted"); return; }
+    setUploading(true);
+    const ext = file.name.split(".").pop();
+    const path = `${crypto.randomUUID()}.${ext}`;
+    const { error } = await supabase.storage.from("events").upload(path, file);
+    if (error) { toast.error("Upload failed: " + error.message); setUploading(false); return; }
+    const { data: urlData } = supabase.storage.from("events").getPublicUrl(path);
+    setForm({ ...form, image_url: urlData.publicUrl });
+    setUploading(false);
+    toast.success("Image uploaded");
+  };
+
   const saveEvent = useMutation({
     mutationFn: async () => {
+      const payload = { ...form };
       if (editingEvent) {
-        const { error } = await supabase.from("events").update(form).eq("id", editingEvent.id);
+        const { error } = await supabase.from("events").update(payload).eq("id", editingEvent.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("events").insert(form);
+        const { error } = await supabase.from("events").insert(payload);
         if (error) throw error;
       }
     },
@@ -85,6 +104,7 @@ export default function Events() {
       title: ev.title, description: ev.description || "", event_date: ev.event_date || "",
       start_time: ev.start_time || "", end_time: ev.end_time || "", address: ev.address || "",
       city: ev.city || "", state: ev.state || "", external_link: ev.external_link || "", status: ev.status,
+      image_url: ev.image_url || "",
     });
     setDialogOpen(true);
   };
@@ -179,6 +199,12 @@ export default function Events() {
               <div><Label>State</Label><Input value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} /></div>
             </div>
             <div><Label>External Link</Label><Input value={form.external_link} onChange={(e) => setForm({ ...form, external_link: e.target.value })} /></div>
+            <div>
+              <Label>Event Image</Label>
+              {form.image_url && <img src={form.image_url} alt="Event" className="w-full h-32 object-cover rounded-lg mb-2" />}
+              <Input type="file" accept="image/jpeg,image/png,image/webp" onChange={handleImageUpload} disabled={uploading} />
+              {uploading && <p className="text-xs text-muted-foreground mt-1">Uploading...</p>}
+            </div>
             <div>
               <Label>Status</Label>
               <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v as EventStatus })}>
