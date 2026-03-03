@@ -41,7 +41,13 @@ export type OrganizationType =
   | "municipal_government"
   | "county_government"
   | "state_government"
-  | "cafe";
+  | "cafe"
+  | "food_beverage_group"
+  | "hospitality_group"
+  | "venue_events_group"
+  | "farm_grocery_group"
+  | "government_entity"
+  | "nonprofit_organization";
 
 export type FoodType =
   | "prepared_meals"
