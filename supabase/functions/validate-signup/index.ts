@@ -25,9 +25,25 @@ function validatePassword(password: string): string | null {
   return null;
 }
 
-function sanitizeString(val: unknown, maxLen = 255): string {
+function sanitizeString(val: unknown, maxLen = 255): string | null {
   if (typeof val !== "string") return "";
-  return val.trim().slice(0, maxLen);
+  const trimmed = val.trim();
+  if (trimmed.length > maxLen) return null; // reject instead of truncate
+  return trimmed;
+}
+
+function validateUrl(url: string): boolean {
+  if (!url) return true;
+  try {
+    new URL(url);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function sanitizeFileName(name: string): string {
+  return name.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 255);
 }
 
 function validateRequired(obj: Record<string, unknown>, fields: string[]): string | null {
@@ -77,11 +93,15 @@ Deno.serve(async (req) => {
     const phone = sanitizeString(account.phone, 20);
     const password = typeof account.password === "string" ? account.password : "";
 
-    if (!firstName) errors.push("First name is required");
-    if (!lastName) errors.push("Last name is required");
-    if (!email) errors.push("Email is required");
+    if (firstName === null) errors.push("First name is too long (max 100 characters)");
+    else if (!firstName) errors.push("First name is required");
+    if (lastName === null) errors.push("Last name is too long (max 100 characters)");
+    else if (!lastName) errors.push("Last name is required");
+    if (email === null) errors.push("Email is too long (max 255 characters)");
+    else if (!email) errors.push("Email is required");
     else if (!validateEmail(email)) errors.push("Invalid email format");
-    if (phone && !validatePhone(phone)) errors.push("Invalid phone format");
+    if (phone === null) errors.push("Phone is too long (max 20 characters)");
+    else if (phone && !validatePhone(phone)) errors.push("Invalid phone format");
 
     const pwError = validatePassword(password);
     if (pwError) errors.push(pwError);
@@ -113,6 +133,8 @@ Deno.serve(async (req) => {
 
       if (org.contactEmail && !validateEmail(org.contactEmail)) errors.push("Invalid contact email");
       if (org.contactPhone && !validatePhone(org.contactPhone)) errors.push("Invalid contact phone");
+      if (org.website && !validateUrl(org.website)) errors.push("Invalid website URL");
+      if (org.socialHandles && typeof org.socialHandles === "string" && org.socialHandles.length > 500) errors.push("Social handles too long (max 500 characters)");
 
       // Validate food types if provided
       const capacity = payload.capacity || {};
