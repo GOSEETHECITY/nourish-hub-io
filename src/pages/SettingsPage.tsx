@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { validatePassword } from "@/lib/validatePassword";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -50,8 +51,9 @@ export default function SettingsPage() {
   };
 
   const changePassword = async () => {
-    if (!newPassword || newPassword.length < 6) {
-      toast.error("Password must be at least 6 characters");
+    const pwError = validatePassword(newPassword || "");
+    if (pwError) {
+      toast.error(pwError);
       return;
     }
     const { error } = await supabase.auth.updateUser({ password: newPassword });

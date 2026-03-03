@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { validatePassword } from "@/lib/validatePassword";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,7 +62,8 @@ export default function NonprofitSignup({ onBack }: Props) {
 
   const handleSubmit = async () => {
     if (account.password !== account.confirmPassword) { toast.error("Passwords do not match"); return; }
-    if (account.password.length < 6) { toast.error("Password must be at least 6 characters"); return; }
+    const pwError = validatePassword(account.password);
+    if (pwError) { toast.error(pwError); return; }
     if (!insuranceFile || !agreementFile) { toast.error("Please upload both required documents"); return; }
     setLoading(true);
     try {
