@@ -93,8 +93,7 @@ export default function NonprofitSignup({ onBack }: Props) {
 
       const joinCode = generateJoinCode();
 
-      const { data: npData, error: npError } = await supabase.from("nonprofits").insert({
-        user_id: userId,
+      const { data: npData, error: npError } = await supabase.from("nonprofits").insert([{
         organization_name: org.name,
         ein: org.ein || null,
         website: org.website || null,
@@ -111,18 +110,18 @@ export default function NonprofitSignup({ onBack }: Props) {
         cold_storage: capacity.coldStorage,
         refrigeration: capacity.refrigeration,
         cabinetry: capacity.cabinetry,
-        food_types_accepted: capacity.foodTypes.length ? capacity.foodTypes : null,
+        food_types_accepted: capacity.foodTypes.length ? capacity.foodTypes as any : null,
         estimated_weekly_served: capacity.weeklyServed ? parseInt(capacity.weeklyServed) : null,
         population_served: capacity.populations.length ? capacity.populations.join(", ") : null,
         proof_of_insurance_url: insUrl,
         signed_agreement_url: agrUrl,
         approval_status: "pending",
         join_code: joinCode,
-      }).select().single();
+      }]).select().single();
       if (npError) throw npError;
 
       // Create first distribution location
-      await supabase.from("nonprofit_locations").insert({
+      await supabase.from("nonprofit_locations").insert([{
         nonprofit_id: npData.id,
         name: loc.name,
         address: loc.address || null,
@@ -135,11 +134,11 @@ export default function NonprofitSignup({ onBack }: Props) {
         cold_storage: capacity.coldStorage,
         refrigeration: capacity.refrigeration,
         cabinetry: capacity.cabinetry,
-        food_types_accepted: capacity.foodTypes.length ? capacity.foodTypes : null,
+        food_types_accepted: capacity.foodTypes.length ? capacity.foodTypes as any : null,
         estimated_weekly_served: capacity.weeklyServed ? parseInt(capacity.weeklyServed) : null,
         population_served: capacity.populations.length ? capacity.populations.join(", ") : null,
         approval_status: "pending",
-      });
+      }]);
 
       // Update profile
       await supabase.from("profiles").update({

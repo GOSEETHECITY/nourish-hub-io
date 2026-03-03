@@ -91,7 +91,7 @@ export default function JoinSignup({ onBack }: Props) {
         setCodeError("This code is not recognized. Please check with your organization for the correct code.");
         return;
       }
-      setOrgMatch(data as OrgMatch);
+      setOrgMatch(data as unknown as OrgMatch);
     } catch (e: any) {
       setCodeError(e.message || "Failed to validate code");
     } finally {
@@ -161,7 +161,7 @@ export default function JoinSignup({ onBack }: Props) {
         // Nonprofit join
         await supabase.from("user_roles").insert({ user_id: userId, role: "nonprofit_partner" });
 
-        await supabase.from("nonprofit_locations").insert({
+        await supabase.from("nonprofit_locations").insert([{
           nonprofit_id: orgMatch.id,
           name: npLoc.name,
           address: npLoc.address || null,
@@ -177,11 +177,11 @@ export default function JoinSignup({ onBack }: Props) {
           cold_storage: capacity.coldStorage,
           refrigeration: capacity.refrigeration,
           cabinetry: capacity.cabinetry,
-          food_types_accepted: capacity.foodTypes.length ? capacity.foodTypes : null,
+          food_types_accepted: capacity.foodTypes.length ? capacity.foodTypes as any : null,
           estimated_weekly_served: capacity.weeklyServed ? parseInt(capacity.weeklyServed) : null,
           population_served: capacity.populations.length ? capacity.populations.join(", ") : null,
           approval_status: "pending",
-        });
+        }]);
 
         await supabase.from("profiles").update({
           first_name: account.firstName,
