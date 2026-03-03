@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { validatePassword } from "@/lib/validatePassword";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +30,8 @@ export default function GovernmentSignup({ onBack }: Props) {
 
   const handleSubmit = async () => {
     if (account.password !== account.confirmPassword) { toast.error("Passwords do not match"); return; }
-    if (account.password.length < 6) { toast.error("Password must be at least 6 characters"); return; }
+    const pwError = validatePassword(account.password);
+    if (pwError) { toast.error(pwError); return; }
     setLoading(true);
     try {
       const { data: authData, error: authError } = await supabase.auth.signUp({

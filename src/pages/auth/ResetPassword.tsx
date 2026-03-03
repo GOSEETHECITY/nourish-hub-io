@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { validatePassword } from "@/lib/validatePassword";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
@@ -30,8 +31,9 @@ export default function ResetPassword() {
       return;
     }
 
-    if (password.length < 6) {
-      toast({ title: "Error", description: "Password must be at least 6 characters", variant: "destructive" });
+    const pwError = validatePassword(password);
+    if (pwError) {
+      toast({ title: "Error", description: pwError, variant: "destructive" });
       return;
     }
 
