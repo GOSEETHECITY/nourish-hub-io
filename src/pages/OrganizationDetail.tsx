@@ -9,11 +9,13 @@ import JoinCodeDisplay from "@/components/invitations/JoinCodeDisplay";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import type { Organization, Location, Profile, FoodListing, SustainabilityBaseline, ApprovalStatus, OrganizationType } from "@/types/database";
+import { ORG_CATEGORIES, LOCATION_TYPES, formatOrgType } from "@/lib/constants";
+import type { Organization, Location, Profile, FoodListing, SustainabilityBaseline, ApprovalStatus } from "@/types/database";
 
 const STATUS_COLORS: Record<ApprovalStatus, string> = {
   pending: "bg-chart-4/15 text-chart-4",
@@ -22,27 +24,10 @@ const STATUS_COLORS: Record<ApprovalStatus, string> = {
   deactivated: "bg-muted text-muted-foreground",
 };
 
-const ORG_TYPES: { value: OrganizationType; label: string }[] = [
-  { value: "restaurant", label: "Restaurant" },
-  { value: "catering_company", label: "Catering Company" },
-  { value: "event", label: "Event" },
-  { value: "hotel", label: "Hotel" },
-  { value: "convention_center", label: "Convention Center" },
-  { value: "stadium", label: "Stadium" },
-  { value: "arena", label: "Arena" },
-  { value: "farm", label: "Farm" },
-  { value: "grocery_store", label: "Grocery Store" },
-  { value: "food_truck", label: "Food Truck" },
-  { value: "airport", label: "Airport" },
-  { value: "festival", label: "Festival" },
-  { value: "municipal_government", label: "Municipal Government" },
-  { value: "county_government", label: "County Government" },
-  { value: "state_government", label: "State Government" },
-];
-
 const emptyLocationForm = {
   name: "", address: "", city: "", state: "", zip: "", county: "",
   pickup_address: "", pickup_instructions: "", hours_of_operation: "", estimated_surplus_frequency: "",
+  location_type: "", different_pickup: false,
 };
 
 export default function OrganizationDetail() {
@@ -50,7 +35,6 @@ export default function OrganizationDetail() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // Dialog state
   const [locationDialogOpen, setLocationDialogOpen] = useState(false);
   const [editingLocation, setEditingLocation] = useState<Location | null>(null);
   const [locationForm, setLocationForm] = useState(emptyLocationForm);
@@ -62,86 +46,56 @@ export default function OrganizationDetail() {
 
   const { data: org } = useQuery({
     queryKey: ["organization", id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("organizations").select("*").eq("id", id!).single();
-      if (error) throw error;
-      return data as Organization;
-    },
+    queryFn: async () => { const { data, error } = await supabase.from("organizations").select("*").eq("id", id!).single(); if (error) throw error; return data as Organization; },
     enabled: !!id,
   });
 
   const { data: locations = [] } = useQuery({
     queryKey: ["org-locations", id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("locations").select("*").eq("organization_id", id!);
-      if (error) throw error;
-      return data as Location[];
-    },
+    queryFn: async () => { const { data, error } = await supabase.from("locations").select("*").eq("organization_id", id!); if (error) throw error; return data as Location[]; },
     enabled: !!id,
   });
 
   const { data: users = [] } = useQuery({
     queryKey: ["org-users", id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("profiles").select("*").eq("organization_id", id!);
-      if (error) throw error;
-      return data as Profile[];
-    },
+    queryFn: async () => { const { data, error } = await supabase.from("profiles").select("*").eq("organization_id", id!); if (error) throw error; return data as Profile[]; },
     enabled: !!id,
   });
 
   const { data: listings = [] } = useQuery({
     queryKey: ["org-listings", id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("food_listings").select("*").eq("organization_id", id!).order("created_at", { ascending: false });
-      if (error) throw error;
-      return data as FoodListing[];
-    },
+    queryFn: async () => { const { data, error } = await supabase.from("food_listings").select("*").eq("organization_id", id!).order("created_at", { ascending: false }); if (error) throw error; return data as FoodListing[]; },
     enabled: !!id,
   });
 
   const { data: baselines = [] } = useQuery({
     queryKey: ["org-baselines", id],
-    queryFn: async () => {
-      const locationIds = locations.map((l) => l.id);
-      if (!locationIds.length) return [];
-      const { data, error } = await supabase.from("sustainability_baseline").select("*").in("location_id", locationIds);
-      if (error) throw error;
-      return data as SustainabilityBaseline[];
-    },
+    queryFn: async () => { const locationIds = locations.map((l) => l.id); if (!locationIds.length) return []; const { data, error } = await supabase.from("sustainability_baseline").select("*").in("location_id", locationIds); if (error) throw error; return data as SustainabilityBaseline[]; },
     enabled: locations.length > 0,
   });
 
   const updateStatus = useMutation({
-    mutationFn: async (status: ApprovalStatus) => {
-      const { error } = await supabase.from("organizations").update({ approval_status: status }).eq("id", id!);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["organization", id] });
-      toast.success("Status updated");
-    },
+    mutationFn: async (status: ApprovalStatus) => { const { error } = await supabase.from("organizations").update({ approval_status: status }).eq("id", id!); if (error) throw error; },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["organization", id] }); toast.success("Status updated"); },
   });
 
   const updateOrg = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.from("organizations").update(orgForm).eq("id", id!);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["organization", id] });
-      toast.success("Organization updated");
-      setEditOrgOpen(false);
-    },
+    mutationFn: async () => { const { error } = await supabase.from("organizations").update(orgForm).eq("id", id!); if (error) throw error; },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["organization", id] }); toast.success("Organization updated"); setEditOrgOpen(false); },
     onError: (e) => toast.error(e.message),
   });
 
   const createLocation = useMutation({
     mutationFn: async () => {
-      const payload = {
-        ...locationForm,
-        organization_id: id!,
-        pickup_address: locationForm.pickup_address || [locationForm.address, locationForm.city, locationForm.state].filter(Boolean).join(", "),
+      const pickupAddr = locationForm.different_pickup
+        ? locationForm.pickup_address
+        : [locationForm.address, locationForm.city, locationForm.state].filter(Boolean).join(", ");
+      const payload: any = {
+        name: locationForm.name, address: locationForm.address, city: locationForm.city,
+        state: locationForm.state, zip: locationForm.zip, county: locationForm.county,
+        pickup_address: pickupAddr, pickup_instructions: locationForm.pickup_instructions,
+        hours_of_operation: locationForm.hours_of_operation, estimated_surplus_frequency: locationForm.estimated_surplus_frequency,
+        location_type: locationForm.location_type || null, organization_id: id!,
       };
       if (editingLocation) {
         const { error } = await supabase.from("locations").update(payload).eq("id", editingLocation.id);
@@ -153,27 +107,23 @@ export default function OrganizationDetail() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["org-locations", id] });
-      queryClient.invalidateQueries({ queryKey: ["location-counts"] });
       toast.success(editingLocation ? "Location updated" : "Location added");
-      setLocationDialogOpen(false);
-      setEditingLocation(null);
-      setLocationForm(emptyLocationForm);
+      setLocationDialogOpen(false); setEditingLocation(null); setLocationForm(emptyLocationForm);
     },
     onError: (e) => toast.error(e.message),
   });
 
-  const openAddLocUser = (locId: string) => {
-    setSelectedLocationId(locId);
-    setLocUserDialogOpen(true);
-  };
+  const openAddLocUser = (locId: string) => { setSelectedLocationId(locId); setLocUserDialogOpen(true); };
 
   const openEditLocation = (loc: Location) => {
     setEditingLocation(loc);
+    const hasDifferentPickup = !!(loc.pickup_address && loc.pickup_address !== [loc.address, loc.city, loc.state].filter(Boolean).join(", "));
     setLocationForm({
       name: loc.name, address: loc.address || "", city: loc.city || "", state: loc.state || "",
       zip: loc.zip || "", county: loc.county || "", pickup_address: loc.pickup_address || "",
       pickup_instructions: loc.pickup_instructions || "", hours_of_operation: loc.hours_of_operation || "",
       estimated_surplus_frequency: loc.estimated_surplus_frequency || "",
+      location_type: (loc as any).location_type || "", different_pickup: hasDifferentPickup,
     });
     setLocationDialogOpen(true);
   };
@@ -191,7 +141,6 @@ export default function OrganizationDetail() {
 
   const totalPounds = listings.reduce((s, l) => s + (l.pounds || 0), 0);
   const totalDonations = listings.length;
-  const formatType = (t: string) => t.split("_").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
   const formatStatus = (s: string) => s.split("_").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
 
   if (!org) return <div className="p-12 text-center text-muted-foreground">Loading...</div>;
@@ -202,7 +151,7 @@ export default function OrganizationDetail() {
         <Button variant="ghost" size="icon" onClick={() => navigate("/organizations")}><ArrowLeft className="w-4 h-4" /></Button>
         <div className="flex-1">
           <h1 className="text-2xl font-bold text-foreground">{org.name}</h1>
-          <p className="text-sm text-muted-foreground">{formatType(org.type)}</p>
+          <p className="text-sm text-muted-foreground">{formatOrgType(org.type)}</p>
         </div>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" onClick={openEditOrg}><Pencil className="w-3 h-3 mr-1" />Edit</Button>
@@ -212,19 +161,19 @@ export default function OrganizationDetail() {
         </div>
       </div>
 
-      {/* Section 1 - Organization Profile */}
+      {/* Organization Profile */}
       <section className="bg-card rounded-xl border p-6">
         <h2 className="text-lg font-bold text-foreground flex items-center gap-2 mb-4"><Building2 className="w-5 h-5" />Organization Profile</h2>
         <div className="grid grid-cols-3 gap-6">
           <div><p className="text-xs text-muted-foreground uppercase tracking-wider">Name</p><p className="text-sm font-medium text-foreground mt-1">{org.name}</p></div>
-          <div><p className="text-xs text-muted-foreground uppercase tracking-wider">Type</p><p className="text-sm font-medium text-foreground mt-1">{formatType(org.type)}</p></div>
+          <div><p className="text-xs text-muted-foreground uppercase tracking-wider">Type</p><p className="text-sm font-medium text-foreground mt-1">{formatOrgType(org.type)}</p></div>
           <div><p className="text-xs text-muted-foreground uppercase tracking-wider">Status</p><span className={`inline-block mt-1 px-2.5 py-0.5 text-xs font-semibold rounded capitalize ${STATUS_COLORS[org.approval_status]}`}>{org.approval_status}</span></div>
           <div><p className="text-xs text-muted-foreground uppercase tracking-wider">Contact Name</p><p className="text-sm text-foreground mt-1">{org.primary_contact_name || "—"}</p></div>
           <div><p className="text-xs text-muted-foreground uppercase tracking-wider">Contact Email</p><p className="text-sm text-foreground mt-1">{org.primary_contact_email || "—"}</p></div>
           <div><p className="text-xs text-muted-foreground uppercase tracking-wider">Contact Phone</p><p className="text-sm text-foreground mt-1">{org.primary_contact_phone || "—"}</p></div>
           <div><p className="text-xs text-muted-foreground uppercase tracking-wider">Billing Contact</p><p className="text-sm text-foreground mt-1">{org.billing_contact || "—"}</p></div>
           <div><p className="text-xs text-muted-foreground uppercase tracking-wider">Address</p><p className="text-sm text-foreground mt-1">{[org.address, org.city, org.state, org.zip].filter(Boolean).join(", ") || "—"}</p></div>
-          <div><p className="text-xs text-muted-foreground uppercase tracking-wider">Registered</p><p className="text-sm text-foreground mt-1">{new Date(org.created_at).toLocaleDateString()}</p></div>
+          <div><p className="text-xs text-muted-foreground uppercase tracking-wider">County</p><p className="text-sm text-foreground mt-1">{org.county || "—"}</p></div>
         </div>
       </section>
 
@@ -235,12 +184,10 @@ export default function OrganizationDetail() {
         <p className="text-xs text-muted-foreground mt-2">Share this code with location operators so they can join your organization during signup.</p>
       </section>
 
-      {/* Section 2 - Onboarding / Sustainability Baseline */}
+      {/* Onboarding */}
       <section className="bg-card rounded-xl border p-6">
         <h2 className="text-lg font-bold text-foreground mb-4">Onboarding Information</h2>
-        {baselines.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No sustainability baseline data submitted yet.</p>
-        ) : (
+        {baselines.length === 0 ? <p className="text-sm text-muted-foreground">No sustainability baseline data submitted yet.</p> : (
           <div className="space-y-4">
             {baselines.map((b) => (
               <div key={b.id} className="grid grid-cols-3 gap-4 p-4 bg-muted/50 rounded-lg">
@@ -256,36 +203,29 @@ export default function OrganizationDetail() {
         )}
       </section>
 
-      {/* Section 3 - Locations */}
+      {/* Locations */}
       <section className="bg-card rounded-xl border p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-foreground flex items-center gap-2"><MapPin className="w-5 h-5" />Locations ({locations.length})</h2>
           <Button size="sm" onClick={() => { setEditingLocation(null); setLocationForm(emptyLocationForm); setLocationDialogOpen(true); }}><Plus className="w-4 h-4 mr-1" />Add Location</Button>
         </div>
-        {locations.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No locations added yet.</p>
-        ) : (
+        {locations.length === 0 ? <p className="text-sm text-muted-foreground">No locations added yet.</p> : (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Location Name</TableHead>
-                <TableHead>Address</TableHead>
-                <TableHead>County</TableHead>
-                <TableHead>Hours</TableHead>
-                <TableHead>Marketplace</TableHead>
-                <TableHead>Stripe Status</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead>Location Name</TableHead><TableHead>Type</TableHead><TableHead>Address</TableHead>
+                <TableHead>County</TableHead><TableHead>Hours</TableHead><TableHead>Marketplace</TableHead><TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {locations.map((loc) => (
                 <TableRow key={loc.id} className="cursor-pointer" onClick={() => navigate(`/organizations/${id}/locations/${loc.id}`)}>
                   <TableCell className="font-medium">{loc.name}</TableCell>
+                  <TableCell>{(loc as any).location_type || "—"}</TableCell>
                   <TableCell>{[loc.address, loc.city, loc.state].filter(Boolean).join(", ") || "—"}</TableCell>
                   <TableCell>{loc.county || "—"}</TableCell>
                   <TableCell>{loc.hours_of_operation || "—"}</TableCell>
                   <TableCell><span className={`px-2 py-0.5 rounded text-xs font-medium ${loc.marketplace_enabled ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>{loc.marketplace_enabled ? "Enabled" : "Disabled"}</span></TableCell>
-                  <TableCell>{loc.stripe_onboarding_status || "Not started"}</TableCell>
                   <TableCell>
                     <div className="flex gap-1">
                       <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); openEditLocation(loc); }}><Pencil className="w-3 h-3" /></Button>
@@ -299,62 +239,35 @@ export default function OrganizationDetail() {
         )}
       </section>
 
-      {/* Section 4 - Users */}
+      {/* Users */}
       <section className="bg-card rounded-xl border p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-foreground flex items-center gap-2"><Users className="w-5 h-5" />Users ({users.length})</h2>
           <Button size="sm" onClick={() => setOrgUserDialogOpen(true)}><UserPlus className="w-4 h-4 mr-1" />Add Organization User</Button>
         </div>
-        {users.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No users associated.</p>
-        ) : (
+        {users.length === 0 ? <p className="text-sm text-muted-foreground">No users associated.</p> : (
           <Table>
             <TableHeader><TableRow><TableHead>First Name</TableHead><TableHead>Last Name</TableHead><TableHead>Email</TableHead><TableHead>Phone</TableHead></TableRow></TableHeader>
-            <TableBody>
-              {users.map((u) => (
-                <TableRow key={u.id}>
-                  <TableCell>{u.first_name || "—"}</TableCell>
-                  <TableCell>{u.last_name || "—"}</TableCell>
-                  <TableCell>{u.email || "—"}</TableCell>
-                  <TableCell>{u.phone || "—"}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
+            <TableBody>{users.map((u) => (<TableRow key={u.id}><TableCell>{u.first_name || "—"}</TableCell><TableCell>{u.last_name || "—"}</TableCell><TableCell>{u.email || "—"}</TableCell><TableCell>{u.phone || "—"}</TableCell></TableRow>))}</TableBody>
           </Table>
         )}
       </section>
 
-      {/* Section 5 - Impact Summary */}
+      {/* Impact */}
       <section className="bg-card rounded-xl border p-6">
         <h2 className="text-lg font-bold text-foreground flex items-center gap-2 mb-4"><BarChart3 className="w-5 h-5" />Impact Summary</h2>
         <div className="grid grid-cols-2 gap-6">
-          <div className="bg-muted/50 rounded-lg p-5">
-            <p className="text-sm text-muted-foreground">Total Pounds Donated</p>
-            <p className="text-3xl font-bold text-foreground mt-1">{totalPounds.toLocaleString()} <span className="text-sm font-normal text-muted-foreground">lbs</span></p>
-          </div>
-          <div className="bg-muted/50 rounded-lg p-5">
-            <p className="text-sm text-muted-foreground">Total Donations</p>
-            <p className="text-3xl font-bold text-foreground mt-1">{totalDonations}</p>
-          </div>
+          <div className="bg-muted/50 rounded-lg p-5"><p className="text-sm text-muted-foreground">Total Pounds Donated</p><p className="text-3xl font-bold text-foreground mt-1">{totalPounds.toLocaleString()} <span className="text-sm font-normal text-muted-foreground">lbs</span></p></div>
+          <div className="bg-muted/50 rounded-lg p-5"><p className="text-sm text-muted-foreground">Total Donations</p><p className="text-3xl font-bold text-foreground mt-1">{totalDonations}</p></div>
         </div>
       </section>
 
-      {/* Section 6 - Donation History */}
+      {/* Donation History */}
       <section className="bg-card rounded-xl border p-6">
         <h2 className="text-lg font-bold text-foreground flex items-center gap-2 mb-4"><Package className="w-5 h-5" />Donation History ({listings.length})</h2>
-        {listings.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No donations yet.</p>
-        ) : (
+        {listings.length === 0 ? <p className="text-sm text-muted-foreground">No donations yet.</p> : (
           <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Food Type</TableHead>
-                <TableHead>Pounds</TableHead>
-                <TableHead>Est. Value</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Date Posted</TableHead>
-              </TableRow>
-            </TableHeader>
+            <TableHeader><TableRow><TableHead>Food Type</TableHead><TableHead>Pounds</TableHead><TableHead>Est. Value</TableHead><TableHead>Status</TableHead><TableHead>Date Posted</TableHead></TableRow></TableHeader>
             <TableBody>
               {listings.map((l) => (
                 <TableRow key={l.id} className="cursor-pointer" onClick={() => navigate(`/food-listings/donations/${l.id}`)}>
@@ -376,6 +289,13 @@ export default function OrganizationDetail() {
           <DialogHeader><DialogTitle>{editingLocation ? "Edit Location" : "Add Location"}</DialogTitle></DialogHeader>
           <div className="space-y-4 pt-4">
             <div><Label>Location Name *</Label><Input value={locationForm.name} onChange={(e) => setLocationForm({ ...locationForm, name: e.target.value })} /></div>
+            <div>
+              <Label>Location Type *</Label>
+              <Select value={locationForm.location_type} onValueChange={(v) => setLocationForm({ ...locationForm, location_type: v })}>
+                <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                <SelectContent>{LOCATION_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
             <div><Label>Address</Label><Input value={locationForm.address} onChange={(e) => setLocationForm({ ...locationForm, address: e.target.value })} /></div>
             <div className="grid grid-cols-3 gap-4">
               <div><Label>City</Label><Input value={locationForm.city} onChange={(e) => setLocationForm({ ...locationForm, city: e.target.value })} /></div>
@@ -383,38 +303,24 @@ export default function OrganizationDetail() {
               <div><Label>ZIP</Label><Input value={locationForm.zip} onChange={(e) => setLocationForm({ ...locationForm, zip: e.target.value })} /></div>
             </div>
             <div><Label>County</Label><Input value={locationForm.county} onChange={(e) => setLocationForm({ ...locationForm, county: e.target.value })} /></div>
-            <div><Label>Pickup Address</Label><Input value={locationForm.pickup_address} onChange={(e) => setLocationForm({ ...locationForm, pickup_address: e.target.value })} placeholder="Defaults to location address" /></div>
+
+            {/* Pickup address toggle (Issue 6) */}
+            <label className="flex items-center gap-2 text-sm">
+              <Checkbox checked={locationForm.different_pickup} onCheckedChange={(v) => setLocationForm({ ...locationForm, different_pickup: !!v, pickup_address: !!v ? locationForm.pickup_address : "" })} />
+              My pickup address is different from my location address
+            </label>
+            {locationForm.different_pickup && (
+              <div><Label>Pickup Address</Label><Input value={locationForm.pickup_address} onChange={(e) => setLocationForm({ ...locationForm, pickup_address: e.target.value })} /></div>
+            )}
             <div><Label>Pickup Instructions</Label><Input value={locationForm.pickup_instructions} onChange={(e) => setLocationForm({ ...locationForm, pickup_instructions: e.target.value })} /></div>
             <div><Label>Hours of Operation</Label><Input value={locationForm.hours_of_operation} onChange={(e) => setLocationForm({ ...locationForm, hours_of_operation: e.target.value })} /></div>
             <div><Label>Estimated Surplus Frequency</Label><Input value={locationForm.estimated_surplus_frequency} onChange={(e) => setLocationForm({ ...locationForm, estimated_surplus_frequency: e.target.value })} /></div>
-            <Button className="w-full" onClick={() => createLocation.mutate()} disabled={!locationForm.name || createLocation.isPending}>
+            <Button className="w-full" onClick={() => createLocation.mutate()} disabled={!locationForm.name || !locationForm.location_type || createLocation.isPending}>
               {createLocation.isPending ? "Saving..." : editingLocation ? "Update Location" : "Add Location"}
             </Button>
           </div>
         </DialogContent>
       </Dialog>
-
-      {/* Add Organization User Dialog */}
-      <AddOrganizationUserDialog
-        open={orgUserDialogOpen}
-        onOpenChange={setOrgUserDialogOpen}
-        organizationId={id!}
-        organizationType="venue"
-        organizationName={org?.name || "Organization"}
-        invalidateKey={["org-users", id!]}
-      />
-
-      {/* Add Location User Dialog */}
-      {selectedLocationId && (
-        <AddLocationUserDialog
-          open={locUserDialogOpen}
-          onOpenChange={(v) => { setLocUserDialogOpen(v); if (!v) setSelectedLocationId(null); }}
-          locationId={selectedLocationId}
-          locationType="venue"
-          locationName={locations.find(l => l.id === selectedLocationId)?.name || "Location"}
-          invalidateKey={["org-users", id!]}
-        />
-      )}
 
       {/* Edit Organization Dialog */}
       <Dialog open={editOrgOpen} onOpenChange={setEditOrgOpen}>
@@ -424,9 +330,9 @@ export default function OrganizationDetail() {
             <div><Label>Organization Name *</Label><Input value={orgForm.name || ""} onChange={(e) => setOrgForm({ ...orgForm, name: e.target.value })} /></div>
             <div>
               <Label>Organization Type *</Label>
-              <Select value={orgForm.type || ""} onValueChange={(v) => setOrgForm({ ...orgForm, type: v as OrganizationType })}>
+              <Select value={orgForm.type || ""} onValueChange={(v) => setOrgForm({ ...orgForm, type: v as any })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{ORG_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
+                <SelectContent>{ORG_CATEGORIES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -450,6 +356,11 @@ export default function OrganizationDetail() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <AddOrganizationUserDialog open={orgUserDialogOpen} onOpenChange={setOrgUserDialogOpen} organizationId={id!} organizationType="venue" organizationName={org?.name || "Organization"} invalidateKey={["org-users", id!]} />
+      {selectedLocationId && (
+        <AddLocationUserDialog open={locUserDialogOpen} onOpenChange={(v) => { setLocUserDialogOpen(v); if (!v) setSelectedLocationId(null); }} locationId={selectedLocationId} locationType="venue" locationName={locations.find(l => l.id === selectedLocationId)?.name || "Location"} invalidateKey={["org-users", id!]} />
+      )}
     </div>
   );
 }

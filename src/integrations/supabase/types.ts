@@ -355,6 +355,7 @@ export type Database = {
           hours_of_operation: string | null
           id: string
           latitude: number | null
+          location_type: string | null
           longitude: number | null
           marketplace_enabled: boolean
           name: string
@@ -382,6 +383,7 @@ export type Database = {
           hours_of_operation?: string | null
           id?: string
           latitude?: number | null
+          location_type?: string | null
           longitude?: number | null
           marketplace_enabled?: boolean
           name: string
@@ -409,6 +411,7 @@ export type Database = {
           hours_of_operation?: string | null
           id?: string
           latitude?: number | null
+          location_type?: string | null
           longitude?: number | null
           marketplace_enabled?: boolean
           name?: string
@@ -617,6 +620,7 @@ export type Database = {
           city: string | null
           county: string | null
           created_at: string
+          government_regions: Json | null
           id: string
           join_code: string | null
           name: string
@@ -634,6 +638,7 @@ export type Database = {
           city?: string | null
           county?: string | null
           created_at?: string
+          government_regions?: Json | null
           id?: string
           join_code?: string | null
           name: string
@@ -651,6 +656,7 @@ export type Database = {
           city?: string | null
           county?: string | null
           created_at?: string
+          government_regions?: Json | null
           id?: string
           join_code?: string | null
           name?: string
@@ -891,6 +897,12 @@ export type Database = {
         | "state_government"
         | "resort"
         | "cafe"
+        | "food_beverage_group"
+        | "hospitality_group"
+        | "venue_events_group"
+        | "farm_grocery_group"
+        | "government_entity"
+        | "nonprofit_organization"
       payment_status: "paid" | "unpaid" | "free"
       support_status: "new" | "in_progress" | "resolved"
     }
@@ -1067,6 +1079,12 @@ export const Constants = {
         "state_government",
         "resort",
         "cafe",
+        "food_beverage_group",
+        "hospitality_group",
+        "venue_events_group",
+        "farm_grocery_group",
+        "government_entity",
+        "nonprofit_organization",
       ],
       payment_status: ["paid", "unpaid", "free"],
       support_status: ["new", "in_progress", "resolved"],
