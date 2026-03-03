@@ -67,6 +67,24 @@ export default function NonprofitSignup({ onBack }: Props) {
     if (!insuranceFile || !agreementFile) { toast.error("Please upload both required documents"); return; }
     setLoading(true);
     try {
+      // Server-side validation
+      const { data: valResult, error: valError } = await supabase.functions.invoke("validate-signup", {
+        body: {
+          signup_type: "nonprofit",
+          account: { firstName: account.firstName, lastName: account.lastName, email: account.email, phone: account.phone, password: account.password, confirmPassword: account.confirmPassword },
+          org: { name: org.name, ein: org.ein, website: org.website, contactName: org.contactName, contactEmail: org.contactEmail, contactPhone: org.contactPhone },
+          loc: { name: loc.name },
+          capacity: { foodTypes: capacity.foodTypes, weeklyServed: capacity.weeklyServed },
+        },
+      });
+      if (valError) throw valError;
+      if (valResult && !valResult.valid) {
+        const msgs = valResult.errors?.join("; ") || valResult.error || "Validation failed";
+        toast.error(msgs);
+        setLoading(false);
+        return;
+      }
+
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: account.email,
         password: account.password,
@@ -87,8 +105,9 @@ export default function NonprofitSignup({ onBack }: Props) {
       ]);
       if (insUpload.error) throw insUpload.error;
       if (agrUpload.error) throw agrUpload.error;
-      const insUrl = supabase.storage.from("nonprofit-documents").getPublicUrl(insurancePath).data.publicUrl;
-      const agrUrl = supabase.storage.from("nonprofit-documents").getPublicUrl(agreementPath).data.publicUrl;
+      // Store the storage paths (not public URLs) since bucket is now private
+      const insUrl = insurancePath;
+      const agrUrl = agreementPath;
 
       let socialObj: Record<string, string> | null = null;
       if (org.socialHandles) socialObj = { handles: org.socialHandles };

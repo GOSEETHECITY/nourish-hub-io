@@ -71,6 +71,38 @@ AS $$
 $$;
 
 -- ========================
+-- 4b. VALIDATE JOIN CODE FUNCTION
+-- ========================
+CREATE OR REPLACE FUNCTION public.validate_join_code(p_code TEXT)
+RETURNS JSON
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE result JSON;
+BEGIN
+  SELECT json_build_object('id', id, 'name', name, 'type', 'venue')
+  INTO result
+  FROM public.organizations
+  WHERE join_code = p_code AND approval_status = 'approved'
+  LIMIT 1;
+
+  IF result IS NOT NULL THEN
+    RETURN result;
+  END IF;
+
+  SELECT json_build_object('id', id, 'name', organization_name, 'type', 'nonprofit')
+  INTO result
+  FROM public.nonprofits
+  WHERE join_code = p_code AND approval_status = 'approved'
+  LIMIT 1;
+
+  RETURN result;
+END;
+$$;
+
+-- ========================
 -- 5. ORGANIZATIONS TABLE
 -- ========================
 CREATE TABLE public.organizations (
@@ -153,6 +185,39 @@ CREATE TABLE public.nonprofits (
 );
 
 ALTER TABLE public.nonprofits ENABLE ROW LEVEL SECURITY;
+
+-- ========================
+-- 7b. NONPROFIT LOCATIONS TABLE
+-- ========================
+CREATE TABLE public.nonprofit_locations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  nonprofit_id UUID REFERENCES public.nonprofits(id) ON DELETE CASCADE NOT NULL,
+  name TEXT NOT NULL,
+  address TEXT,
+  city TEXT,
+  state TEXT,
+  zip TEXT,
+  county TEXT,
+  contact_name TEXT,
+  contact_email TEXT,
+  contact_phone TEXT,
+  operating_hours TEXT,
+  pickup_dropoff_instructions TEXT,
+  cold_storage BOOLEAN DEFAULT FALSE,
+  refrigeration BOOLEAN DEFAULT FALSE,
+  cabinetry BOOLEAN DEFAULT FALSE,
+  food_types_accepted public.food_type[],
+  estimated_weekly_served INTEGER,
+  population_served TEXT,
+  approval_status public.approval_status DEFAULT 'pending' NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+ALTER TABLE public.nonprofit_locations ENABLE ROW LEVEL SECURITY;
+
+-- Add FK from profiles to nonprofit_locations
+ALTER TABLE public.profiles ADD CONSTRAINT fk_profiles_nonprofit_location
+  FOREIGN KEY (nonprofit_location_id) REFERENCES public.nonprofit_locations(id) ON DELETE SET NULL;
 
 -- ========================
 -- 8. FOOD LISTINGS TABLE
@@ -419,6 +484,27 @@ CREATE POLICY "Nonprofit users read own" ON public.nonprofits
 
 CREATE POLICY "Nonprofit users update own" ON public.nonprofits
   FOR UPDATE USING (user_id = auth.uid());
+
+-- Nonprofit locations: admins full, nonprofit partners manage own, assigned users read
+CREATE POLICY "Admins full access nonprofit_locations" ON public.nonprofit_locations
+  FOR ALL USING (public.has_role(auth.uid(), 'admin'));
+
+CREATE POLICY "Nonprofit partners manage own locations" ON public.nonprofit_locations
+  FOR ALL USING (
+    public.has_role(auth.uid(), 'nonprofit_partner')
+    AND nonprofit_id IN (SELECT id FROM public.nonprofits WHERE user_id = auth.uid())
+  );
+
+CREATE POLICY "Nonprofit users read assigned locations" ON public.nonprofit_locations
+  FOR SELECT USING (
+    id IN (SELECT nonprofit_location_id FROM public.profiles WHERE id = auth.uid())
+  );
+
+CREATE POLICY "Government can read nonprofit_locations" ON public.nonprofit_locations
+  FOR SELECT USING (public.has_role(auth.uid(), 'government_partner'));
+
+CREATE POLICY "Authenticated can insert nonprofit_locations" ON public.nonprofit_locations
+  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
 
 -- Impact reports: admins full, nonprofits manage own
 CREATE POLICY "Admins full access impact_reports" ON public.impact_reports
