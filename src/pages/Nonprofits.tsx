@@ -38,28 +38,15 @@ export default function Nonprofits() {
 
   const { data: nonprofits = [], isLoading } = useQuery({
     queryKey: ["nonprofits"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("nonprofits").select("*").order("created_at", { ascending: false });
-      if (error) throw error;
-      return data as Nonprofit[];
-    },
+    queryFn: async () => { const { data, error } = await supabase.from("nonprofits").select("*").order("created_at", { ascending: false }); if (error) throw error; return data as Nonprofit[]; },
   });
 
   const saveNonprofit = useMutation({
     mutationFn: async () => {
-      if (editingNp) {
-        const { error } = await supabase.from("nonprofits").update(form).eq("id", editingNp.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("nonprofits").insert({ ...form, approval_status: "pending" as ApprovalStatus });
-        if (error) throw error;
-      }
+      if (editingNp) { const { error } = await supabase.from("nonprofits").update(form).eq("id", editingNp.id); if (error) throw error; }
+      else { const { error } = await supabase.from("nonprofits").insert({ ...form, approval_status: "pending" as ApprovalStatus }); if (error) throw error; }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["nonprofits"] });
-      toast.success(editingNp ? "Nonprofit updated" : "Nonprofit added");
-      closeDialog();
-    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["nonprofits"] }); toast.success(editingNp ? "Nonprofit updated" : "Nonprofit added"); closeDialog(); },
     onError: (e) => toast.error(e.message),
   });
 
@@ -91,57 +78,34 @@ export default function Nonprofits() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Nonprofits</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage nonprofit partner applications and approvals</p>
-        </div>
+        <div><h1 className="text-2xl font-bold text-foreground">Nonprofits</h1><p className="text-sm text-muted-foreground mt-1">Manage nonprofit partner applications and approvals</p></div>
         <Button onClick={() => { setEditingNp(null); setForm(emptyForm); setDialogOpen(true); }}><Plus className="w-4 h-4 mr-2" />Add Nonprofit</Button>
       </div>
 
       <div className="flex gap-3">
         <Select value={filterStatus} onValueChange={setFilterStatus}>
           <SelectTrigger className="w-[160px]"><SelectValue placeholder="Status" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="approved">Approved</SelectItem>
-            <SelectItem value="rejected">Rejected</SelectItem>
-            <SelectItem value="deactivated">Deactivated</SelectItem>
-          </SelectContent>
+          <SelectContent><SelectItem value="all">All Statuses</SelectItem><SelectItem value="pending">Pending</SelectItem><SelectItem value="approved">Approved</SelectItem><SelectItem value="rejected">Rejected</SelectItem><SelectItem value="deactivated">Deactivated</SelectItem></SelectContent>
         </Select>
         <Select value={filterCity} onValueChange={setFilterCity}>
           <SelectTrigger className="w-[140px]"><SelectValue placeholder="City" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Cities</SelectItem>
-            {cities.map((c) => <SelectItem key={c!} value={c!}>{c}</SelectItem>)}
-          </SelectContent>
+          <SelectContent><SelectItem value="all">All Cities</SelectItem>{cities.map((c) => <SelectItem key={c!} value={c!}>{c}</SelectItem>)}</SelectContent>
         </Select>
       </div>
 
       <div className="bg-card rounded-xl border">
         <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Organization Name</TableHead>
-              <TableHead>Primary Contact</TableHead>
-              <TableHead>City</TableHead>
-              <TableHead>State</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Date Applied</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
+          <TableHeader><TableRow><TableHead>Organization Name</TableHead><TableHead>Primary Contact</TableHead><TableHead>City</TableHead><TableHead>State</TableHead><TableHead>County</TableHead><TableHead>Status</TableHead><TableHead>Date Applied</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
           <TableBody>
-            {isLoading ? (
-              <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground">Loading...</TableCell></TableRow>
-            ) : filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground">No nonprofits found</TableCell></TableRow>
-            ) : filtered.map((n) => (
+            {isLoading ? <TableRow><TableCell colSpan={8} className="text-center py-12 text-muted-foreground">Loading...</TableCell></TableRow>
+            : filtered.length === 0 ? <TableRow><TableCell colSpan={8} className="text-center py-12 text-muted-foreground">No nonprofits found</TableCell></TableRow>
+            : filtered.map((n) => (
               <TableRow key={n.id} className="cursor-pointer" onClick={() => navigate(`/nonprofits/${n.id}`)}>
                 <TableCell className="font-medium">{n.organization_name}</TableCell>
                 <TableCell>{n.primary_contact || "—"}</TableCell>
                 <TableCell>{n.city || "—"}</TableCell>
                 <TableCell>{n.state || "—"}</TableCell>
+                <TableCell>{n.county || "—"}</TableCell>
                 <TableCell><span className={`px-2.5 py-0.5 text-xs font-semibold rounded capitalize ${STATUS_COLORS[n.approval_status]}`}>{n.approval_status}</span></TableCell>
                 <TableCell>{new Date(n.created_at).toLocaleDateString()}</TableCell>
                 <TableCell><Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); openEdit(n); }}><Pencil className="w-3 h-3" /></Button></TableCell>
@@ -167,6 +131,7 @@ export default function Nonprofits() {
               <div><Label>State</Label><Input value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} /></div>
               <div><Label>ZIP</Label><Input value={form.zip} onChange={(e) => setForm({ ...form, zip: e.target.value })} /></div>
             </div>
+            <div><Label>County</Label><Input value={form.county} onChange={(e) => setForm({ ...form, county: e.target.value })} /></div>
             <div><Label>Operating Hours</Label><Input value={form.operating_hours} onChange={(e) => setForm({ ...form, operating_hours: e.target.value })} /></div>
             <div className="flex gap-6">
               <label className="flex items-center gap-2 text-sm"><Checkbox checked={form.cold_storage} onCheckedChange={(v) => setForm({ ...form, cold_storage: !!v })} />Cold Storage</label>

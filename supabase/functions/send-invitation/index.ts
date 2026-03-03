@@ -12,13 +12,9 @@ interface InvitationPayload {
   last_name: string;
   phone?: string;
   role: string;
-  /** "organization" | "location" */
   level: "organization" | "location";
-  /** The org/location name shown in the email */
   entity_name: string;
-  /** ID of the org or location to link the user to */
   entity_id: string;
-  /** "venue" | "nonprofit" */
   entity_type: "venue" | "nonprofit";
 }
 
@@ -28,7 +24,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Authenticate caller
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -51,7 +46,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Verify caller has admin role
     const { data: roleData } = await supabase
       .from("user_roles")
       .select("role")
@@ -76,7 +70,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Check if user already exists
     const adminClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -91,7 +84,6 @@ Deno.serve(async (req) => {
     let action: string;
 
     if (existing) {
-      // Link existing user
       const updateData: Record<string, string> = {};
       if (level === "organization") {
         updateData[entity_type === "nonprofit" ? "nonprofit_id" : "organization_id"] = entity_id;
@@ -105,7 +97,6 @@ Deno.serve(async (req) => {
       action = "invited";
     }
 
-    // Send invitation email via Resend
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
     if (!RESEND_API_KEY) {
       throw new Error("RESEND_API_KEY is not configured");
@@ -113,7 +104,7 @@ Deno.serve(async (req) => {
 
     const roleLabel = role.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
     const levelLabel = level === "organization" ? "Organization" : "Location";
-    const setupUrl = Deno.env.get("SUPABASE_URL")?.replace(".supabase.co", ".lovable.app") || "#";
+    const setupUrl = "https://nourish-hub-io.lovable.app";
 
     const emailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
@@ -152,7 +143,7 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "HarietAI <onboarding@resend.dev>",
+        from: "HarietAI <noreply@updates.hariet.ai>",
         to: [email],
         subject: `You've been invited to join ${entity_name} on HarietAI`,
         html: emailHtml,

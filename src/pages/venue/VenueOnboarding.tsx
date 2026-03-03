@@ -6,7 +6,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { LOCATION_TYPES } from "@/lib/constants";
 import SustainabilityBaselineForm, { emptySustainabilityBaseline, type SustainabilityBaselineData } from "@/components/forms/SustainabilityBaselineForm";
 
 export default function VenueOnboarding() {
@@ -14,43 +17,35 @@ export default function VenueOnboarding() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
 
-  // Location form
   const [locationForm, setLocationForm] = useState({
-    name: "", address: "", city: "", state: "", zip: "", county: "",
-    pickup_address: "", pickup_instructions: "", hours_of_operation: "", estimated_surplus_frequency: "",
+    name: "", locationType: "", address: "", city: "", state: "", zip: "", county: "",
+    differentPickup: false, pickupAddress: "", pickupInstructions: "", hours_of_operation: "", estimated_surplus_frequency: "",
   });
 
-  // Sustainability baseline
   const [baseline, setBaseline] = useState<SustainabilityBaselineData>(emptySustainabilityBaseline);
 
   const completeOnboarding = useMutation({
     mutationFn: async () => {
       if (!profile?.organization_id) throw new Error("No organization linked to your profile");
+      const pickupAddr = locationForm.differentPickup
+        ? locationForm.pickupAddress
+        : [locationForm.address, locationForm.city, locationForm.state].filter(Boolean).join(", ");
 
-      // Create the location
       const { data: loc, error: locError } = await supabase.from("locations").insert({
         organization_id: profile.organization_id,
-        name: locationForm.name,
+        name: locationForm.name, location_type: locationForm.locationType || null,
         address: locationForm.address, city: locationForm.city, state: locationForm.state,
-        zip: locationForm.zip, county: locationForm.county,
-        pickup_address: locationForm.pickup_address || [locationForm.address, locationForm.city, locationForm.state].filter(Boolean).join(", "),
-        pickup_instructions: locationForm.pickup_instructions,
+        zip: locationForm.zip, county: locationForm.county, pickup_address: pickupAddr,
+        pickup_instructions: locationForm.pickupInstructions,
         hours_of_operation: locationForm.hours_of_operation,
         estimated_surplus_frequency: locationForm.estimated_surplus_frequency,
       }).select().single();
-
       if (locError) throw locError;
 
-      // Save sustainability baseline
       const outcomes = [...baseline.priority_outcomes];
-      if (baseline.priority_other && outcomes.includes("Other")) {
-        const idx = outcomes.indexOf("Other");
-        outcomes[idx] = baseline.priority_other;
-      }
-
+      if (baseline.priority_other && outcomes.includes("Other")) outcomes[outcomes.indexOf("Other")] = baseline.priority_other;
       await supabase.from("sustainability_baseline").insert({
-        location_id: loc.id,
-        generates_surplus: baseline.generates_surplus,
+        location_id: loc.id, generates_surplus: baseline.generates_surplus,
         estimated_daily_surplus: baseline.estimated_daily_surplus || null,
         surplus_types: baseline.surplus_types.length ? baseline.surplus_types : null,
         current_handling: baseline.current_handling || null,
@@ -58,10 +53,7 @@ export default function VenueOnboarding() {
         priority_outcomes: outcomes.length ? outcomes : null,
       });
     },
-    onSuccess: () => {
-      toast.success("Onboarding complete! Welcome to your dashboard.");
-      navigate("/venue");
-    },
+    onSuccess: () => { toast.success("Onboarding complete! Welcome to your dashboard."); navigate("/venue"); },
     onError: (e) => toast.error(e.message),
   });
 
@@ -81,6 +73,13 @@ export default function VenueOnboarding() {
           <div className="space-y-4">
             <h2 className="text-lg font-semibold text-foreground">Your Primary Location</h2>
             <div><Label>Location Name *</Label><Input value={locationForm.name} onChange={(e) => setLocationForm({ ...locationForm, name: e.target.value })} placeholder="e.g. Main Kitchen" /></div>
+            <div>
+              <Label>Location Type *</Label>
+              <Select value={locationForm.locationType} onValueChange={(v) => setLocationForm({ ...locationForm, locationType: v })}>
+                <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
+                <SelectContent>{LOCATION_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
             <div><Label>Address</Label><Input value={locationForm.address} onChange={(e) => setLocationForm({ ...locationForm, address: e.target.value })} /></div>
             <div className="grid grid-cols-3 gap-4">
               <div><Label>City</Label><Input value={locationForm.city} onChange={(e) => setLocationForm({ ...locationForm, city: e.target.value })} /></div>
@@ -88,13 +87,15 @@ export default function VenueOnboarding() {
               <div><Label>ZIP</Label><Input value={locationForm.zip} onChange={(e) => setLocationForm({ ...locationForm, zip: e.target.value })} /></div>
             </div>
             <div><Label>County</Label><Input value={locationForm.county} onChange={(e) => setLocationForm({ ...locationForm, county: e.target.value })} /></div>
-            <div><Label>Pickup Address</Label><Input value={locationForm.pickup_address} onChange={(e) => setLocationForm({ ...locationForm, pickup_address: e.target.value })} placeholder="Defaults to location address" /></div>
-            <div><Label>Pickup Instructions</Label><Input value={locationForm.pickup_instructions} onChange={(e) => setLocationForm({ ...locationForm, pickup_instructions: e.target.value })} /></div>
+            <label className="flex items-center gap-2 text-sm">
+              <Checkbox checked={locationForm.differentPickup} onCheckedChange={(v) => setLocationForm({ ...locationForm, differentPickup: !!v, pickupAddress: !!v ? locationForm.pickupAddress : "" })} />
+              My pickup address is different from my location address
+            </label>
+            {locationForm.differentPickup && <div><Label>Pickup Address</Label><Input value={locationForm.pickupAddress} onChange={(e) => setLocationForm({ ...locationForm, pickupAddress: e.target.value })} /></div>}
+            <div><Label>Pickup Instructions</Label><Input value={locationForm.pickupInstructions} onChange={(e) => setLocationForm({ ...locationForm, pickupInstructions: e.target.value })} /></div>
             <div><Label>Hours of Operation</Label><Input value={locationForm.hours_of_operation} onChange={(e) => setLocationForm({ ...locationForm, hours_of_operation: e.target.value })} /></div>
             <div><Label>Estimated Surplus Frequency</Label><Input value={locationForm.estimated_surplus_frequency} onChange={(e) => setLocationForm({ ...locationForm, estimated_surplus_frequency: e.target.value })} /></div>
-            <Button className="w-full" onClick={() => setStep(2)} disabled={!locationForm.name}>
-              Continue
-            </Button>
+            <Button className="w-full" onClick={() => setStep(2)} disabled={!locationForm.name || !locationForm.locationType}>Continue</Button>
           </div>
         )}
 
