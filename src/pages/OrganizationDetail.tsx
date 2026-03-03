@@ -400,6 +400,7 @@ export default function OrganizationDetail() {
         onOpenChange={setOrgUserDialogOpen}
         organizationId={id!}
         organizationType="venue"
+        organizationName={org?.name || "Organization"}
         invalidateKey={["org-users", id!]}
       />
 
@@ -410,6 +411,7 @@ export default function OrganizationDetail() {
           onOpenChange={(v) => { setLocUserDialogOpen(v); if (!v) setSelectedLocationId(null); }}
           locationId={selectedLocationId}
           locationType="venue"
+          locationName={locations.find(l => l.id === selectedLocationId)?.name || "Location"}
           invalidateKey={["org-users", id!]}
         />
       )}

@@ -289,6 +289,7 @@ export default function NonprofitDetail() {
         onOpenChange={setOrgUserDialogOpen}
         organizationId={id!}
         organizationType="nonprofit"
+        organizationName={np?.organization_name || "Organization"}
         invalidateKey={["np-users", id!]}
       />
 
@@ -298,6 +299,7 @@ export default function NonprofitDetail() {
           onOpenChange={(v) => { setLocUserDialogOpen(v); if (!v) setSelectedLocationId(null); }}
           locationId={selectedLocationId}
           locationType="nonprofit"
+          locationName={npLocations.find(l => l.id === selectedLocationId)?.name || "Location"}
           invalidateKey={["np-users", id!]}
         />
       )}
@@ -306,6 +308,7 @@ export default function NonprofitDetail() {
         open={addLocationOpen}
         onOpenChange={setAddLocationOpen}
         nonprofitId={id!}
+        nonprofitName={np?.organization_name || "Organization"}
         invalidateKey={["np-locations", id!]}
       />
     </div>
