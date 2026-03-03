@@ -85,6 +85,11 @@ SET search_path = public
 AS $$
 DECLARE result JSON;
 BEGIN
+  -- Require authentication
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Authentication required';
+  END IF;
+
   SELECT json_build_object('id', id, 'name', name, 'type', 'venue')
   INTO result
   FROM public.organizations
