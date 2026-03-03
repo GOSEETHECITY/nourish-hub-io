@@ -14,6 +14,7 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   nonprofitId: string;
+  nonprofitName: string;
   invalidateKey: string[];
 }
 
@@ -39,7 +40,7 @@ const emptyForm = {
   contact_name: "", contact_email: "", contact_phone: "",
 };
 
-export default function AddNonprofitLocationDialog({ open, onOpenChange, nonprofitId, invalidateKey }: Props) {
+export default function AddNonprofitLocationDialog({ open, onOpenChange, nonprofitId, nonprofitName, invalidateKey }: Props) {
   const queryClient = useQueryClient();
   const [form, setForm] = useState(emptyForm);
 
@@ -85,14 +86,28 @@ export default function AddNonprofitLocationDialog({ open, onOpenChange, nonprof
       });
       if (error) throw error;
 
-      // Stub: send email to contact_email
+      // Send invitation email to contact person if provided
       if (form.contact_email) {
-        toast.info(`Invitation would be sent to ${form.contact_email}. Email sending is not yet configured.`);
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          await supabase.functions.invoke("send-invitation", {
+            body: {
+              email: form.contact_email,
+              first_name: form.contact_name?.split(" ")[0] || "Team Member",
+              last_name: form.contact_name?.split(" ").slice(1).join(" ") || "",
+              role: "site_manager",
+              level: "location",
+              entity_name: `${form.name} (${nonprofitName})`,
+              entity_id: nonprofitId,
+              entity_type: "nonprofit",
+            },
+          });
+        }
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: invalidateKey });
-      toast.success("Distribution location added");
+      toast.success("Distribution location added and invitation sent");
       onOpenChange(false);
       setForm(emptyForm);
     },

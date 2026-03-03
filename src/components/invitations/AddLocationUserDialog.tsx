@@ -13,6 +13,7 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   locationId: string;
   locationType: "venue" | "nonprofit";
+  locationName: string;
   /** Query key to invalidate on success */
   invalidateKey: string[];
 }
@@ -32,28 +33,36 @@ const NONPROFIT_LOCATION_ROLES = [
 
 const emptyForm = { first_name: "", last_name: "", email: "", phone: "", role: "staff" };
 
-export default function AddLocationUserDialog({ open, onOpenChange, locationId, locationType, invalidateKey }: Props) {
+export default function AddLocationUserDialog({ open, onOpenChange, locationId, locationType, locationName, invalidateKey }: Props) {
   const queryClient = useQueryClient();
   const [form, setForm] = useState(emptyForm);
   const roles = locationType === "nonprofit" ? NONPROFIT_LOCATION_ROLES : VENUE_LOCATION_ROLES;
 
   const invite = useMutation({
     mutationFn: async () => {
-      const { data: existing } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("email", form.email)
-        .maybeSingle();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
 
-      if (existing) {
-        const updateData = locationType === "nonprofit"
-          ? { nonprofit_location_id: locationId }
-          : { location_id: locationId };
-        const { error } = await supabase.from("profiles").update(updateData).eq("id", existing.id);
-        if (error) throw error;
-        toast.success("Existing user linked to location");
+      const res = await supabase.functions.invoke("send-invitation", {
+        body: {
+          email: form.email,
+          first_name: form.first_name,
+          last_name: form.last_name,
+          phone: form.phone,
+          role: form.role,
+          level: "location",
+          entity_name: locationName,
+          entity_id: locationId,
+          entity_type: locationType,
+        },
+      });
+
+      if (res.error) throw new Error(res.error.message || "Failed to send invitation");
+      const data = res.data as { action?: string };
+      if (data?.action === "linked") {
+        toast.success("Existing user linked to location and notified by email");
       } else {
-        toast.success(`Invitation would be sent to ${form.email}. Email sending is not yet configured.`);
+        toast.success(`Invitation email sent to ${form.email}`);
       }
     },
     onSuccess: () => {
@@ -89,7 +98,7 @@ export default function AddLocationUserDialog({ open, onOpenChange, locationId, 
             </Select>
           </div>
           <p className="text-xs text-muted-foreground">
-            If the user already has an account, they will be linked to this location. Otherwise, an email invitation will be sent.
+            An invitation email will be sent. If the user already has an account, they will be linked to this location.
           </p>
           <Button className="w-full" onClick={() => invite.mutate()} disabled={!form.email || !form.first_name || !form.last_name || invite.isPending}>
             {invite.isPending ? "Sending..." : "Send Invitation"}

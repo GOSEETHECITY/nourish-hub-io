@@ -235,6 +235,7 @@ export default function LocationDetail() {
         onOpenChange={setLocUserDialogOpen}
         locationId={locationId!}
         locationType="venue"
+        locationName={location?.name || "Location"}
         invalidateKey={["location-users", locationId!]}
       />
     </div>

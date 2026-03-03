@@ -13,6 +13,7 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   organizationId: string;
   organizationType: "venue" | "nonprofit";
+  organizationName: string;
   /** Query key to invalidate on success */
   invalidateKey: string[];
 }
@@ -25,31 +26,35 @@ const ORG_ROLES = [
 
 const emptyForm = { first_name: "", last_name: "", email: "", phone: "", role: "staff" };
 
-export default function AddOrganizationUserDialog({ open, onOpenChange, organizationId, organizationType, invalidateKey }: Props) {
+export default function AddOrganizationUserDialog({ open, onOpenChange, organizationId, organizationType, organizationName, invalidateKey }: Props) {
   const queryClient = useQueryClient();
   const [form, setForm] = useState(emptyForm);
 
   const invite = useMutation({
     mutationFn: async () => {
-      // Check if user already exists
-      const { data: existing } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("email", form.email)
-        .maybeSingle();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
 
-      if (existing) {
-        // Link existing user to org
-        const updateData = organizationType === "nonprofit"
-          ? { nonprofit_id: organizationId }
-          : { organization_id: organizationId };
-        const { error } = await supabase.from("profiles").update(updateData).eq("id", existing.id);
-        if (error) throw error;
-        toast.success("Existing user linked to organization");
+      const res = await supabase.functions.invoke("send-invitation", {
+        body: {
+          email: form.email,
+          first_name: form.first_name,
+          last_name: form.last_name,
+          phone: form.phone,
+          role: form.role,
+          level: "organization",
+          entity_name: organizationName,
+          entity_id: organizationId,
+          entity_type: organizationType,
+        },
+      });
+
+      if (res.error) throw new Error(res.error.message || "Failed to send invitation");
+      const data = res.data as { action?: string };
+      if (data?.action === "linked") {
+        toast.success("Existing user linked to organization and notified by email");
       } else {
-        // Stub: In production this would send an invitation email
-        // For now, show a message that the invitation would be sent
-        toast.success(`Invitation would be sent to ${form.email}. Email sending is not yet configured.`);
+        toast.success(`Invitation email sent to ${form.email}`);
       }
     },
     onSuccess: () => {
@@ -85,7 +90,7 @@ export default function AddOrganizationUserDialog({ open, onOpenChange, organiza
             </Select>
           </div>
           <p className="text-xs text-muted-foreground">
-            If the user already has an account, they will be linked to this organization. Otherwise, an email invitation will be sent.
+            An invitation email will be sent. If the user already has an account, they will be linked to this organization.
           </p>
           <Button className="w-full" onClick={() => invite.mutate()} disabled={!form.email || !form.first_name || !form.last_name || invite.isPending}>
             {invite.isPending ? "Sending..." : "Send Invitation"}
