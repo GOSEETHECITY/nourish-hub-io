@@ -35,6 +35,9 @@ CREATE TABLE public.profiles (
   email TEXT,
   phone TEXT,
   organization_id UUID,
+  location_id UUID,
+  nonprofit_id UUID,
+  nonprofit_location_id UUID,
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
@@ -124,8 +127,10 @@ CREATE TABLE public.organizations (
 
 ALTER TABLE public.organizations ENABLE ROW LEVEL SECURITY;
 
--- Add FK from profiles to organizations
+-- Add FKs from profiles to organizations, locations, nonprofits
 ALTER TABLE public.profiles ADD CONSTRAINT fk_profiles_organization FOREIGN KEY (organization_id) REFERENCES public.organizations(id) ON DELETE SET NULL;
+ALTER TABLE public.profiles ADD CONSTRAINT profiles_location_id_fkey FOREIGN KEY (location_id) REFERENCES public.locations(id) ON DELETE SET NULL;
+ALTER TABLE public.profiles ADD CONSTRAINT profiles_nonprofit_id_fkey FOREIGN KEY (nonprofit_id) REFERENCES public.nonprofits(id) ON DELETE SET NULL;
 
 -- ========================
 -- 6. LOCATIONS TABLE

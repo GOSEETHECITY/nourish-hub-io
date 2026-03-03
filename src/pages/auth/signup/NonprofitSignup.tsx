@@ -97,8 +97,10 @@ export default function NonprofitSignup({ onBack }: Props) {
       await supabase.from("user_roles").insert({ user_id: userId, role: "nonprofit_partner" });
 
       // Upload documents
-      const insurancePath = `nonprofits/${userId}/insurance_${insuranceFile.name}`;
-      const agreementPath = `nonprofits/${userId}/agreement_${agreementFile.name}`;
+      const safeInsName = insuranceFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const safeAgrName = agreementFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const insurancePath = `nonprofits/${userId}/insurance_${safeInsName}`;
+      const agreementPath = `nonprofits/${userId}/agreement_${safeAgrName}`;
       const [insUpload, agrUpload] = await Promise.all([
         supabase.storage.from("nonprofit-documents").upload(insurancePath, insuranceFile),
         supabase.storage.from("nonprofit-documents").upload(agreementPath, agreementFile),

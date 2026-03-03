@@ -51,6 +51,21 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Verify caller has admin role
+    const { data: roleData } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+
+    if (!roleData) {
+      return new Response(JSON.stringify({ error: "Forbidden: admin role required" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const payload: InvitationPayload = await req.json();
     const { email, first_name, last_name, role, level, entity_name, entity_id, entity_type } = payload;
 
