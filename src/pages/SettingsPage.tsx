@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
+import PasswordInput from "@/components/ui/password-input";
 
 export default function SettingsPage() {
   const { profile, user } = useAuth();
@@ -81,7 +82,7 @@ export default function SettingsPage() {
         <Separator />
         <h3 className="text-sm font-semibold text-foreground">Change Password</h3>
         <div className="flex gap-4">
-          <Input type="password" placeholder="New password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="max-w-xs" />
+          <PasswordInput placeholder="New password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="max-w-xs" />
           <Button variant="outline" onClick={changePassword}>Update Password</Button>
         </div>
       </section>

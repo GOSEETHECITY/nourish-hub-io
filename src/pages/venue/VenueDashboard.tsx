@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { Package, Leaf, DollarSign, BarChart3, Plus, Pencil, Store } from "lucide-react";
+import OnboardingChecklist from "@/components/venue/OnboardingChecklist";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -159,6 +160,8 @@ export default function VenueDashboard() {
             <p className="text-sm text-muted-foreground mt-1">Manage your food listings, coupons, and impact</p>
           </div>
         </div>
+
+        <OnboardingChecklist />
 
         {/* KPI Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
