@@ -43,28 +43,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    let mounted = true;
+
+    // Set up listener first — but do NOT await inside the callback
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      (_event, session) => {
+        if (!mounted) return;
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          await fetchProfileAndRole(session.user.id);
+          // Defer fetch to avoid blocking the auth listener
+          fetchProfileAndRole(session.user.id).then(() => {
+            if (mounted) setLoading(false);
+          });
         } else {
           setProfile(null);
           setRole(null);
+          setLoading(false);
         }
-        setLoading(false);
       }
     );
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    // Initial session check
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        await fetchProfileAndRole(session.user.id);
+        fetchProfileAndRole(session.user.id).then(() => {
+          if (mounted) setLoading(false);
+        });
+      } else {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
