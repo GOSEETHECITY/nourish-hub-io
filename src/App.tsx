@@ -29,10 +29,36 @@ import Signup from "./pages/auth/Signup";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import AcceptInvitation from "./pages/auth/AcceptInvitation";
+// Venue
 import VenueDashboard from "./pages/venue/VenueDashboard";
+import VenueDashboardHome from "./pages/venue/VenueDashboardHome";
+import VenueDonations from "./pages/venue/VenueDonations";
+import VenueMarketplace from "./pages/venue/VenueMarketplace";
+import VenueImpact from "./pages/venue/VenueImpact";
+import VenueBaseline from "./pages/venue/VenueBaseline";
+import VenueLocations from "./pages/venue/VenueLocations";
+import VenueSettings from "./pages/venue/VenueSettings";
+import VenueSupport from "./pages/venue/VenueSupport";
 import VenueOnboarding from "./pages/venue/VenueOnboarding";
+// Nonprofit
 import NonprofitDashboard from "./pages/nonprofit/NonprofitDashboard";
+import NonprofitDashboardHome from "./pages/nonprofit/NonprofitDashboardHome";
+import NonprofitAvailable from "./pages/nonprofit/NonprofitAvailable";
+import NonprofitClaimed from "./pages/nonprofit/NonprofitClaimed";
+import NonprofitImpactReports from "./pages/nonprofit/NonprofitImpactReports";
+import NonprofitDistributionLocations from "./pages/nonprofit/NonprofitDistributionLocations";
+import NonprofitSettings from "./pages/nonprofit/NonprofitSettings";
+import NonprofitSupport from "./pages/nonprofit/NonprofitSupport";
+// Government
 import GovernmentDashboard from "./pages/government/GovernmentDashboard";
+import GovernmentDashboardHome from "./pages/government/GovernmentDashboardHome";
+import GovernmentListings from "./pages/government/GovernmentListings";
+import GovernmentOrganizations from "./pages/government/GovernmentOrganizations";
+import GovernmentNonprofits from "./pages/government/GovernmentNonprofits";
+import GovernmentImpactReports from "./pages/government/GovernmentImpactReports";
+import GovernmentSettings from "./pages/government/GovernmentSettings";
+import GovernmentSupport from "./pages/government/GovernmentSupport";
+
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -81,12 +107,57 @@ const App = () => (
             </Route>
 
             {/* Venue Partner routes */}
-            <Route path="/venue" element={<ProtectedRoute allowedRoles={["venue_partner"]}><VenueDashboard /></ProtectedRoute>} />
             <Route path="/venue/onboarding" element={<ProtectedRoute allowedRoles={["venue_partner"]}><VenueOnboarding /></ProtectedRoute>} />
+            <Route
+              element={
+                <ProtectedRoute allowedRoles={["venue_partner"]}>
+                  <VenueDashboard />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="/venue" element={<VenueDashboardHome />} />
+              <Route path="/venue/donations" element={<VenueDonations />} />
+              <Route path="/venue/marketplace" element={<VenueMarketplace />} />
+              <Route path="/venue/impact" element={<VenueImpact />} />
+              <Route path="/venue/baseline" element={<VenueBaseline />} />
+              <Route path="/venue/locations" element={<VenueLocations />} />
+              <Route path="/venue/settings" element={<VenueSettings />} />
+              <Route path="/venue/support" element={<VenueSupport />} />
+            </Route>
+
             {/* Nonprofit Partner routes */}
-            <Route path="/nonprofit" element={<ProtectedRoute allowedRoles={["nonprofit_partner"]}><NonprofitDashboard /></ProtectedRoute>} />
+            <Route
+              element={
+                <ProtectedRoute allowedRoles={["nonprofit_partner"]}>
+                  <NonprofitDashboard />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="/nonprofit" element={<NonprofitDashboardHome />} />
+              <Route path="/nonprofit/available" element={<NonprofitAvailable />} />
+              <Route path="/nonprofit/claimed" element={<NonprofitClaimed />} />
+              <Route path="/nonprofit/reports" element={<NonprofitImpactReports />} />
+              <Route path="/nonprofit/locations" element={<NonprofitDistributionLocations />} />
+              <Route path="/nonprofit/settings" element={<NonprofitSettings />} />
+              <Route path="/nonprofit/support" element={<NonprofitSupport />} />
+            </Route>
+
             {/* Government Partner routes */}
-            <Route path="/government" element={<ProtectedRoute allowedRoles={["government_partner"]}><GovernmentDashboard /></ProtectedRoute>} />
+            <Route
+              element={
+                <ProtectedRoute allowedRoles={["government_partner"]}>
+                  <GovernmentDashboard />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="/government" element={<GovernmentDashboardHome />} />
+              <Route path="/government/listings" element={<GovernmentListings />} />
+              <Route path="/government/organizations" element={<GovernmentOrganizations />} />
+              <Route path="/government/nonprofits" element={<GovernmentNonprofits />} />
+              <Route path="/government/reports" element={<GovernmentImpactReports />} />
+              <Route path="/government/settings" element={<GovernmentSettings />} />
+              <Route path="/government/support" element={<GovernmentSupport />} />
+            </Route>
 
             <Route path="*" element={<NotFound />} />
           </Routes>
