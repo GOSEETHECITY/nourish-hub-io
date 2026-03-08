@@ -28,55 +28,67 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<AppRole | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfileAndRole = async (userId: string) => {
+  const fetchProfileAndRole = async (userId: string): Promise<{ profile: Profile | null; role: AppRole | null }> => {
     try {
       const [profileRes, roleRes] = await Promise.all([
-        supabase.from("profiles").select("*").eq("id", userId).single(),
-        supabase.from("user_roles").select("role").eq("user_id", userId).single(),
+        supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
+        supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle(),
       ]);
 
-      if (profileRes.data) setProfile(profileRes.data as Profile);
-      if (roleRes.data) setRole(roleRes.data.role as AppRole);
+      if (profileRes.error) throw profileRes.error;
+      if (roleRes.error) throw roleRes.error;
+
+      return {
+        profile: (profileRes.data as Profile | null) ?? null,
+        role: (roleRes.data?.role as AppRole | null) ?? null,
+      };
     } catch (err) {
       console.error("Error fetching profile/role:", err);
+      return { profile: null, role: null };
     }
   };
 
   useEffect(() => {
     let mounted = true;
+    let activeRequestId = 0;
+    let authEventReceived = false;
 
-    // Set up listener first — but do NOT await inside the callback
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (!mounted) return;
-        setSession(session);
-        setUser(session?.user ?? null);
+    const applySession = (nextSession: Session | null) => {
+      const requestId = ++activeRequestId;
 
-        if (session?.user) {
-          // Defer fetch to avoid blocking the auth listener
-          fetchProfileAndRole(session.user.id).then(() => {
-            if (mounted) setLoading(false);
-          });
-        } else {
-          setProfile(null);
-          setRole(null);
-          setLoading(false);
-        }
-      }
-    );
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
 
-    // Initial session check
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!mounted) return;
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfileAndRole(session.user.id).then(() => {
-          if (mounted) setLoading(false);
-        });
-      } else {
+      if (!nextSession?.user) {
+        setProfile(null);
+        setRole(null);
         setLoading(false);
+        return;
       }
+
+      setLoading(true);
+
+      fetchProfileAndRole(nextSession.user.id)
+        .then(({ profile: nextProfile, role: nextRole }) => {
+          if (!mounted || requestId !== activeRequestId) return;
+          setProfile(nextProfile);
+          setRole(nextRole);
+        })
+        .finally(() => {
+          if (!mounted || requestId !== activeRequestId) return;
+          setLoading(false);
+        });
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      if (!mounted) return;
+      authEventReceived = true;
+      applySession(nextSession);
+    });
+
+    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+      if (!mounted || authEventReceived) return;
+      applySession(initialSession);
     });
 
     return () => {
@@ -101,3 +113,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 }
 
 export const useAuth = () => useContext(AuthContext);
+
