@@ -11,38 +11,86 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
-  const { session, user, role, loading } = useAuth();
+  const { session, user, profile, role, loading } = useAuth();
+  const requiresOrgApproval = role === "venue_partner" || role === "government_partner";
+  const requiresNonprofitApproval = role === "nonprofit_partner";
 
   // Check approval status for venue/government partners (org-based)
-  const { data: orgStatus, isLoading: orgLoading } = useQuery({
-    queryKey: ["org-approval", user?.id],
+  const {
+    data: orgStatus,
+    isLoading: orgLoading,
+    error: orgError,
+  } = useQuery({
+    queryKey: ["org-approval", user?.id, profile?.organization_id, profile?.location_id, role],
     queryFn: async () => {
-      const { data: profile } = await supabase.from("profiles").select("organization_id").eq("id", user!.id).single();
-      if (!profile?.organization_id) return null;
-      const { data: org } = await supabase.from("organizations").select("approval_status").eq("id", profile.organization_id).single();
+      if (!profile) return null;
+
+      let organizationId = profile.organization_id;
+
+      // Location-level venue users can inherit organization via location
+      if (!organizationId && profile.location_id) {
+        const { data: location, error: locationError } = await supabase
+          .from("locations")
+          .select("organization_id")
+          .eq("id", profile.location_id)
+          .maybeSingle();
+
+        if (locationError) throw locationError;
+        organizationId = location?.organization_id ?? null;
+      }
+
+      if (!organizationId) return null;
+
+      const { data: org, error: orgFetchError } = await supabase
+        .from("organizations")
+        .select("approval_status")
+        .eq("id", organizationId)
+        .maybeSingle();
+
+      if (orgFetchError) throw orgFetchError;
       return org?.approval_status ?? null;
     },
-    enabled: !!user && (role === "venue_partner" || role === "government_partner"),
+    enabled: !!user && !!profile && requiresOrgApproval,
+    retry: 2,
   });
 
   // Check approval status for nonprofit partners
-  const { data: nonprofitStatus, isLoading: nonprofitLoading } = useQuery({
-    queryKey: ["nonprofit-approval", user?.id],
+  const {
+    data: nonprofitStatus,
+    isLoading: nonprofitLoading,
+    error: nonprofitError,
+  } = useQuery({
+    queryKey: ["nonprofit-approval", user?.id, profile?.nonprofit_id, role],
     queryFn: async () => {
+      if (!user || !profile) return null;
+
       // Check via profile.nonprofit_id first
-      const { data: profile } = await supabase.from("profiles").select("nonprofit_id").eq("id", user!.id).single();
-      if (profile?.nonprofit_id) {
-        const { data } = await supabase.from("nonprofits").select("approval_status").eq("id", profile.nonprofit_id).single();
+      if (profile.nonprofit_id) {
+        const { data, error } = await supabase
+          .from("nonprofits")
+          .select("approval_status")
+          .eq("id", profile.nonprofit_id)
+          .maybeSingle();
+
+        if (error) throw error;
         return data?.approval_status ?? null;
       }
+
       // Fallback: legacy check via user_id
-      const { data } = await supabase.from("nonprofits").select("approval_status").eq("user_id", user!.id).single();
+      const { data, error } = await supabase
+        .from("nonprofits")
+        .select("approval_status")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (error) throw error;
       return data?.approval_status ?? null;
     },
-    enabled: !!user && role === "nonprofit_partner",
+    enabled: !!user && !!profile && requiresNonprofitApproval,
+    retry: 2,
   });
 
-  if (loading || orgLoading || nonprofitLoading) {
+  if (loading || (requiresOrgApproval && orgLoading) || (requiresNonprofitApproval && nonprofitLoading)) {
     return (
       <div className="flex items-center justify-center h-screen bg-background">
         <div className="text-center space-y-3">
@@ -57,18 +105,30 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
     return <Navigate to="/login" replace />;
   }
 
+  if ((requiresOrgApproval || requiresNonprofitApproval) && !profile) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (orgError || nonprofitError) {
+    return <Navigate to="/login" replace />;
+  }
+
   // Check approval gates
   if (role === "venue_partner") {
-    if (orgStatus === "rejected") return <PendingApproval status="rejected" type="venue" />;
+    if (orgStatus === "rejected" || orgStatus === "deactivated") return <PendingApproval status="rejected" type="venue" />;
     if (orgStatus !== "approved") return <PendingApproval status="pending" type="venue" />;
   }
   if (role === "nonprofit_partner") {
-    if (nonprofitStatus === "rejected") return <PendingApproval status="rejected" type="nonprofit" />;
+    if (nonprofitStatus === "rejected" || nonprofitStatus === "deactivated") return <PendingApproval status="rejected" type="nonprofit" />;
     if (nonprofitStatus !== "approved") return <PendingApproval status="pending" type="nonprofit" />;
   }
   if (role === "government_partner") {
-    if (orgStatus === "rejected") return <PendingApproval status="rejected" type="government" />;
+    if (orgStatus === "rejected" || orgStatus === "deactivated") return <PendingApproval status="rejected" type="government" />;
     if (orgStatus !== "approved") return <PendingApproval status="pending" type="government" />;
+  }
+
+  if (allowedRoles && !role) {
+    return <Navigate to="/login" replace />;
   }
 
   if (allowedRoles && role && !allowedRoles.includes(role)) {
@@ -88,3 +148,4 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
 
   return <>{children}</>;
 }
+
