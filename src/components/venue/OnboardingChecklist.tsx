@@ -62,10 +62,10 @@ export default function OnboardingChecklist() {
   if (dismissed) return null;
 
   const items: ChecklistItem[] = [
-    { id: "baseline", label: "Complete sustainability baseline", icon: Leaf, done: baselines.length > 0, route: "/venue" },
-    { id: "location", label: "Add your first location", icon: MapPin, done: locations.length > 0, route: "/venue" },
-    { id: "donation", label: "Post your first donation", icon: Package, done: donations.length > 0, route: "/venue" },
-    { id: "stripe", label: "Connect Stripe for marketplace", icon: CreditCard, done: stripeLocations.length > 0, route: "/venue" },
+    { id: "baseline", label: "Complete sustainability baseline", icon: Leaf, done: baselines.length > 0, route: "/venue/baseline" },
+    { id: "location", label: "Add your first location", icon: MapPin, done: locations.length > 0, route: "/venue/locations" },
+    { id: "donation", label: "Post your first donation", icon: Package, done: donations.length > 0, route: "/venue/donations" },
+    { id: "stripe", label: "Connect Stripe for marketplace", icon: CreditCard, done: stripeLocations.length > 0, route: "/venue/marketplace" },
   ];
 
   const allDone = items.every((i) => i.done);
