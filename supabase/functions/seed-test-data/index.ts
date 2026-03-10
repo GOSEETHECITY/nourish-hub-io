@@ -271,7 +271,6 @@ Deno.serve(async (req) => {
     // 1. Venue Independent
     await createTestUser({
       email: "venue.independent@test.hariet.ai",
-      password: "TestHariet2026!",
       first_name: "Venue",
       last_name: "Independent",
       role: "venue_partner",
