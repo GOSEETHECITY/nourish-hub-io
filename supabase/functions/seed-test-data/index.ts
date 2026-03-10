@@ -59,7 +59,6 @@ Deno.serve(async (req) => {
     // Helper to create user + profile + role
     async function createTestUser(opts: {
       email: string;
-      password: string;
       first_name: string;
       last_name: string;
       role: string;
@@ -67,6 +66,8 @@ Deno.serve(async (req) => {
       location_id?: string;
       nonprofit_id?: string;
     }) {
+      // Generate a random password for each user
+      const password = crypto.randomUUID() + "A1!";
       // Check if user already exists
       const { data: existingProfile } = await adminClient
         .from("profiles")
