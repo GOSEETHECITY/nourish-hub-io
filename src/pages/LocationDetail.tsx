@@ -78,6 +78,15 @@ export default function LocationDetail() {
     onError: (e) => toast.error(e.message),
   });
 
+  const toggleMarketplace = useMutation({
+    mutationFn: async (enabled: boolean) => {
+      const { error } = await supabase.from("locations").update({ marketplace_enabled: enabled }).eq("id", locationId!);
+      if (error) throw error;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["location", locationId] }); toast.success("Marketplace access updated"); },
+    onError: (e) => toast.error(e.message),
+  });
+
   const openEdit = () => {
     if (!location) return;
     const hasDifferentPickup = !!(location.pickup_address && location.pickup_address !== [location.address, location.city, location.state].filter(Boolean).join(", "));
