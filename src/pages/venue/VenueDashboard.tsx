@@ -22,6 +22,16 @@ export default function VenueDashboard() {
     enabled: !!profile?.organization_id,
   });
 
+  const { data: org } = useQuery({
+    queryKey: ["venue-org", profile?.organization_id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("organizations").select("name").eq("id", profile!.organization_id!).single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!profile?.organization_id,
+  });
+
   if (isLoading) return <div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>;
   if (!profile?.organization_id || locations.length === 0) return <Navigate to="/venue/onboarding" replace />;
 
@@ -44,6 +54,7 @@ export default function VenueDashboard() {
   return (
     <PartnerDashboardLayout
       roleLabel="Venue Partner"
+      orgName={org?.name}
       navItems={navItems}
       otherNavItems={otherNavItems}
       switcherItems={locations.map((l) => ({ id: l.id, name: l.name }))}

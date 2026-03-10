@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
 import { LOCATION_TYPES } from "@/lib/constants";
+import { Switch } from "@/components/ui/switch";
 import type { Location, FoodListing, SustainabilityBaseline, ImpactReport, Coupon, Profile } from "@/types/database";
 import AddLocationUserDialog from "@/components/invitations/AddLocationUserDialog";
 
@@ -77,6 +78,15 @@ export default function LocationDetail() {
     onError: (e) => toast.error(e.message),
   });
 
+  const toggleMarketplace = useMutation({
+    mutationFn: async (enabled: boolean) => {
+      const { error } = await supabase.from("locations").update({ marketplace_enabled: enabled }).eq("id", locationId!);
+      if (error) throw error;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["location", locationId] }); toast.success("Marketplace access updated"); },
+    onError: (e) => toast.error(e.message),
+  });
+
   const openEdit = () => {
     if (!location) return;
     const hasDifferentPickup = !!(location.pickup_address && location.pickup_address !== [location.address, location.city, location.state].filter(Boolean).join(", "));
@@ -120,7 +130,13 @@ export default function LocationDetail() {
           <div><p className="text-xs text-muted-foreground uppercase tracking-wider">Pickup Address</p><p className="text-sm text-foreground mt-1">{location.pickup_address || "—"}</p></div>
           <div><p className="text-xs text-muted-foreground uppercase tracking-wider">Pickup Instructions</p><p className="text-sm text-foreground mt-1">{location.pickup_instructions || "—"}</p></div>
           <div><p className="text-xs text-muted-foreground uppercase tracking-wider">Hours</p><p className="text-sm text-foreground mt-1">{location.hours_of_operation || "—"}</p></div>
-          <div><p className="text-xs text-muted-foreground uppercase tracking-wider">Marketplace</p><span className={`inline-block mt-1 px-2.5 py-0.5 rounded text-xs font-medium ${location.marketplace_enabled ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>{location.marketplace_enabled ? "Enabled" : "Disabled"}</span></div>
+          <div>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">Marketplace Access</p>
+            <div className="flex items-center gap-2 mt-1">
+              <Switch checked={location.marketplace_enabled} onCheckedChange={(v) => toggleMarketplace.mutate(v)} />
+              <span className={`text-xs font-medium ${location.marketplace_enabled ? "text-green-600" : "text-muted-foreground"}`}>{location.marketplace_enabled ? "Enabled" : "Disabled"}</span>
+            </div>
+          </div>
           <div><p className="text-xs text-muted-foreground uppercase tracking-wider">Stripe Status</p><p className="text-sm text-foreground mt-1">{formatStripeStatus(location.stripe_onboarding_status)}</p></div>
         </div>
       </section>

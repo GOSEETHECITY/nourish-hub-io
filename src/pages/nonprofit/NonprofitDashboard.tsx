@@ -19,6 +19,16 @@ export default function NonprofitDashboard() {
     enabled: !!profile?.nonprofit_id,
   });
 
+  const { data: nonprofit } = useQuery({
+    queryKey: ["np-org", profile?.nonprofit_id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("nonprofits").select("organization_name").eq("id", profile!.nonprofit_id!).single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!profile?.nonprofit_id,
+  });
+
   if (!profile?.nonprofit_id) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -47,6 +57,7 @@ export default function NonprofitDashboard() {
   return (
     <PartnerDashboardLayout
       roleLabel="Nonprofit Partner"
+      orgName={nonprofit?.organization_name}
       navItems={navItems}
       otherNavItems={otherNavItems}
       switcherItems={locations.map((l) => ({ id: l.id, name: l.name }))}

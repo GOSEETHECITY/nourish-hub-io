@@ -1,8 +1,22 @@
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { LayoutDashboard, UtensilsCrossed, Building2, Heart, BarChart3, Settings, Headphones } from "lucide-react";
 import PartnerDashboardLayout from "@/components/layout/PartnerDashboardLayout";
 import type { NavItem } from "@/components/layout/PartnerDashboardLayout";
 
 export default function GovernmentDashboard() {
+  const { profile } = useAuth();
+
+  const { data: org } = useQuery({
+    queryKey: ["gov-org-name", profile?.organization_id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("organizations").select("name").eq("id", profile!.organization_id!).single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!profile?.organization_id,
+  });
   const navItems: NavItem[] = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/government" },
     { icon: UtensilsCrossed, label: "Food Listings", path: "/government/listings" },
@@ -19,6 +33,7 @@ export default function GovernmentDashboard() {
   return (
     <PartnerDashboardLayout
       roleLabel="Government Partner"
+      orgName={org?.name}
       navItems={navItems}
       otherNavItems={otherNavItems}
     />
