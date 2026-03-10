@@ -289,7 +289,6 @@ Deno.serve(async (req) => {
     // 3. Venue Location-level user
     await createTestUser({
       email: "venue.location@test.hariet.ai",
-      password: "TestHariet2026!",
       first_name: "Venue",
       last_name: "LocationUser",
       role: "venue_partner",
