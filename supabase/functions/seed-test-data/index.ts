@@ -299,7 +299,6 @@ Deno.serve(async (req) => {
     // 4. Nonprofit partner
     const npUserId = await createTestUser({
       email: "nonprofit@test.hariet.ai",
-      password: "TestHariet2026!",
       first_name: "Nonprofit",
       last_name: "Admin",
       role: "nonprofit_partner",
