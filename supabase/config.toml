@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.seed-test-data]
 verify_jwt = false
+
+[functions.assign-government-role]
+verify_jwt = false
