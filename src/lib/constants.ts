@@ -58,7 +58,8 @@ export const US_STATES = [
 ] as const;
 
 // Format org type for display (handles both old specific types and new categories)
-export function formatOrgType(type: string): string {
+export function formatOrgType(type: string | null | undefined): string {
+  if (!type) return "—";
   const cat = ORG_CATEGORIES.find((c) => c.value === type);
   if (cat) return cat.label;
   // Legacy specific types
