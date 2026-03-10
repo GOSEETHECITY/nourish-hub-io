@@ -59,7 +59,6 @@ Deno.serve(async (req) => {
     // Helper to create user + profile + role
     async function createTestUser(opts: {
       email: string;
-      password: string;
       first_name: string;
       last_name: string;
       role: string;
@@ -67,6 +66,8 @@ Deno.serve(async (req) => {
       location_id?: string;
       nonprofit_id?: string;
     }) {
+      // Generate a random password for each user
+      const password = crypto.randomUUID() + "A1!";
       // Check if user already exists
       const { data: existingProfile } = await adminClient
         .from("profiles")
@@ -83,7 +84,7 @@ Deno.serve(async (req) => {
       const { data: authData, error: authError } =
         await adminClient.auth.admin.createUser({
           email: opts.email,
-          password: opts.password,
+          password: password,
           email_confirm: true,
           user_metadata: {
             first_name: opts.first_name,
@@ -124,7 +125,7 @@ Deno.serve(async (req) => {
         role: opts.role,
       });
 
-      results.push(`CREATED: ${opts.email} (${opts.role})`);
+      results.push(`CREATED: ${opts.email} (${opts.role}) — password: ${password}`);
       return userId;
     }
 
@@ -270,7 +271,6 @@ Deno.serve(async (req) => {
     // 1. Venue Independent
     await createTestUser({
       email: "venue.independent@test.hariet.ai",
-      password: "TestHariet2026!",
       first_name: "Venue",
       last_name: "Independent",
       role: "venue_partner",
@@ -280,7 +280,6 @@ Deno.serve(async (req) => {
     // 2. Venue Multi-location
     await createTestUser({
       email: "venue.multilocation@test.hariet.ai",
-      password: "TestHariet2026!",
       first_name: "Venue",
       last_name: "MultiLocation",
       role: "venue_partner",
@@ -290,7 +289,6 @@ Deno.serve(async (req) => {
     // 3. Venue Location-level user
     await createTestUser({
       email: "venue.location@test.hariet.ai",
-      password: "TestHariet2026!",
       first_name: "Venue",
       last_name: "LocationUser",
       role: "venue_partner",
@@ -301,7 +299,6 @@ Deno.serve(async (req) => {
     // 4. Nonprofit partner
     const npUserId = await createTestUser({
       email: "nonprofit@test.hariet.ai",
-      password: "TestHariet2026!",
       first_name: "Nonprofit",
       last_name: "Admin",
       role: "nonprofit_partner",
@@ -319,7 +316,6 @@ Deno.serve(async (req) => {
     // 5. Government partner
     await createTestUser({
       email: "government@test.hariet.ai",
-      password: "TestHariet2026!",
       first_name: "Government",
       last_name: "Rep",
       role: "government_partner",
