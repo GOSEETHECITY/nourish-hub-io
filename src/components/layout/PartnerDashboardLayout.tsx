@@ -30,6 +30,7 @@ interface PartnerDashboardLayoutProps {
 
 export default function PartnerDashboardLayout({
   roleLabel,
+  orgName,
   navItems,
   otherNavItems,
   switcherItems,
