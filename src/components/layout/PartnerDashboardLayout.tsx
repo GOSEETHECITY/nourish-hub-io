@@ -18,6 +18,8 @@ export interface NavItem {
 
 interface PartnerDashboardLayoutProps {
   roleLabel: string;
+  /** Organization/nonprofit name shown as subtitle in header */
+  orgName?: string;
   navItems: NavItem[];
   otherNavItems: NavItem[];
   /** For venue: locations list. For nonprofit: distribution locations. */
