@@ -280,7 +280,6 @@ Deno.serve(async (req) => {
     // 2. Venue Multi-location
     await createTestUser({
       email: "venue.multilocation@test.hariet.ai",
-      password: "TestHariet2026!",
       first_name: "Venue",
       last_name: "MultiLocation",
       role: "venue_partner",
