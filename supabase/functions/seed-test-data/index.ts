@@ -316,7 +316,6 @@ Deno.serve(async (req) => {
     // 5. Government partner
     await createTestUser({
       email: "government@test.hariet.ai",
-      password: "TestHariet2026!",
       first_name: "Government",
       last_name: "Rep",
       role: "government_partner",
