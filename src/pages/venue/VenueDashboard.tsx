@@ -54,6 +54,7 @@ export default function VenueDashboard() {
   return (
     <PartnerDashboardLayout
       roleLabel="Venue Partner"
+      orgName={org?.name}
       navItems={navItems}
       otherNavItems={otherNavItems}
       switcherItems={locations.map((l) => ({ id: l.id, name: l.name }))}

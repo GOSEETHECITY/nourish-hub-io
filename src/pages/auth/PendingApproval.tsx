@@ -43,6 +43,9 @@ export default function PendingApproval({ status, type }: Props) {
             <p className="text-foreground text-lg font-medium leading-relaxed">
               {pendingMessages[type || "venue"]}
             </p>
+            <p className="text-muted-foreground text-sm">
+              Estimated response time: 1–2 business days.
+            </p>
           </>
         )}
 

@@ -171,7 +171,7 @@ export default function PartnerDashboardLayout({
               <div className="w-9 h-9 rounded-full bg-accent text-accent-foreground flex items-center justify-center text-sm font-bold">{initials}</div>
               <div className="hidden md:block">
                 <p className="text-sm font-semibold text-foreground">{displayName}</p>
-                <p className="text-xs text-muted-foreground">{roleLabel}</p>
+                <p className="text-xs text-muted-foreground">{orgName || roleLabel}</p>
               </div>
             </div>
           </div>

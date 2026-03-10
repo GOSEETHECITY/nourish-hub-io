@@ -57,6 +57,7 @@ export default function NonprofitDashboard() {
   return (
     <PartnerDashboardLayout
       roleLabel="Nonprofit Partner"
+      orgName={nonprofit?.organization_name}
       navItems={navItems}
       otherNavItems={otherNavItems}
       switcherItems={locations.map((l) => ({ id: l.id, name: l.name }))}

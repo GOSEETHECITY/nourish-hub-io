@@ -33,6 +33,7 @@ export default function GovernmentDashboard() {
   return (
     <PartnerDashboardLayout
       roleLabel="Government Partner"
+      orgName={org?.name}
       navItems={navItems}
       otherNavItems={otherNavItems}
     />
