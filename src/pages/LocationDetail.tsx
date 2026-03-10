@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
 import { LOCATION_TYPES } from "@/lib/constants";
+import { Switch } from "@/components/ui/switch";
 import type { Location, FoodListing, SustainabilityBaseline, ImpactReport, Coupon, Profile } from "@/types/database";
 import AddLocationUserDialog from "@/components/invitations/AddLocationUserDialog";
 
