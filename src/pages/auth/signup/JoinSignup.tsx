@@ -62,10 +62,12 @@ export default function JoinSignup({ onBack }: Props) {
     if (!joinCode.trim()) return;
     setValidating(true); setCodeError(""); setOrgMatch(null);
     try {
-      const { data, error } = await supabase.rpc("validate_join_code", { p_code: joinCode.trim().toUpperCase() });
+      const { data, error } = await supabase.functions.invoke("validate-join-code", {
+        body: { code: joinCode.trim().toUpperCase() },
+      });
       if (error) throw error;
-      if (!data) { setCodeError("This code is not recognized."); return; }
-      setOrgMatch(data as unknown as OrgMatch);
+      if (!data?.match) { setCodeError("This code is not recognized."); return; }
+      setOrgMatch(data.match as OrgMatch);
     } catch (e: any) { setCodeError(e.message || "Failed to validate code"); } finally { setValidating(false); }
   };
 
