@@ -108,6 +108,7 @@ export default function GovernmentSignup({ onBack }: Props) {
             <button onClick={onBack} className="text-muted-foreground hover:text-foreground"><ArrowLeft className="w-5 h-5" /></button>
             <h2 className="text-lg font-semibold text-foreground">Your Account</h2>
           </div>
+          <div><Label>Invitation Code *</Label><Input value={invitationCode} onChange={(e) => setInvitationCode(e.target.value)} placeholder="Enter your government invitation code" /></div>
           <div className="grid grid-cols-2 gap-4">
             <div><Label>First Name *</Label><Input value={account.firstName} onChange={(e) => setAccount({ ...account, firstName: e.target.value })} /></div>
             <div><Label>Last Name *</Label><Input value={account.lastName} onChange={(e) => setAccount({ ...account, lastName: e.target.value })} /></div>
@@ -116,7 +117,7 @@ export default function GovernmentSignup({ onBack }: Props) {
           <div><Label>Phone</Label><Input type="tel" value={account.phone} onChange={(e) => setAccount({ ...account, phone: e.target.value })} /></div>
           <div><Label>Password *</Label><PasswordInput value={account.password} onChange={(e) => setAccount({ ...account, password: e.target.value })} placeholder="••••••••" /></div>
           <div><Label>Confirm Password *</Label><PasswordInput value={account.confirmPassword} onChange={(e) => setAccount({ ...account, confirmPassword: e.target.value })} placeholder="••••••••" /></div>
-          <Button className="w-full" onClick={() => setStep(2)} disabled={!account.firstName || !account.lastName || !account.email || !account.password || !account.confirmPassword}>Continue</Button>
+          <Button className="w-full" onClick={() => setStep(2)} disabled={!invitationCode.trim() || !account.firstName || !account.lastName || !account.email || !account.password || !account.confirmPassword}>Continue</Button>
         </div>
       )}
 
