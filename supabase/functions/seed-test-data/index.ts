@@ -11,6 +11,15 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Environment gate — disabled by default in production
+  const seedEnabled = Deno.env.get("SEED_DATA_ENABLED");
+  if (seedEnabled !== "true") {
+    return new Response(
+      JSON.stringify({ error: "Seed endpoint is disabled" }),
+      { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+
   try {
     // Authenticate the caller and verify admin role
     const authHeader = req.headers.get("Authorization");
@@ -125,7 +134,7 @@ Deno.serve(async (req) => {
         role: opts.role,
       });
 
-      results.push(`CREATED: ${opts.email} (${opts.role}) — password: ${password}`);
+      results.push(`CREATED: ${opts.email} (${opts.role})`);
       return userId;
     }
 
