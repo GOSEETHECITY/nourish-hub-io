@@ -850,6 +850,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      user_has_any_role: { Args: { _user_id: string }; Returns: boolean }
       validate_join_code: { Args: { p_code: string }; Returns: Json }
     }
     Enums: {
