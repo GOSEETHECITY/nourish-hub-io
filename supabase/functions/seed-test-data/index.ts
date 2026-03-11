@@ -134,7 +134,7 @@ Deno.serve(async (req) => {
         role: opts.role,
       });
 
-      results.push(`CREATED: ${opts.email} (${opts.role}) — password: ${password}`);
+      results.push(`CREATED: ${opts.email} (${opts.role})`);
       return userId;
     }
 
