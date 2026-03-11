@@ -106,10 +106,15 @@ Deno.serve(async (req) => {
     if (insertError) throw insertError;
 
     // Increment times_used on the invitation code
-    await adminClient.rpc("", {}).catch(() => {});
+    const { data: currentCode } = await adminClient
+      .from("invitation_codes")
+      .select("times_used")
+      .eq("id", codeData.id)
+      .single();
+
     await adminClient
       .from("invitation_codes")
-      .update({ times_used: (codeData as any).times_used ? (codeData as any).times_used + 1 : 1 })
+      .update({ times_used: (currentCode?.times_used ?? 0) + 1 })
       .eq("id", codeData.id);
 
     return new Response(

@@ -26,6 +26,7 @@ export default function GovernmentSignup({ onBack }: Props) {
 
   const [account, setAccount] = useState({ firstName: "", lastName: "", email: "", phone: "", password: "", confirmPassword: "" });
   const [gov, setGov] = useState({ name: "", type: "", contactName: "", contactEmail: "", contactPhone: "", address: "", city: "", state: "", zip: "", county: "" });
+  const [invitationCode, setInvitationCode] = useState("");
 
   // Region selection
   const [regionState, setRegionState] = useState("");
