@@ -65,7 +65,9 @@ export default function GovernmentSignup({ onBack }: Props) {
       const userId = authData.user.id;
 
       // Assign government_partner role via server-side function (not self-assignable via RLS)
-      const { data: roleResult, error: roleError } = await supabase.functions.invoke("assign-government-role");
+      const { data: roleResult, error: roleError } = await supabase.functions.invoke("assign-government-role", {
+        body: { invitationCode },
+      });
       if (roleError) throw roleError;
       if (roleResult && roleResult.error) throw new Error(roleResult.error);
 
