@@ -55,6 +55,192 @@ export type Database = {
           },
         ]
       }
+      consumer_checkins: {
+        Row: {
+          checkin_type: string | null
+          consumer_id: string | null
+          created_at: string | null
+          event_id: string | null
+          id: string
+          organization_id: string | null
+        }
+        Insert: {
+          checkin_type?: string | null
+          consumer_id?: string | null
+          created_at?: string | null
+          event_id?: string | null
+          id?: string
+          organization_id?: string | null
+        }
+        Update: {
+          checkin_type?: string | null
+          consumer_id?: string | null
+          created_at?: string | null
+          event_id?: string | null
+          id?: string
+          organization_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consumer_checkins_consumer_id_fkey"
+            columns: ["consumer_id"]
+            isOneToOne: false
+            referencedRelation: "consumers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consumer_checkins_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consumer_favorites: {
+        Row: {
+          consumer_id: string | null
+          created_at: string | null
+          id: string
+          organization_id: string | null
+        }
+        Insert: {
+          consumer_id?: string | null
+          created_at?: string | null
+          id?: string
+          organization_id?: string | null
+        }
+        Update: {
+          consumer_id?: string | null
+          created_at?: string | null
+          id?: string
+          organization_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consumer_favorites_consumer_id_fkey"
+            columns: ["consumer_id"]
+            isOneToOne: false
+            referencedRelation: "consumers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consumer_favorites_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consumer_orders: {
+        Row: {
+          consumer_id: string | null
+          coupon_id: string | null
+          created_at: string | null
+          id: string
+          payment_method_last4: string | null
+          pickup_window_end: string | null
+          pickup_window_start: string | null
+          quantity: number | null
+          status: string | null
+          tax_amount: number | null
+          total_price: number | null
+          unit_price: number | null
+        }
+        Insert: {
+          consumer_id?: string | null
+          coupon_id?: string | null
+          created_at?: string | null
+          id?: string
+          payment_method_last4?: string | null
+          pickup_window_end?: string | null
+          pickup_window_start?: string | null
+          quantity?: number | null
+          status?: string | null
+          tax_amount?: number | null
+          total_price?: number | null
+          unit_price?: number | null
+        }
+        Update: {
+          consumer_id?: string | null
+          coupon_id?: string | null
+          created_at?: string | null
+          id?: string
+          payment_method_last4?: string | null
+          pickup_window_end?: string | null
+          pickup_window_start?: string | null
+          quantity?: number | null
+          status?: string | null
+          tax_amount?: number | null
+          total_price?: number | null
+          unit_price?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consumer_orders_consumer_id_fkey"
+            columns: ["consumer_id"]
+            isOneToOne: false
+            referencedRelation: "consumers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consumer_orders_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consumers: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          date_of_birth: string | null
+          email: string | null
+          first_name: string | null
+          id: string
+          invite_code_used: string | null
+          last_name: string | null
+          money_saved: number | null
+          phone: string | null
+          pounds_rescued: number | null
+          user_id: string | null
+          zip_code: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          date_of_birth?: string | null
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          invite_code_used?: string | null
+          last_name?: string | null
+          money_saved?: number | null
+          phone?: string | null
+          pounds_rescued?: number | null
+          user_id?: string | null
+          zip_code?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          date_of_birth?: string | null
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          invite_code_used?: string | null
+          last_name?: string | null
+          money_saved?: number | null
+          phone?: string | null
+          pounds_rescued?: number | null
+          user_id?: string | null
+          zip_code?: string | null
+        }
+        Relationships: []
+      }
       coupons: {
         Row: {
           coupon_active_end: string | null
@@ -338,6 +524,36 @@ export type Database = {
           label?: string | null
           status?: Database["public"]["Enums"]["invitation_code_status"]
           times_used?: number
+        }
+        Relationships: []
+      }
+      invite_codes: {
+        Row: {
+          code: string
+          created_at: string | null
+          current_uses: number | null
+          id: string
+          is_active: boolean | null
+          max_uses: number | null
+          region: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          current_uses?: number | null
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          region?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          current_uses?: number | null
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          region?: string | null
         }
         Relationships: []
       }
