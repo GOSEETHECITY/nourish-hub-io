@@ -4,6 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ConsumerAuthProvider } from "@/contexts/ConsumerAuthContext";
+import { ConsumerCartProvider } from "@/contexts/ConsumerCartContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Dashboard from "./pages/Index";
@@ -58,6 +60,31 @@ import GovernmentNonprofits from "./pages/government/GovernmentNonprofits";
 import GovernmentImpactReports from "./pages/government/GovernmentImpactReports";
 import GovernmentSettings from "./pages/government/GovernmentSettings";
 import GovernmentSupport from "./pages/government/GovernmentSupport";
+// GO See The City Consumer
+import ConsumerLoading from "./pages/consumer/ConsumerLoading";
+import ConsumerSplash from "./pages/consumer/ConsumerSplash";
+import ConsumerInviteCode from "./pages/consumer/ConsumerInviteCode";
+import ConsumerPhoneEntry from "./pages/consumer/ConsumerPhoneEntry";
+import ConsumerVerification from "./pages/consumer/ConsumerVerification";
+import ConsumerLogin from "./pages/consumer/ConsumerLogin";
+import ConsumerSignup from "./pages/consumer/ConsumerSignup";
+import ConsumerLocationPermission from "./pages/consumer/ConsumerLocationPermission";
+import ConsumerHome from "./pages/consumer/ConsumerHome";
+import ConsumerRestaurants from "./pages/consumer/ConsumerRestaurants";
+import ConsumerRestaurantDetail from "./pages/consumer/ConsumerRestaurantDetail";
+import ConsumerCouponDetail from "./pages/consumer/ConsumerCouponDetail";
+import ConsumerEvents from "./pages/consumer/ConsumerEvents";
+import ConsumerEventDetail from "./pages/consumer/ConsumerEventDetail";
+import ConsumerProfile from "./pages/consumer/ConsumerProfile";
+import ConsumerProfileEdit from "./pages/consumer/ConsumerProfileEdit";
+import ConsumerCheckIns from "./pages/consumer/ConsumerCheckIns";
+import ConsumerCart from "./pages/consumer/ConsumerCart";
+import ConsumerAddPayment from "./pages/consumer/ConsumerAddPayment";
+import ConsumerOrders from "./pages/consumer/ConsumerOrders";
+import ConsumerFollows from "./pages/consumer/ConsumerFollows";
+import ConsumerNotifications from "./pages/consumer/ConsumerNotifications";
+import ConsumerFeedback from "./pages/consumer/ConsumerFeedback";
+import ConsumerInviteFriends from "./pages/consumer/ConsumerInviteFriends";
 
 import NotFound from "./pages/NotFound";
 
@@ -158,6 +185,32 @@ const App = () => (
               <Route path="/government/settings" element={<GovernmentSettings />} />
               <Route path="/government/support" element={<GovernmentSupport />} />
             </Route>
+
+            {/* GO SEE THE CITY CONSUMER ROUTES */}
+            <Route path="/app" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerLoading /></ConsumerCartProvider></ConsumerAuthProvider>} />
+            <Route path="/app/splash" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerSplash /></ConsumerCartProvider></ConsumerAuthProvider>} />
+            <Route path="/app/invite-code" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerInviteCode /></ConsumerCartProvider></ConsumerAuthProvider>} />
+            <Route path="/app/phone-entry" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerPhoneEntry /></ConsumerCartProvider></ConsumerAuthProvider>} />
+            <Route path="/app/verification" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerVerification /></ConsumerCartProvider></ConsumerAuthProvider>} />
+            <Route path="/app/login" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerLogin /></ConsumerCartProvider></ConsumerAuthProvider>} />
+            <Route path="/app/signup" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerSignup /></ConsumerCartProvider></ConsumerAuthProvider>} />
+            <Route path="/app/location-permission" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerLocationPermission /></ConsumerCartProvider></ConsumerAuthProvider>} />
+            <Route path="/app/home" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerHome /></ConsumerCartProvider></ConsumerAuthProvider>} />
+            <Route path="/app/restaurants" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerRestaurants /></ConsumerCartProvider></ConsumerAuthProvider>} />
+            <Route path="/app/restaurant/:id" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerRestaurantDetail /></ConsumerCartProvider></ConsumerAuthProvider>} />
+            <Route path="/app/coupon/:id" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerCouponDetail /></ConsumerCartProvider></ConsumerAuthProvider>} />
+            <Route path="/app/events" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerEvents /></ConsumerCartProvider></ConsumerAuthProvider>} />
+            <Route path="/app/event/:id" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerEventDetail /></ConsumerCartProvider></ConsumerAuthProvider>} />
+            <Route path="/app/profile" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerProfile /></ConsumerCartProvider></ConsumerAuthProvider>} />
+            <Route path="/app/profile/edit" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerProfileEdit /></ConsumerCartProvider></ConsumerAuthProvider>} />
+            <Route path="/app/checkins" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerCheckIns /></ConsumerCartProvider></ConsumerAuthProvider>} />
+            <Route path="/app/cart" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerCart /></ConsumerCartProvider></ConsumerAuthProvider>} />
+            <Route path="/app/add-payment" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerAddPayment /></ConsumerCartProvider></ConsumerAuthProvider>} />
+            <Route path="/app/orders" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerOrders /></ConsumerCartProvider></ConsumerAuthProvider>} />
+            <Route path="/app/follows" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerFollows /></ConsumerCartProvider></ConsumerAuthProvider>} />
+            <Route path="/app/notifications" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerNotifications /></ConsumerCartProvider></ConsumerAuthProvider>} />
+            <Route path="/app/feedback" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerFeedback /></ConsumerCartProvider></ConsumerAuthProvider>} />
+            <Route path="/app/invite-friends" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerInviteFriends /></ConsumerCartProvider></ConsumerAuthProvider>} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
