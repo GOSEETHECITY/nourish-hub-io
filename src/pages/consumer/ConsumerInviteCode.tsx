@@ -18,8 +18,9 @@ const ConsumerInviteCode = () => {
       const { data, error: rpcError } = await supabase.rpc("validate_and_use_invite_code", {
         code_input: inviteCode.trim().toUpperCase(),
       });
-      if (rpcError || !data.valid) {
-        setError(data?.message || "Invalid or expired invite code");
+      const result = data as any;
+      if (rpcError || !result?.valid) {
+        setError(result?.message || "Invalid or expired invite code");
         return;
       }
       sessionStorage.setItem("invite_code", inviteCode.trim().toUpperCase());
