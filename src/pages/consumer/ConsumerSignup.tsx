@@ -31,7 +31,7 @@ const ConsumerSignup = () => {
       });
       if (authErr) { setError(authErr.message); return; }
       if (authData.user) {
-        await supabase.from("consumers").insert({
+        const { error: insertErr } = await supabase.from("consumers").insert({
           user_id: authData.user.id,
           first_name: form.firstName,
           last_name: form.lastName,
@@ -41,6 +41,7 @@ const ConsumerSignup = () => {
           date_of_birth: form.dob || null,
           invite_code_used: inviteCode || null,
         });
+        if (insertErr) { setError(insertErr.message); setLoading(false); return; }
       }
       navigate("/app/location-permission");
     } catch { setError("Something went wrong"); } finally { setLoading(false); }
