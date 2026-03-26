@@ -36,9 +36,9 @@ export default function CouponDetail() {
     enabled: !!coupon?.location_id,
   });
 
-  const killCoupon = useMutation({
+  const deactivateCoupon = useMutation({
     mutationFn: async () => { const { error } = await supabase.from("coupons").update({ status: "taken_down" as CouponStatus }).eq("id", couponId!); if (error) throw error; },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["coupon", couponId] }); toast.success("Coupon taken down"); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["coupon", couponId] }); toast.success("Coupon deactivated"); },
   });
 
   const updateCoupon = useMutation({
