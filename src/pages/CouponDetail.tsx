@@ -71,7 +71,7 @@ export default function CouponDetail() {
         <h1 className="text-2xl font-bold text-foreground flex-1">Coupon Detail</h1>
         <Button size="sm" variant="outline" onClick={openEdit}><Pencil className="w-3 h-3 mr-1" />Edit</Button>
         {coupon.status !== "taken_down" && (
-          <Button variant="destructive" onClick={() => killCoupon.mutate()}><AlertTriangle className="w-4 h-4 mr-2" />Take Down</Button>
+          <Button variant="destructive" onClick={() => deactivateCoupon.mutate()}><AlertTriangle className="w-4 h-4 mr-2" />Deactivate</Button>
         )}
       </div>
 
