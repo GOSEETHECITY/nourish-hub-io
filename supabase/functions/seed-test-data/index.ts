@@ -331,6 +331,54 @@ Deno.serve(async (req) => {
       organization_id: govOrgId,
     });
 
+    // 6. Consumer test user
+    const consumerPassword = "TestHariet2026!";
+    const consumerEmail = "consumer@test.hariet.ai";
+    const { data: existingConsumer } = await adminClient
+      .from("consumers")
+      .select("id")
+      .eq("email", consumerEmail)
+      .maybeSingle();
+
+    if (existingConsumer) {
+      results.push(`SKIP: ${consumerEmail} already exists`);
+    } else {
+      // Check if auth user exists
+      const { data: existingProfile } = await adminClient
+        .from("profiles")
+        .select("id")
+        .eq("email", consumerEmail)
+        .maybeSingle();
+
+      let consumerUserId: string;
+      if (existingProfile) {
+        consumerUserId = existingProfile.id;
+        results.push(`SKIP: ${consumerEmail} auth user already exists`);
+      } else {
+        const { data: authData, error: authErr } =
+          await adminClient.auth.admin.createUser({
+            email: consumerEmail,
+            password: consumerPassword,
+            email_confirm: true,
+            user_metadata: { first_name: "Test", last_name: "Consumer" },
+          });
+        if (authErr) throw authErr;
+        consumerUserId = authData.user.id;
+      }
+
+      const { error: consumerErr } = await adminClient.from("consumers").insert({
+        user_id: consumerUserId,
+        first_name: "Test",
+        last_name: "Consumer",
+        email: consumerEmail,
+        phone: "555-000-1234",
+        zip_code: "32801",
+        invite_code_used: "GOSEE2026",
+      });
+      if (consumerErr) throw consumerErr;
+      results.push(`CREATED: ${consumerEmail} (consumer)`);
+    }
+
     return new Response(JSON.stringify({ success: true, results }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
