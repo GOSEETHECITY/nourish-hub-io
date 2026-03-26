@@ -1071,6 +1071,7 @@ export type Database = {
         Returns: undefined
       }
       user_has_any_role: { Args: { _user_id: string }; Returns: boolean }
+      user_org_is_approved: { Args: { _user_id: string }; Returns: boolean }
       validate_and_use_invite_code: {
         Args: { code_input: string }
         Returns: Json
