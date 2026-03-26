@@ -54,12 +54,12 @@ export default function MarketplacePartnerDetail() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["mp-locs", orgId] }); toast.success("Fee updated"); },
   });
 
-  const killCoupon = useMutation({
+  const deactivateCoupon = useMutation({
     mutationFn: async (couponId: string) => {
       const { error } = await supabase.from("coupons").update({ status: "taken_down" as CouponStatus }).eq("id", couponId);
       if (error) throw error;
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["mp-coupons", orgId] }); toast.success("Coupon taken down"); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["mp-coupons", orgId] }); toast.success("Coupon deactivated"); },
   });
 
   if (!org) return <div className="p-12 text-center text-muted-foreground">Loading...</div>;
