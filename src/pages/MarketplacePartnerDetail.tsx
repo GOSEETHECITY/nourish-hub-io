@@ -54,12 +54,12 @@ export default function MarketplacePartnerDetail() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["mp-locs", orgId] }); toast.success("Fee updated"); },
   });
 
-  const killCoupon = useMutation({
+  const deactivateCoupon = useMutation({
     mutationFn: async (couponId: string) => {
       const { error } = await supabase.from("coupons").update({ status: "taken_down" as CouponStatus }).eq("id", couponId);
       if (error) throw error;
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["mp-coupons", orgId] }); toast.success("Coupon taken down"); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["mp-coupons", orgId] }); toast.success("Coupon deactivated"); },
   });
 
   if (!org) return <div className="p-12 text-center text-muted-foreground">Loading...</div>;
@@ -120,7 +120,7 @@ export default function MarketplacePartnerDetail() {
                       <TableCell>${c.price.toFixed(2)}</TableCell>
                       <TableCell>{c.quantity_sold} / {c.quantity_available}</TableCell>
                       <TableCell className="capitalize">{c.status.replace(/_/g, " ")}</TableCell>
-                      <TableCell>{c.status !== "taken_down" && <Button size="sm" variant="destructive" onClick={() => killCoupon.mutate(c.id)}><AlertTriangle className="w-3 h-3 mr-1" />Kill</Button>}</TableCell>
+                      <TableCell>{c.status !== "taken_down" && <Button size="sm" variant="destructive" onClick={() => deactivateCoupon.mutate(c.id)}><AlertTriangle className="w-3 h-3 mr-1" />Deactivate</Button>}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
