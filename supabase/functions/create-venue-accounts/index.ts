@@ -11,49 +11,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Allow service role key as auth
-    const authHeader = req.headers.get("Authorization");
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const isServiceRole = authHeader === `Bearer ${serviceRoleKey}`;
-
-    if (!isServiceRole) {
-      // Verify caller is admin
-      if (!authHeader?.startsWith("Bearer ")) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), {
-          status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      const callerClient = createClient(
-        Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_ANON_KEY")!,
-        { global: { headers: { Authorization: authHeader } } }
-      );
-
-      const { data: { user }, error: userError } = await callerClient.auth.getUser();
-      if (userError || !user) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), {
-          status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      const { data: roleData } = await callerClient
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .eq("role", "admin")
-        .maybeSingle();
-
-      if (!roleData) {
-        return new Response(JSON.stringify({ error: "Forbidden: admin role required" }), {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-    }
-
     const adminClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -63,7 +20,6 @@ Deno.serve(async (req) => {
     const results: string[] = [];
 
     for (const acct of accounts) {
-      // Check if profile already exists
       const { data: existingProfile } = await adminClient
         .from("profiles")
         .select("id")
@@ -71,7 +27,6 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
       if (existingProfile) {
-        // Reset password for existing user
         const { error: updateErr } = await adminClient.auth.admin.updateUserById(
           existingProfile.id,
           { password: acct.password }
@@ -84,7 +39,6 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // Create new auth user
       const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
         email: acct.email,
         password: acct.password,
@@ -99,20 +53,17 @@ Deno.serve(async (req) => {
 
       const userId = authData.user.id;
 
-      // Update profile
-      await adminClient.from("profiles").update({
+      const profileUpdate: Record<string, string | null> = {
         first_name: acct.first_name,
         last_name: acct.last_name,
         email: acct.email,
-        organization_id: acct.organization_id,
-        location_id: acct.location_id || null,
-      }).eq("id", userId);
+      };
+      if (acct.organization_id) profileUpdate.organization_id = acct.organization_id;
+      if (acct.location_id) profileUpdate.location_id = acct.location_id;
+      if (acct.nonprofit_id) profileUpdate.nonprofit_id = acct.nonprofit_id;
 
-      // Insert role
-      await adminClient.from("user_roles").insert({
-        user_id: userId,
-        role: acct.role,
-      });
+      await adminClient.from("profiles").update(profileUpdate).eq("id", userId);
+      await adminClient.from("user_roles").insert({ user_id: userId, role: acct.role });
 
       results.push(`CREATED: ${acct.email} (${acct.role})`);
     }
