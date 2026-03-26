@@ -120,7 +120,7 @@ export default function MarketplacePartnerDetail() {
                       <TableCell>${c.price.toFixed(2)}</TableCell>
                       <TableCell>{c.quantity_sold} / {c.quantity_available}</TableCell>
                       <TableCell className="capitalize">{c.status.replace(/_/g, " ")}</TableCell>
-                      <TableCell>{c.status !== "taken_down" && <Button size="sm" variant="destructive" onClick={() => killCoupon.mutate(c.id)}><AlertTriangle className="w-3 h-3 mr-1" />Kill</Button>}</TableCell>
+                      <TableCell>{c.status !== "taken_down" && <Button size="sm" variant="destructive" onClick={() => deactivateCoupon.mutate(c.id)}><AlertTriangle className="w-3 h-3 mr-1" />Deactivate</Button>}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

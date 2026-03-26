@@ -111,7 +111,7 @@ export default function Dashboard() {
     const now = new Date();
     const year = now.getFullYear();
     const monthlyPounds = MONTHS.map((m, i) => ({ month: m, pounds: 0 }));
-    listings.filter((l) => l.listing_type === "donation" && l.status === "completed").forEach((l) => {
+    listings.filter((l) => l.listing_type === "donation" && ["completed", "claimed", "picked_up", "pending_impact_report"].includes(l.status)).forEach((l) => {
       const d = new Date(l.created_at);
       if (d.getFullYear() === year) monthlyPounds[d.getMonth()].pounds += l.pounds || 0;
     });
