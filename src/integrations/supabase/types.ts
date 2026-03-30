@@ -53,6 +53,13 @@ export type Database = {
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "billing_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       consumer_checkins: {
@@ -95,6 +102,13 @@ export type Database = {
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "consumer_checkins_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       consumer_favorites: {
@@ -129,6 +143,13 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consumer_favorites_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations_public"
             referencedColumns: ["id"]
           },
         ]
@@ -324,6 +345,13 @@ export type Database = {
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "coupons_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       events: {
@@ -452,10 +480,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "food_listings_nonprofit_claimed_id_fkey"
+            columns: ["nonprofit_claimed_id"]
+            isOneToOne: false
+            referencedRelation: "nonprofits_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "food_listings_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "food_listings_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations_public"
             referencedColumns: ["id"]
           },
         ]
@@ -504,6 +546,13 @@ export type Database = {
             columns: ["nonprofit_id"]
             isOneToOne: false
             referencedRelation: "nonprofits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "impact_reports_nonprofit_id_fkey"
+            columns: ["nonprofit_id"]
+            isOneToOne: false
+            referencedRelation: "nonprofits_public"
             referencedColumns: ["id"]
           },
         ]
@@ -662,6 +711,13 @@ export type Database = {
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "locations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       nonprofit_locations: {
@@ -744,6 +800,13 @@ export type Database = {
             columns: ["nonprofit_id"]
             isOneToOne: false
             referencedRelation: "nonprofits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nonprofit_locations_nonprofit_id_fkey"
+            columns: ["nonprofit_id"]
+            isOneToOne: false
+            referencedRelation: "nonprofits_public"
             referencedColumns: ["id"]
           },
         ]
@@ -952,6 +1015,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "fk_profiles_organization"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "profiles_location_id_fkey"
             columns: ["location_id"]
             isOneToOne: false
@@ -970,6 +1040,13 @@ export type Database = {
             columns: ["nonprofit_id"]
             isOneToOne: false
             referencedRelation: "nonprofits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_nonprofit_id_fkey"
+            columns: ["nonprofit_id"]
+            isOneToOne: false
+            referencedRelation: "nonprofits_public"
             referencedColumns: ["id"]
           },
         ]
@@ -1154,7 +1231,167 @@ export type Database = {
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "locations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations_public"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      nonprofits_public: {
+        Row: {
+          address: string | null
+          approval_status: Database["public"]["Enums"]["approval_status"] | null
+          cabinetry: boolean | null
+          city: string | null
+          cold_storage: boolean | null
+          county: string | null
+          created_at: string | null
+          ein: string | null
+          estimated_weekly_served: number | null
+          food_types_accepted: Database["public"]["Enums"]["food_type"][] | null
+          id: string | null
+          logo_url: string | null
+          operating_hours: string | null
+          organization_name: string | null
+          population_served: string | null
+          primary_contact: string | null
+          primary_contact_email: string | null
+          primary_contact_phone: string | null
+          proof_of_insurance_url: string | null
+          refrigeration: boolean | null
+          signed_agreement_url: string | null
+          social_handles: Json | null
+          state: string | null
+          user_id: string | null
+          website: string | null
+          zip: string | null
+        }
+        Insert: {
+          address?: string | null
+          approval_status?:
+            | Database["public"]["Enums"]["approval_status"]
+            | null
+          cabinetry?: boolean | null
+          city?: string | null
+          cold_storage?: boolean | null
+          county?: string | null
+          created_at?: string | null
+          ein?: string | null
+          estimated_weekly_served?: number | null
+          food_types_accepted?:
+            | Database["public"]["Enums"]["food_type"][]
+            | null
+          id?: string | null
+          logo_url?: string | null
+          operating_hours?: string | null
+          organization_name?: string | null
+          population_served?: string | null
+          primary_contact?: string | null
+          primary_contact_email?: string | null
+          primary_contact_phone?: string | null
+          proof_of_insurance_url?: string | null
+          refrigeration?: boolean | null
+          signed_agreement_url?: string | null
+          social_handles?: Json | null
+          state?: string | null
+          user_id?: string | null
+          website?: string | null
+          zip?: string | null
+        }
+        Update: {
+          address?: string | null
+          approval_status?:
+            | Database["public"]["Enums"]["approval_status"]
+            | null
+          cabinetry?: boolean | null
+          city?: string | null
+          cold_storage?: boolean | null
+          county?: string | null
+          created_at?: string | null
+          ein?: string | null
+          estimated_weekly_served?: number | null
+          food_types_accepted?:
+            | Database["public"]["Enums"]["food_type"][]
+            | null
+          id?: string | null
+          logo_url?: string | null
+          operating_hours?: string | null
+          organization_name?: string | null
+          population_served?: string | null
+          primary_contact?: string | null
+          primary_contact_email?: string | null
+          primary_contact_phone?: string | null
+          proof_of_insurance_url?: string | null
+          refrigeration?: boolean | null
+          signed_agreement_url?: string | null
+          social_handles?: Json | null
+          state?: string | null
+          user_id?: string | null
+          website?: string | null
+          zip?: string | null
+        }
+        Relationships: []
+      }
+      organizations_public: {
+        Row: {
+          address: string | null
+          approval_status: Database["public"]["Enums"]["approval_status"] | null
+          billing_contact: string | null
+          city: string | null
+          county: string | null
+          created_at: string | null
+          government_regions: Json | null
+          id: string | null
+          name: string | null
+          primary_contact_email: string | null
+          primary_contact_name: string | null
+          primary_contact_phone: string | null
+          state: string | null
+          type: Database["public"]["Enums"]["organization_type"] | null
+          zip: string | null
+        }
+        Insert: {
+          address?: string | null
+          approval_status?:
+            | Database["public"]["Enums"]["approval_status"]
+            | null
+          billing_contact?: string | null
+          city?: string | null
+          county?: string | null
+          created_at?: string | null
+          government_regions?: Json | null
+          id?: string | null
+          name?: string | null
+          primary_contact_email?: string | null
+          primary_contact_name?: string | null
+          primary_contact_phone?: string | null
+          state?: string | null
+          type?: Database["public"]["Enums"]["organization_type"] | null
+          zip?: string | null
+        }
+        Update: {
+          address?: string | null
+          approval_status?:
+            | Database["public"]["Enums"]["approval_status"]
+            | null
+          billing_contact?: string | null
+          city?: string | null
+          county?: string | null
+          created_at?: string | null
+          government_regions?: Json | null
+          id?: string | null
+          name?: string | null
+          primary_contact_email?: string | null
+          primary_contact_name?: string | null
+          primary_contact_phone?: string | null
+          state?: string | null
+          type?: Database["public"]["Enums"]["organization_type"] | null
+          zip?: string | null
+        }
+        Relationships: []
       }
     }
     Functions: {
