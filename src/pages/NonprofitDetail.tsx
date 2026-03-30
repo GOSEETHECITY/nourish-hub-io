@@ -40,6 +40,12 @@ export default function NonprofitDetail() {
     enabled: !!id,
   });
 
+  const { data: npJoinCode } = useQuery({
+    queryKey: ["np-join-code", id],
+    queryFn: async () => { const { data } = await supabase.rpc("get_nonprofit_join_code", { _nonprofit_id: id! }); return data as string | null; },
+    enabled: !!id,
+  });
+
   const { data: npLocations = [] } = useQuery({
     queryKey: ["np-locations", id],
     queryFn: async () => { const { data, error } = await supabase.from("nonprofit_locations").select("*").eq("nonprofit_id", id!).order("created_at", { ascending: false }); if (error) throw error; return data as NonprofitLocation[]; },
@@ -169,7 +175,7 @@ export default function NonprofitDetail() {
       {/* Join Code */}
       <section className="bg-card rounded-xl border p-6">
         <h2 className="text-lg font-bold text-foreground mb-4">Nonprofit Location Join Code</h2>
-        <JoinCodeDisplay code={np.join_code} entityId={np.id} entityType="nonprofit" invalidateKey={["nonprofit", id!]} />
+        <JoinCodeDisplay code={npJoinCode ?? null} entityId={np.id} entityType="nonprofit" invalidateKey={["np-join-code", id!]} />
         <p className="text-xs text-muted-foreground mt-2">Share this code with distribution location operators so they can join your nonprofit during signup.</p>
       </section>
 
