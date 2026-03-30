@@ -62,6 +62,36 @@ export type Database = {
           },
         ]
       }
+      city_thresholds: {
+        Row: {
+          city: string
+          created_at: string
+          current_consumer_count: number
+          id: string
+          marketplace_unlocked: boolean
+          state: string | null
+          threshold: number
+        }
+        Insert: {
+          city: string
+          created_at?: string
+          current_consumer_count?: number
+          id?: string
+          marketplace_unlocked?: boolean
+          state?: string | null
+          threshold?: number
+        }
+        Update: {
+          city?: string
+          created_at?: string
+          current_consumer_count?: number
+          id?: string
+          marketplace_unlocked?: boolean
+          state?: string | null
+          threshold?: number
+        }
+        Relationships: []
+      }
       consumer_checkins: {
         Row: {
           checkin_type: string | null
@@ -217,6 +247,7 @@ export type Database = {
       consumers: {
         Row: {
           avatar_url: string | null
+          city: string | null
           created_at: string | null
           date_of_birth: string | null
           email: string | null
@@ -232,6 +263,7 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          city?: string | null
           created_at?: string | null
           date_of_birth?: string | null
           email?: string | null
@@ -247,6 +279,7 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          city?: string | null
           created_at?: string | null
           date_of_birth?: string | null
           email?: string | null
@@ -364,8 +397,12 @@ export type Database = {
           end_time: string | null
           event_date: string | null
           external_link: string | null
+          flyer_url: string | null
           id: string
           image_url: string | null
+          offer_badge: string | null
+          share_count: number
+          share_url: string | null
           start_time: string | null
           state: string | null
           status: Database["public"]["Enums"]["event_status"]
@@ -380,8 +417,12 @@ export type Database = {
           end_time?: string | null
           event_date?: string | null
           external_link?: string | null
+          flyer_url?: string | null
           id?: string
           image_url?: string | null
+          offer_badge?: string | null
+          share_count?: number
+          share_url?: string | null
           start_time?: string | null
           state?: string | null
           status?: Database["public"]["Enums"]["event_status"]
@@ -396,8 +437,12 @@ export type Database = {
           end_time?: string | null
           event_date?: string | null
           external_link?: string | null
+          flyer_url?: string | null
           id?: string
           image_url?: string | null
+          offer_badge?: string | null
+          share_count?: number
+          share_url?: string | null
           start_time?: string | null
           state?: string | null
           status?: Database["public"]["Enums"]["event_status"]
@@ -1158,6 +1203,51 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      venue_waitlist: {
+        Row: {
+          city: string | null
+          date_added: string
+          id: string
+          marketplace_unlocked: boolean
+          notified: boolean
+          organization_id: string
+          state: string | null
+        }
+        Insert: {
+          city?: string | null
+          date_added?: string
+          id?: string
+          marketplace_unlocked?: boolean
+          notified?: boolean
+          organization_id: string
+          state?: string | null
+        }
+        Update: {
+          city?: string | null
+          date_added?: string
+          id?: string
+          marketplace_unlocked?: boolean
+          notified?: boolean
+          organization_id?: string
+          state?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_waitlist_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venue_waitlist_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
