@@ -12,7 +12,7 @@ const ConsumerRestaurantDetail = () => {
 
   useEffect(() => {
     const load = async () => {
-      const { data: loc } = await supabase.from("locations").select("*, organizations(name, address, city, state)").eq("id", id!).maybeSingle();
+      const { data: loc } = await supabase.from("locations").select("id, name, address, city, state, zip, latitude, longitude, hours_of_operation, location_type, marketplace_enabled, pickup_address, pickup_instructions, organization_id, organizations(name, address, city, state)").eq("id", id!).maybeSingle();
       setLocation(loc);
       const { data: c } = await supabase.from("coupons").select("*").eq("location_id", id!).eq("status", "active");
       setCoupons(c || []);
