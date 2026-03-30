@@ -215,8 +215,11 @@ export default function UsersPage() {
       <Tabs defaultValue="users">
         <TabsList>
           <TabsTrigger value="users">All Users</TabsTrigger>
+          <TabsTrigger value="consumers">Consumers</TabsTrigger>
           <TabsTrigger value="codes">Invitation Codes</TabsTrigger>
         </TabsList>
+
+        <ConsumersTab />
 
         <TabsContent value="users" className="space-y-4 mt-4">
           <div className="relative">
