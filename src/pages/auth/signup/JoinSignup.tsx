@@ -123,7 +123,7 @@ export default function JoinSignup({ onBack }: Props) {
       } else {
         await supabase.from("user_roles").insert({ user_id: userId, role: "nonprofit_partner" });
         await supabase.from("nonprofit_locations").insert([{
-          nonprofit_id: orgMatch.id, name: npLoc.name,
+          nonprofit_id: resolvedOrgId, name: npLoc.name,
           address: npLoc.address || null, city: npLoc.city || null, state: npLoc.state || null,
           zip: npLoc.zip || null, county: npLoc.county || null, operating_hours: npLoc.operatingHours || null,
           pickup_dropoff_instructions: npLoc.pickupDropoff || null,
