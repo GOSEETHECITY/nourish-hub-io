@@ -9,7 +9,7 @@ const ConsumerSignup = () => {
   const phone = sessionStorage.getItem("signup_phone") || "";
   const inviteCode = sessionStorage.getItem("invite_code") || "";
 
-  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", password: "", phone, zip: "", dob: "" });
+  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", password: "", phone, zip: "", city: "", dob: "" });
   const [showPw, setShowPw] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
@@ -20,7 +20,7 @@ const ConsumerSignup = () => {
 
   const handleSubmit = async () => {
     setError("");
-    if (!form.firstName || !form.lastName || !form.email || !form.password) { setError("All fields are required"); return; }
+    if (!form.firstName || !form.lastName || !form.email || !form.password || !form.city) { setError("All required fields must be filled"); return; }
     if (!termsAccepted) { setError("Please accept terms and conditions"); return; }
     setLoading(true);
     try {
@@ -38,12 +38,37 @@ const ConsumerSignup = () => {
           email: form.email,
           phone: form.phone,
           zip_code: form.zip,
+          city: form.city,
           date_of_birth: form.dob || null,
           invite_code_used: inviteCode || null,
         });
         if (insertErr) { setError(insertErr.message); setLoading(false); return; }
+
+        // Update city_thresholds
+        const cityLower = form.city.trim();
+        if (cityLower) {
+          const { data: existing } = await supabase.from("city_thresholds").select("*").ilike("city", cityLower).maybeSingle();
+          if (existing) {
+            await supabase.from("city_thresholds").update({
+              current_consumer_count: existing.current_consumer_count + 1,
+            }).eq("id", existing.id);
+          } else {
+            await supabase.from("city_thresholds").insert({
+              city: form.city.trim(),
+              state: form.zip ? null : null,
+              current_consumer_count: 1,
+            });
+          }
+        }
       }
-      navigate("/app/location-permission");
+      // Check for redirect
+      const redirect = sessionStorage.getItem("redirect_after_signup");
+      if (redirect) {
+        sessionStorage.removeItem("redirect_after_signup");
+        navigate(redirect);
+      } else {
+        navigate("/app/location-permission");
+      }
     } catch { setError("Something went wrong"); } finally { setLoading(false); }
   };
 
@@ -58,9 +83,9 @@ const ConsumerSignup = () => {
           <span className="text-[#F97316]">GO</span> <span className="text-[#1B2A4A]">See The City</span>
         </div>
         {[
-          { key: "firstName", label: "First name", type: "text" },
-          { key: "lastName", label: "Last name", type: "text" },
-          { key: "email", label: "Email", type: "email" },
+          { key: "firstName", label: "First name *", type: "text" },
+          { key: "lastName", label: "Last name *", type: "text" },
+          { key: "email", label: "Email *", type: "email" },
         ].map(({ key, label, type }) => (
           <div key={key}>
             <label className="text-sm text-gray-600 mb-1 block">{label}</label>
@@ -69,7 +94,7 @@ const ConsumerSignup = () => {
           </div>
         ))}
         <div>
-          <label className="text-sm text-gray-600 mb-1 block">Password</label>
+          <label className="text-sm text-gray-600 mb-1 block">Password *</label>
           <div className="relative">
             <input value={form.password} onChange={(e) => update("password", e.target.value)}
               type={showPw ? "text" : "password"}
@@ -88,6 +113,12 @@ const ConsumerSignup = () => {
           <label className="text-sm text-gray-600 mb-1 block">Zip code</label>
           <input value={form.zip} onChange={(e) => update("zip", e.target.value)}
             className="w-full py-3 px-4 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#F97316]" />
+        </div>
+        <div>
+          <label className="text-sm text-gray-600 mb-1 block">City *</label>
+          <input value={form.city} onChange={(e) => update("city", e.target.value)}
+            className="w-full py-3 px-4 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#F97316]"
+            placeholder="Enter your city" />
         </div>
         <div>
           <label className="text-sm text-gray-600 mb-1 block">Date of birth</label>

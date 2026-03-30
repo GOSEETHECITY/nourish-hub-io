@@ -100,7 +100,7 @@ export default function VenueDonations() {
           <h1 className="text-2xl font-bold text-foreground">Donations</h1>
           <p className="text-sm text-muted-foreground mt-1">Manage all food donations across your locations</p>
         </div>
-        <Button onClick={() => { setForm(emptyDonation); setSelectedLocationId(locations[0]?.id || ""); setDialogOpen(true); }}>
+        <Button size="lg" onClick={() => { setForm(emptyDonation); setSelectedLocationId(locations[0]?.id || ""); setDialogOpen(true); }}>
           <Plus className="w-4 h-4 mr-2" />Post Donation
         </Button>
       </div>
@@ -171,23 +171,21 @@ export default function VenueDonations() {
               </div>
             )}
             <div>
-              <Label>Food Type</Label>
+              <Label>Food Type *</Label>
               <Select value={form.food_type} onValueChange={(v) => setForm({ ...form, food_type: v as FoodType })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>{FOOD_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
               </Select>
             </div>
+            <div><Label>Estimated Pounds *</Label><Input type="number" value={form.pounds} onChange={(e) => setForm({ ...form, pounds: e.target.value })} placeholder="e.g. 50" /></div>
             <div className="grid grid-cols-2 gap-4">
-              <div><Label>Pounds</Label><Input type="number" value={form.pounds} onChange={(e) => setForm({ ...form, pounds: e.target.value })} /></div>
-              <div><Label>Est. Value ($)</Label><Input type="number" step="0.01" value={form.estimated_donation_value} onChange={(e) => setForm({ ...form, estimated_donation_value: e.target.value })} /></div>
+              <div><Label>Pickup Start *</Label><Input type="datetime-local" value={form.pickup_window_start} onChange={(e) => setForm({ ...form, pickup_window_start: e.target.value })} /></div>
+              <div><Label>Pickup End *</Label><Input type="datetime-local" value={form.pickup_window_end} onChange={(e) => setForm({ ...form, pickup_window_end: e.target.value })} /></div>
             </div>
-            <div><Label>Pickup Address</Label><Input value={form.pickup_address} onChange={(e) => setForm({ ...form, pickup_address: e.target.value })} placeholder="Defaults to location address" /></div>
-            <div className="grid grid-cols-2 gap-4">
-              <div><Label>Pickup Start</Label><Input type="datetime-local" value={form.pickup_window_start} onChange={(e) => setForm({ ...form, pickup_window_start: e.target.value })} /></div>
-              <div><Label>Pickup End</Label><Input type="datetime-local" value={form.pickup_window_end} onChange={(e) => setForm({ ...form, pickup_window_end: e.target.value })} /></div>
-            </div>
-            <div><Label>Notes</Label><Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
-            <Button className="w-full" onClick={() => createDonation.mutate()} disabled={createDonation.isPending}>
+            <div><Label>Est. Value ($) <span className="text-muted-foreground text-xs">(optional)</span></Label><Input type="number" step="0.01" value={form.estimated_donation_value} onChange={(e) => setForm({ ...form, estimated_donation_value: e.target.value })} /></div>
+            <div><Label>Pickup Address <span className="text-muted-foreground text-xs">(optional — defaults to location)</span></Label><Input value={form.pickup_address} onChange={(e) => setForm({ ...form, pickup_address: e.target.value })} /></div>
+            <div><Label>Notes <span className="text-muted-foreground text-xs">(optional)</span></Label><Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
+            <Button className="w-full" size="lg" onClick={() => createDonation.mutate()} disabled={!form.food_type || !form.pounds || !form.pickup_window_start || !form.pickup_window_end || createDonation.isPending}>
               {createDonation.isPending ? "Posting..." : "Post Donation"}
             </Button>
           </div>

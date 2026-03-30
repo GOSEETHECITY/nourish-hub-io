@@ -86,6 +86,7 @@ import ConsumerNotifications from "./pages/consumer/ConsumerNotifications";
 import ConsumerFeedback from "./pages/consumer/ConsumerFeedback";
 import ConsumerInviteFriends from "./pages/consumer/ConsumerInviteFriends";
 
+import EventPreview from "./pages/consumer/EventPreview";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -211,6 +212,9 @@ const App = () => (
             <Route path="/app/notifications" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerNotifications /></ConsumerCartProvider></ConsumerAuthProvider>} />
             <Route path="/app/feedback" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerFeedback /></ConsumerCartProvider></ConsumerAuthProvider>} />
             <Route path="/app/invite-friends" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerInviteFriends /></ConsumerCartProvider></ConsumerAuthProvider>} />
+
+            {/* Public gated event preview */}
+            <Route path="/event-preview/:id" element={<EventPreview />} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
