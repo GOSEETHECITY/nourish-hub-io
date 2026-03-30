@@ -15,7 +15,7 @@ interface Props {
 function generateCode(prefix: string): string {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let result = prefix + "-";
-  for (let i = 0; i < 4; i++) result += chars[Math.floor(Math.random() * chars.length)];
+  for (let i = 0; i < 8; i++) result += chars[Math.floor(Math.random() * chars.length)];
   return result;
 }
 
