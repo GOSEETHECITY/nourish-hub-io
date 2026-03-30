@@ -17,7 +17,13 @@ const ConsumerLogin = () => {
     const { error: authErr } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (authErr) { setError(authErr.message); return; }
-    navigate("/app/home");
+    const redirect = sessionStorage.getItem("redirect_after_login");
+    if (redirect) {
+      sessionStorage.removeItem("redirect_after_login");
+      navigate(redirect);
+    } else {
+      navigate("/app/events");
+    }
   };
 
   return (
