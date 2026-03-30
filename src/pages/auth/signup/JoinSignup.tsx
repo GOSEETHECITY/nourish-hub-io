@@ -100,7 +100,7 @@ export default function JoinSignup({ onBack }: Props) {
         await supabase.from("user_roles").insert({ user_id: userId, role: "venue_partner" });
         const pickupAddr = venueLoc.differentPickup ? venueLoc.pickupAddress : venueLoc.address;
         const { data: locResult, error: locError } = await supabase.from("locations").insert({
-          organization_id: orgMatch.id, name: venueLoc.name, location_type: venueLoc.locationType || null,
+          organization_id: resolvedOrgId, name: venueLoc.name, location_type: venueLoc.locationType || null,
           address: venueLoc.address || null, city: venueLoc.city || null, state: venueLoc.state || null,
           zip: venueLoc.zip || null, county: venueLoc.county || null, pickup_address: pickupAddr || null,
           pickup_instructions: venueLoc.pickupInstructions || null, hours_of_operation: venueLoc.hours || null,
