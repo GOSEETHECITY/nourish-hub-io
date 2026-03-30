@@ -233,7 +233,31 @@ export interface HarietEvent {
   external_link: string | null;
   status: EventStatus;
   attendee_count: number;
+  offer_badge: string | null;
+  share_url: string | null;
+  share_count: number;
+  flyer_url: string | null;
   created_at: string;
+}
+
+export interface CityThreshold {
+  id: string;
+  city: string;
+  state: string | null;
+  threshold: number;
+  current_consumer_count: number;
+  marketplace_unlocked: boolean;
+  created_at: string;
+}
+
+export interface VenueWaitlist {
+  id: string;
+  organization_id: string;
+  city: string | null;
+  state: string | null;
+  date_added: string;
+  notified: boolean;
+  marketplace_unlocked: boolean;
 }
 
 export interface InvitationCode {
