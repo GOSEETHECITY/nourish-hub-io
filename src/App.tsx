@@ -86,6 +86,7 @@ import ConsumerNotifications from "./pages/consumer/ConsumerNotifications";
 import ConsumerFeedback from "./pages/consumer/ConsumerFeedback";
 import ConsumerInviteFriends from "./pages/consumer/ConsumerInviteFriends";
 
+import EventPreview from "./pages/consumer/EventPreview";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
