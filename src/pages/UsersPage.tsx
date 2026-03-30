@@ -375,3 +375,119 @@ export default function UsersPage() {
     </div>
   );
 }
+
+function ConsumersTab() {
+  const queryClient = useQueryClient();
+  const [editThreshold, setEditThreshold] = useState<CityThreshold | null>(null);
+  const [newThreshold, setNewThreshold] = useState("");
+
+  const { data: consumers = [] } = useQuery({
+    queryKey: ["all-consumers"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("consumers").select("id, city");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: cityThresholds = [] } = useQuery({
+    queryKey: ["city-thresholds"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("city_thresholds").select("*").order("city");
+      if (error) throw error;
+      return data as CityThreshold[];
+    },
+  });
+
+  const updateThreshold = useMutation({
+    mutationFn: async () => {
+      if (!editThreshold) return;
+      const { error } = await supabase.from("city_thresholds").update({ threshold: Number(newThreshold) }).eq("id", editThreshold.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["city-thresholds"] });
+      toast.success("Threshold updated");
+      setEditThreshold(null);
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const totalConsumers = consumers.length;
+  const citiesWithConsumers = new Set(consumers.map((c) => c.city).filter(Boolean)).size;
+  const unlockedCities = cityThresholds.filter((c) => c.marketplace_unlocked).length;
+
+  return (
+    <>
+      <TabsContent value="consumers" className="space-y-4 mt-4">
+        <div className="grid grid-cols-3 gap-4">
+          <div className="bg-card rounded-xl border p-5">
+            <p className="text-sm text-muted-foreground flex items-center gap-2"><Users className="w-4 h-4" />Total Consumers</p>
+            <p className="text-3xl font-bold text-foreground mt-2">{totalConsumers}</p>
+          </div>
+          <div className="bg-card rounded-xl border p-5">
+            <p className="text-sm text-muted-foreground flex items-center gap-2"><MapPin className="w-4 h-4" />Active Cities</p>
+            <p className="text-3xl font-bold text-foreground mt-2">{citiesWithConsumers}</p>
+          </div>
+          <div className="bg-card rounded-xl border p-5">
+            <p className="text-sm text-muted-foreground flex items-center gap-2"><Unlock className="w-4 h-4" />Unlocked Cities</p>
+            <p className="text-3xl font-bold text-foreground mt-2">{unlockedCities}</p>
+          </div>
+        </div>
+
+        <div className="bg-card rounded-xl border">
+          <div className="p-4 border-b"><h2 className="text-lg font-bold text-foreground">City Breakdown</h2></div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>City</TableHead>
+                <TableHead>State</TableHead>
+                <TableHead>Consumers</TableHead>
+                <TableHead>Threshold</TableHead>
+                <TableHead>Progress</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {cityThresholds.length === 0 ? (
+                <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground">No city data yet</TableCell></TableRow>
+              ) : cityThresholds.map((ct) => {
+                const pct = Math.min(100, Math.round((ct.current_consumer_count / ct.threshold) * 100));
+                return (
+                  <TableRow key={ct.id}>
+                    <TableCell className="font-medium">{ct.city}</TableCell>
+                    <TableCell>{ct.state || "—"}</TableCell>
+                    <TableCell>{ct.current_consumer_count}</TableCell>
+                    <TableCell>{ct.threshold}</TableCell>
+                    <TableCell><div className="flex items-center gap-2 min-w-[120px]"><Progress value={pct} className="h-2 flex-1" /><span className="text-xs text-muted-foreground">{pct}%</span></div></TableCell>
+                    <TableCell>
+                      <span className={`px-2.5 py-0.5 text-xs font-semibold rounded ${ct.marketplace_unlocked ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>
+                        {ct.marketplace_unlocked ? "Unlocked" : "Locked"}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <Button size="sm" variant="outline" onClick={() => { setEditThreshold(ct); setNewThreshold(String(ct.threshold)); }}>Edit Threshold</Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
+      </TabsContent>
+
+      <Dialog open={!!editThreshold} onOpenChange={(open) => { if (!open) setEditThreshold(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>Edit Threshold — {editThreshold?.city}</DialogTitle></DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div><Label>Consumer Threshold</Label><Input type="number" value={newThreshold} onChange={(e) => setNewThreshold(e.target.value)} /></div>
+            <Button className="w-full" onClick={() => updateThreshold.mutate()} disabled={updateThreshold.isPending}>
+              {updateThreshold.isPending ? "Saving..." : "Save"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
