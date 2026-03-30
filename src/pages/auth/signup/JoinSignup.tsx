@@ -119,7 +119,7 @@ export default function JoinSignup({ onBack }: Props) {
           current_handling: baseline.current_handling || null, donation_frequency: baseline.donation_frequency || null,
           priority_outcomes: outcomes.length ? outcomes : null,
         });
-        await supabase.from("profiles").update({ first_name: account.firstName, last_name: account.lastName, phone: account.phone || null, organization_id: orgMatch.id, location_id: locResult.id }).eq("id", userId);
+        await supabase.from("profiles").update({ first_name: account.firstName, last_name: account.lastName, phone: account.phone || null, organization_id: resolvedOrgId, location_id: locResult.id }).eq("id", userId);
       } else {
         await supabase.from("user_roles").insert({ user_id: userId, role: "nonprofit_partner" });
         await supabase.from("nonprofit_locations").insert([{
