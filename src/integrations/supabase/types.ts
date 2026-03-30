@@ -311,6 +311,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "coupons_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "coupons_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
@@ -428,6 +435,13 @@ export type Database = {
             columns: ["location_id"]
             isOneToOne: false
             referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "food_listings_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations_public"
             referencedColumns: ["id"]
           },
           {
@@ -945,6 +959,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "profiles_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "profiles_nonprofit_id_fkey"
             columns: ["nonprofit_id"]
             isOneToOne: false
@@ -1034,6 +1055,13 @@ export type Database = {
             referencedRelation: "locations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "sustainability_baseline_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       user_roles: {
@@ -1056,7 +1084,78 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      locations_public: {
+        Row: {
+          address: string | null
+          approval_status: Database["public"]["Enums"]["approval_status"] | null
+          city: string | null
+          county: string | null
+          hours_of_operation: string | null
+          id: string | null
+          latitude: number | null
+          location_type: string | null
+          longitude: number | null
+          marketplace_enabled: boolean | null
+          name: string | null
+          organization_id: string | null
+          pickup_address: string | null
+          pickup_instructions: string | null
+          platform_fee_percentage: number | null
+          state: string | null
+          zip: string | null
+        }
+        Insert: {
+          address?: string | null
+          approval_status?:
+            | Database["public"]["Enums"]["approval_status"]
+            | null
+          city?: string | null
+          county?: string | null
+          hours_of_operation?: string | null
+          id?: string | null
+          latitude?: number | null
+          location_type?: string | null
+          longitude?: number | null
+          marketplace_enabled?: boolean | null
+          name?: string | null
+          organization_id?: string | null
+          pickup_address?: string | null
+          pickup_instructions?: string | null
+          platform_fee_percentage?: number | null
+          state?: string | null
+          zip?: string | null
+        }
+        Update: {
+          address?: string | null
+          approval_status?:
+            | Database["public"]["Enums"]["approval_status"]
+            | null
+          city?: string | null
+          county?: string | null
+          hours_of_operation?: string | null
+          id?: string | null
+          latitude?: number | null
+          location_type?: string | null
+          longitude?: number | null
+          marketplace_enabled?: boolean | null
+          name?: string | null
+          organization_id?: string | null
+          pickup_address?: string | null
+          pickup_instructions?: string | null
+          platform_fee_percentage?: number | null
+          state?: string | null
+          zip?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locations_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       has_role: {
