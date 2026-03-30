@@ -134,7 +134,7 @@ export default function JoinSignup({ onBack }: Props) {
           population_served: capacity.populations.length ? capacity.populations.join(", ") : null,
           approval_status: "pending",
         }]);
-        await supabase.from("profiles").update({ first_name: account.firstName, last_name: account.lastName, phone: account.phone || null, nonprofit_id: orgMatch.id }).eq("id", userId);
+        await supabase.from("profiles").update({ first_name: account.firstName, last_name: account.lastName, phone: account.phone || null, nonprofit_id: resolvedOrgId }).eq("id", userId);
       }
 
       await supabase.auth.signOut();
