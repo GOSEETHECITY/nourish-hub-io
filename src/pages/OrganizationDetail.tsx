@@ -186,7 +186,7 @@ export default function OrganizationDetail() {
       {/* Join Code */}
       <section className="bg-card rounded-xl border p-6">
         <h2 className="text-lg font-bold text-foreground mb-4">Location Join Code</h2>
-        <JoinCodeDisplay code={org.join_code} entityId={org.id} entityType="organization" invalidateKey={["organization", id!]} />
+        <JoinCodeDisplay code={orgJoinCode ?? null} entityId={org.id} entityType="organization" invalidateKey={["org-join-code", id!]} />
         <p className="text-xs text-muted-foreground mt-2">Share this code with location operators so they can join your organization during signup.</p>
       </section>
 

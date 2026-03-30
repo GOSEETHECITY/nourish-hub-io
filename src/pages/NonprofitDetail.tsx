@@ -175,7 +175,7 @@ export default function NonprofitDetail() {
       {/* Join Code */}
       <section className="bg-card rounded-xl border p-6">
         <h2 className="text-lg font-bold text-foreground mb-4">Nonprofit Location Join Code</h2>
-        <JoinCodeDisplay code={np.join_code} entityId={np.id} entityType="nonprofit" invalidateKey={["nonprofit", id!]} />
+        <JoinCodeDisplay code={npJoinCode ?? null} entityId={np.id} entityType="nonprofit" invalidateKey={["np-join-code", id!]} />
         <p className="text-xs text-muted-foreground mt-2">Share this code with distribution location operators so they can join your nonprofit during signup.</p>
       </section>
 
