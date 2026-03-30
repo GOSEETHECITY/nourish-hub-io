@@ -29,7 +29,7 @@ const POPULATIONS = ["Children", "Seniors", "Families", "Homeless Individuals", 
 
 interface Props { onBack: () => void; }
 type JoinType = "venue" | "nonprofit" | null;
-interface OrgMatch { id: string; name: string; type: JoinType; }
+interface OrgMatch { name: string; type: JoinType; }
 
 export default function JoinSignup({ onBack }: Props) {
   const [step, setStep] = useState(1);
