@@ -1158,6 +1158,11 @@ export type Database = {
       }
     }
     Functions: {
+      get_nonprofit_join_code: {
+        Args: { _nonprofit_id: string }
+        Returns: string
+      }
+      get_org_join_code: { Args: { _org_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
