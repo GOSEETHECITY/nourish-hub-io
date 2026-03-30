@@ -90,6 +90,12 @@ export default function JoinSignup({ onBack }: Props) {
       if (!authData.user) throw new Error("Signup failed");
       const userId = authData.user.id;
 
+      // Resolve org ID server-side after authentication (never trust client-cached IDs)
+      const { data: resolvedData, error: resolveError } = await supabase.rpc("validate_join_code", { p_code: joinCode.trim().toUpperCase().replace(/[^A-Z0-9\-]/g, "") });
+      if (resolveError || !resolvedData) throw new Error("Failed to resolve organization");
+      const resolved = typeof resolvedData === "string" ? JSON.parse(resolvedData) : resolvedData;
+      const resolvedOrgId = resolved.id;
+
       if (orgMatch.type === "venue") {
         await supabase.from("user_roles").insert({ user_id: userId, role: "venue_partner" });
         const pickupAddr = venueLoc.differentPickup ? venueLoc.pickupAddress : venueLoc.address;
