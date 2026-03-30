@@ -29,7 +29,7 @@ const POPULATIONS = ["Children", "Seniors", "Families", "Homeless Individuals", 
 
 interface Props { onBack: () => void; }
 type JoinType = "venue" | "nonprofit" | null;
-interface OrgMatch { id: string; name: string; type: JoinType; }
+interface OrgMatch { name: string; type: JoinType; }
 
 export default function JoinSignup({ onBack }: Props) {
   const [step, setStep] = useState(1);
@@ -90,11 +90,17 @@ export default function JoinSignup({ onBack }: Props) {
       if (!authData.user) throw new Error("Signup failed");
       const userId = authData.user.id;
 
+      // Resolve org ID server-side after authentication (never trust client-cached IDs)
+      const { data: resolvedData, error: resolveError } = await supabase.rpc("validate_join_code", { p_code: joinCode.trim().toUpperCase().replace(/[^A-Z0-9\-]/g, "") });
+      if (resolveError || !resolvedData) throw new Error("Failed to resolve organization");
+      const resolved = typeof resolvedData === "string" ? JSON.parse(resolvedData) : resolvedData;
+      const resolvedOrgId = resolved.id;
+
       if (orgMatch.type === "venue") {
         await supabase.from("user_roles").insert({ user_id: userId, role: "venue_partner" });
         const pickupAddr = venueLoc.differentPickup ? venueLoc.pickupAddress : venueLoc.address;
         const { data: locResult, error: locError } = await supabase.from("locations").insert({
-          organization_id: orgMatch.id, name: venueLoc.name, location_type: venueLoc.locationType || null,
+          organization_id: resolvedOrgId, name: venueLoc.name, location_type: venueLoc.locationType || null,
           address: venueLoc.address || null, city: venueLoc.city || null, state: venueLoc.state || null,
           zip: venueLoc.zip || null, county: venueLoc.county || null, pickup_address: pickupAddr || null,
           pickup_instructions: venueLoc.pickupInstructions || null, hours_of_operation: venueLoc.hours || null,
@@ -113,11 +119,11 @@ export default function JoinSignup({ onBack }: Props) {
           current_handling: baseline.current_handling || null, donation_frequency: baseline.donation_frequency || null,
           priority_outcomes: outcomes.length ? outcomes : null,
         });
-        await supabase.from("profiles").update({ first_name: account.firstName, last_name: account.lastName, phone: account.phone || null, organization_id: orgMatch.id, location_id: locResult.id }).eq("id", userId);
+        await supabase.from("profiles").update({ first_name: account.firstName, last_name: account.lastName, phone: account.phone || null, organization_id: resolvedOrgId, location_id: locResult.id }).eq("id", userId);
       } else {
         await supabase.from("user_roles").insert({ user_id: userId, role: "nonprofit_partner" });
         await supabase.from("nonprofit_locations").insert([{
-          nonprofit_id: orgMatch.id, name: npLoc.name,
+          nonprofit_id: resolvedOrgId, name: npLoc.name,
           address: npLoc.address || null, city: npLoc.city || null, state: npLoc.state || null,
           zip: npLoc.zip || null, county: npLoc.county || null, operating_hours: npLoc.operatingHours || null,
           pickup_dropoff_instructions: npLoc.pickupDropoff || null,
@@ -128,7 +134,7 @@ export default function JoinSignup({ onBack }: Props) {
           population_served: capacity.populations.length ? capacity.populations.join(", ") : null,
           approval_status: "pending",
         }]);
-        await supabase.from("profiles").update({ first_name: account.firstName, last_name: account.lastName, phone: account.phone || null, nonprofit_id: orgMatch.id }).eq("id", userId);
+        await supabase.from("profiles").update({ first_name: account.firstName, last_name: account.lastName, phone: account.phone || null, nonprofit_id: resolvedOrgId }).eq("id", userId);
       }
 
       await supabase.auth.signOut();
