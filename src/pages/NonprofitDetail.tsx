@@ -40,6 +40,12 @@ export default function NonprofitDetail() {
     enabled: !!id,
   });
 
+  const { data: npJoinCode } = useQuery({
+    queryKey: ["np-join-code", id],
+    queryFn: async () => { const { data } = await supabase.rpc("get_nonprofit_join_code", { _nonprofit_id: id! }); return data as string | null; },
+    enabled: !!id,
+  });
+
   const { data: npLocations = [] } = useQuery({
     queryKey: ["np-locations", id],
     queryFn: async () => { const { data, error } = await supabase.from("nonprofit_locations").select("*").eq("nonprofit_id", id!).order("created_at", { ascending: false }); if (error) throw error; return data as NonprofitLocation[]; },

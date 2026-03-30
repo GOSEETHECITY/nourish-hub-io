@@ -50,6 +50,12 @@ export default function OrganizationDetail() {
     enabled: !!id,
   });
 
+  const { data: orgJoinCode } = useQuery({
+    queryKey: ["org-join-code", id],
+    queryFn: async () => { const { data } = await supabase.rpc("get_org_join_code", { _org_id: id! }); return data as string | null; },
+    enabled: !!id,
+  });
+
   const { data: locations = [] } = useQuery({
     queryKey: ["org-locations", id],
     queryFn: async () => { const { data, error } = await supabase.from("locations").select("*").eq("organization_id", id!); if (error) throw error; return data as Location[]; },
