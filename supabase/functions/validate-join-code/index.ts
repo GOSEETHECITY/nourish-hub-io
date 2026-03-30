@@ -50,8 +50,9 @@ Deno.serve(async (req) => {
 
     const result = typeof data === "string" ? JSON.parse(data) : data;
 
+    // Only return name and type — never expose internal IDs to unauthenticated users
     return new Response(
-      JSON.stringify({ match: { id: result.id, name: result.name, type: result.type } }),
+      JSON.stringify({ match: { name: result.name, type: result.type } }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e) {
