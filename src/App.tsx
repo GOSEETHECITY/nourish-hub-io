@@ -213,6 +213,9 @@ const App = () => (
             <Route path="/app/feedback" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerFeedback /></ConsumerCartProvider></ConsumerAuthProvider>} />
             <Route path="/app/invite-friends" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerInviteFriends /></ConsumerCartProvider></ConsumerAuthProvider>} />
 
+            {/* Public gated event preview */}
+            <Route path="/event-preview/:id" element={<EventPreview />} />
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
