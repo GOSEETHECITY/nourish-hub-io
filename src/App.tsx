@@ -86,10 +86,25 @@ import ConsumerNotifications from "./pages/consumer/ConsumerNotifications";
 import ConsumerFeedback from "./pages/consumer/ConsumerFeedback";
 import ConsumerInviteFriends from "./pages/consumer/ConsumerInviteFriends";
 
+import ConsumerForgotPassword from "./pages/consumer/ConsumerForgotPassword";
+import ConsumerResetPassword from "./pages/consumer/ConsumerResetPassword";
+import ConsumerWaitlist from "./pages/consumer/ConsumerWaitlist";
+
 import EventPreview from "./pages/consumer/EventPreview";
+import ErrorBoundary from "./components/ErrorBoundary";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+
+const ConsumerWrapper = ({ children }: { children: React.ReactNode }) => (
+  <ConsumerAuthProvider>
+    <ConsumerCartProvider>
+      <ErrorBoundary>
+        {children}
+      </ErrorBoundary>
+    </ConsumerCartProvider>
+  </ConsumerAuthProvider>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
