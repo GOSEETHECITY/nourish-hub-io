@@ -1,14 +1,21 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Utensils, Package, Heart, Building2, ArrowUpRight } from "lucide-react";
+import { Utensils, Package, Heart, Building2 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell,
 } from "recharts";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { FoodListing, ImpactReport, Organization, Nonprofit } from "@/types/database";
 
-/* ── Custom Tooltips ── */
+/* Brand brown palette for charts */
+const BRAND_BROWN = "#6d412a";
+const BRAND_BROWN_LIGHT = "#a07452";
+const BRAND_CREAM = "#d7b899";
+const BRAND_CREAM_LIGHT = "#f0e4d4";
+
 const PoundsTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   return (
@@ -34,13 +41,13 @@ const DonationsTooltip = ({ active, payload, label }: any) => {
 };
 
 const FOOD_TYPE_COLORS: Record<string, string> = {
-  prepared_meals: "hsl(var(--chart-5))",
-  produce: "hsl(var(--chart-2))",
-  dairy: "hsl(var(--chart-1))",
-  meat_protein: "hsl(var(--chart-4))",
-  baked_goods: "hsl(var(--chart-3))",
-  shelf_stable: "hsl(199, 60%, 65%)",
-  frozen: "hsl(220, 14%, 60%)",
+  prepared_meals: BRAND_BROWN,
+  produce: BRAND_BROWN_LIGHT,
+  dairy: BRAND_CREAM,
+  meat_protein: BRAND_CREAM_LIGHT,
+  baked_goods: "#8b5e3c",
+  shelf_stable: "#c4956a",
+  frozen: "#e8d5c0",
 };
 
 const FOOD_TYPE_LABELS: Record<string, string> = {
@@ -55,8 +62,18 @@ const FOOD_TYPE_LABELS: Record<string, string> = {
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
+const STATUS_CHIP: Record<string, string> = {
+  posted: "bg-green-100 text-green-800",
+  claimed: "bg-amber-100 text-amber-800",
+  picked_up: "bg-blue-100 text-blue-800",
+  pending_impact_report: "bg-amber-100 text-amber-800",
+  completed: "bg-green-100 text-green-800",
+  cancelled: "bg-red-100 text-red-800",
+};
+
 export default function Dashboard() {
-  // Fetch real data
+  const navigate = useNavigate();
+
   const { data: listings = [] } = useQuery({
     queryKey: ["dashboard-listings"],
     queryFn: async () => {
@@ -78,20 +95,22 @@ export default function Dashboard() {
   const { data: orgs = [] } = useQuery({
     queryKey: ["dashboard-orgs"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("organizations").select("id, approval_status");
+      const { data, error } = await supabase.from("organizations").select("*");
       if (error) throw error;
-      return data as Pick<Organization, "id" | "approval_status">[];
+      return data as Organization[];
     },
   });
 
   const { data: nonprofits = [] } = useQuery({
     queryKey: ["dashboard-nonprofits"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("nonprofits").select("id, approval_status");
+      const { data, error } = await supabase.from("nonprofits").select("*");
       if (error) throw error;
-      return data as Pick<Nonprofit, "id" | "approval_status">[];
+      return data as Nonprofit[];
     },
   });
+
+  const orgMap = useMemo(() => Object.fromEntries(orgs.map((o) => [o.id, o])), [orgs]);
 
   // KPI calculations
   const totalMeals = reports.reduce((s, r) => s + (r.meals_served || 0), 0);
@@ -101,16 +120,16 @@ export default function Dashboard() {
 
   const stats = [
     { title: "Total Meals Served", value: totalMeals.toLocaleString(), sub: `${reports.length} impact reports`, icon: Utensils },
-    { title: "Active Donations", value: activeDonations.toString(), sub: "Posted, Claimed & Picked Up", icon: Package },
+    { title: "Active Donations", value: activeDonations.toString(), sub: "Currently available for pickup", icon: Package },
     { title: "Total Nonprofits", value: approvedNonprofits.toString(), sub: "Approved only", icon: Heart },
     { title: "Total Organizations", value: totalOrgs.toString(), sub: "All registered", icon: Building2 },
   ];
 
-  // Chart 1: Pounds diverted by month (current year)
+  // Chart: Pounds diverted by month
   const poundsData = useMemo(() => {
     const now = new Date();
     const year = now.getFullYear();
-    const monthlyPounds = MONTHS.map((m, i) => ({ month: m, pounds: 0 }));
+    const monthlyPounds = MONTHS.map((m) => ({ month: m, pounds: 0 }));
     listings.filter((l) => l.listing_type === "donation" && ["completed", "claimed", "picked_up", "pending_impact_report"].includes(l.status)).forEach((l) => {
       const d = new Date(l.created_at);
       if (d.getFullYear() === year) monthlyPounds[d.getMonth()].pounds += l.pounds || 0;
@@ -120,7 +139,7 @@ export default function Dashboard() {
 
   const totalPounds = poundsData.reduce((s, d) => s + d.pounds, 0);
 
-  // Chart 2: Donations over time (count by month)
+  // Chart: Donations count by month
   const donationsCountData = useMemo(() => {
     const now = new Date();
     const year = now.getFullYear();
@@ -134,7 +153,7 @@ export default function Dashboard() {
 
   const totalDonationCount = donationsCountData.reduce((s, d) => s + d.count, 0);
 
-  // Chart 3: Food type breakdown
+  // Chart: Food type breakdown
   const foodTypes = useMemo(() => {
     const map: Record<string, number> = {};
     listings.filter((l) => l.listing_type === "donation" && l.food_type).forEach((l) => {
@@ -144,14 +163,48 @@ export default function Dashboard() {
     return Object.entries(map).map(([type, count]) => ({
       name: FOOD_TYPE_LABELS[type] || type,
       value: Math.round((count / total) * 100),
-      color: FOOD_TYPE_COLORS[type] || "hsl(220, 14%, 60%)",
+      color: FOOD_TYPE_COLORS[type] || BRAND_CREAM,
     }));
   }, [listings]);
+
+  // Recent Donations (P3)
+  const recentDonations = useMemo(() => {
+    return listings
+      .filter((l) => l.listing_type === "donation")
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 10);
+  }, [listings]);
+
+  // Top Nonprofits by lbs in last 30 days (P3)
+  const topNonprofits = useMemo(() => {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    const recentListings = listings.filter(
+      (l) => l.listing_type === "donation" && l.nonprofit_claimed_id && new Date(l.created_at) >= thirtyDaysAgo
+    );
+    const npMap: Record<string, { pounds: number; count: number }> = {};
+    recentListings.forEach((l) => {
+      const id = l.nonprofit_claimed_id!;
+      if (!npMap[id]) npMap[id] = { pounds: 0, count: 0 };
+      npMap[id].pounds += l.pounds || 0;
+      npMap[id].count += 1;
+    });
+    return Object.entries(npMap)
+      .sort((a, b) => b[1].pounds - a[1].pounds)
+      .slice(0, 5)
+      .map(([id, data], i) => {
+        const np = nonprofits.find((n) => n.id === id);
+        return { rank: i + 1, name: np?.organization_name || "Unknown", ...data };
+      });
+  }, [listings, nonprofits]);
+
+  const formatFoodType = (t: string | null) => FOOD_TYPE_LABELS[t || ""] || t || "—";
+  const formatStatus = (s: string) => s.split("_").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+        <h1 className="text-2xl font-bold font-display text-foreground">Dashboard</h1>
         <p className="text-sm mt-1 text-muted-foreground">
           Platform-wide overview of food diversion impact
         </p>
@@ -162,9 +215,9 @@ export default function Dashboard() {
         {stats.map((stat) => (
           <div key={stat.title} className="bg-card rounded-xl border p-5 shadow-sm">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-medium font-serif text-chart-5">{stat.title}</p>
+              <p className="text-sm font-medium text-foreground">{stat.title}</p>
               <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                <stat.icon className="w-4 h-4 text-muted-foreground" />
+                <stat.icon className="w-4 h-4 text-foreground" />
               </div>
             </div>
             <p className="text-3xl font-bold text-foreground">{stat.value}</p>
@@ -177,11 +230,8 @@ export default function Dashboard() {
 
       {/* Charts Row */}
       <div className="grid grid-cols-2 gap-4">
-        {/* Chart 1 — Pounds Diverted */}
         <div className="bg-card rounded-xl border p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-sm font-medium font-serif text-sidebar-primary">Pounds of Food Diverted</p>
-          </div>
+          <p className="text-sm font-medium text-foreground mb-1">Pounds of Food Diverted</p>
           <p className="text-2xl font-bold text-foreground mb-6">{totalPounds.toLocaleString()} lbs</p>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={poundsData}>
@@ -189,16 +239,13 @@ export default function Dashboard() {
               <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
               <YAxis axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} tickFormatter={(v) => v >= 1000 ? `${v / 1000}k` : v.toString()} />
               <Tooltip content={<PoundsTooltip />} cursor={{ fill: "hsl(var(--muted))" }} />
-              <Bar dataKey="pounds" fill="hsl(var(--foreground))" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="pounds" fill={BRAND_BROWN} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
-        {/* Chart 2 — Donations Over Time */}
         <div className="bg-card rounded-xl border p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-sm font-medium text-muted-foreground">Donations Over Time</p>
-          </div>
+          <p className="text-sm font-medium text-foreground mb-1">Donations Over Time</p>
           <p className="text-2xl font-bold text-foreground mb-6">{totalDonationCount} total</p>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={donationsCountData}>
@@ -206,16 +253,16 @@ export default function Dashboard() {
               <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
               <YAxis axisLine={false} tickLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }} />
               <Tooltip content={<DonationsTooltip />} cursor={{ fill: "hsl(var(--muted))" }} />
-              <Bar dataKey="count" fill="hsl(var(--foreground))" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="count" fill={BRAND_BROWN_LIGHT} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      {/* Chart 3 — Food Type Breakdown */}
+      {/* Food Type Breakdown */}
       {foodTypes.length > 0 && (
         <div className="bg-card rounded-xl border p-6 shadow-sm">
-          <p className="text-sm font-medium text-muted-foreground mb-4">Food Type Breakdown</p>
+          <p className="text-sm font-medium text-foreground mb-4">Food Type Breakdown</p>
           <div className="flex items-center gap-12">
             <div className="w-52 h-52 relative">
               <ResponsiveContainer>
@@ -236,7 +283,7 @@ export default function Dashboard() {
               {foodTypes.map((type) => (
                 <div key={type.name} className="flex items-center gap-2.5">
                   <div className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: type.color }} />
-                  <span className="text-sm text-muted-foreground">{type.name}</span>
+                  <span className="text-sm text-foreground">{type.name}</span>
                   <span className="text-sm font-semibold text-foreground ml-auto">{type.value}%</span>
                 </div>
               ))}
@@ -244,6 +291,62 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* Recent Donations (P3) */}
+      <div className="bg-card rounded-xl border p-6 shadow-sm">
+        <p className="text-sm font-medium text-foreground mb-4">Recent Donations</p>
+        {recentDonations.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No donations yet.</p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-foreground">Organization</TableHead>
+                <TableHead className="text-foreground">Food Type</TableHead>
+                <TableHead className="text-foreground">Weight</TableHead>
+                <TableHead className="text-foreground">Pickup Start</TableHead>
+                <TableHead className="text-foreground">Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {recentDonations.map((d) => (
+                <TableRow key={d.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate(`/food-listings/donations/${d.id}`)}>
+                  <TableCell className="text-foreground">{orgMap[d.organization_id]?.name || "—"}</TableCell>
+                  <TableCell className="text-foreground">{formatFoodType(d.food_type)}</TableCell>
+                  <TableCell className="text-foreground">{d.pounds ? `${d.pounds} lbs` : "—"}</TableCell>
+                  <TableCell className="text-foreground">{d.pickup_window_start ? new Date(d.pickup_window_start).toLocaleString() : "—"}</TableCell>
+                  <TableCell>
+                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${STATUS_CHIP[d.status] || "bg-gray-100 text-gray-800"}`}>
+                      {formatStatus(d.status)}
+                    </span>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </div>
+
+      {/* Top Nonprofits (P3) */}
+      <div className="bg-card rounded-xl border p-6 shadow-sm">
+        <p className="text-sm font-medium text-foreground mb-4">Top Nonprofits (Last 30 Days)</p>
+        {topNonprofits.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No nonprofit activity in the last 30 days.</p>
+        ) : (
+          <div className="space-y-3">
+            {topNonprofits.map((np) => (
+              <div key={np.rank} className="flex items-center gap-4 p-3 rounded-lg" style={{ backgroundColor: BRAND_CREAM_LIGHT }}>
+                <span className="text-lg font-bold text-foreground w-8">#{np.rank}</span>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-foreground">{np.name}</p>
+                  <p className="text-xs text-muted-foreground">{np.count} donations</p>
+                </div>
+                <p className="text-sm font-bold text-foreground">{np.pounds.toLocaleString()} lbs</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
