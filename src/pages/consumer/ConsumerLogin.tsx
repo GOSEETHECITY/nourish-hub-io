@@ -9,12 +9,19 @@ const ConsumerLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
     setError("");
+    const errors: { email?: string; password?: string } = {};
+    if (!email.trim()) errors.email = "Email is required";
+    if (!password) errors.password = "Password is required";
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
     setLoading(true);
-    const { error: authErr } = await supabase.auth.signInWithPassword({ email, password });
+    const { error: authErr } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     setLoading(false);
     if (authErr) { setError(authErr.message); return; }
     const redirect = sessionStorage.getItem("redirect_after_login");
@@ -30,20 +37,38 @@ const ConsumerLogin = () => {
     <ConsumerMobileLayout className="flex flex-col items-center justify-center overflow-hidden">
       <ConsumerDecorativeBackground />
       <div className="relative z-10 flex flex-col items-center gap-5 px-8 w-full">
-        <div className="text-3xl font-extrabold">
+        <h1 className="text-3xl font-extrabold">
           <span className="text-[#F97316]">GO</span>{" "}
           <span className="text-[#1B2A4A]">See The City</span>
+        </h1>
+        <div className="w-full">
+          <input
+            value={email}
+            onChange={(e) => { setEmail(e.target.value); setFieldErrors((p) => ({ ...p, email: undefined })); }}
+            type="email"
+            placeholder="you@email.com"
+            className="w-full py-3 px-4 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#F97316] placeholder:text-gray-400"
+          />
+          {fieldErrors.email && <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>}
         </div>
-        <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Email"
-          className="w-full py-3 px-4 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#F97316]" />
-        <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="Password"
-          className="w-full py-3 px-4 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#F97316]" />
+        <div className="w-full">
+          <input
+            value={password}
+            onChange={(e) => { setPassword(e.target.value); setFieldErrors((p) => ({ ...p, password: undefined })); }}
+            type="password"
+            placeholder="Password"
+            className="w-full py-3 px-4 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#F97316] placeholder:text-gray-400"
+          />
+          {fieldErrors.password && <p className="text-red-500 text-xs mt-1">{fieldErrors.password}</p>}
+        </div>
         {error && <p className="text-red-500 text-sm">{error}</p>}
         <button onClick={handleLogin} disabled={loading}
           className="w-full py-3 rounded-full bg-[#F97316] text-white font-bold text-lg shadow-lg hover:bg-[#EA6C10] disabled:opacity-50 transition-colors">
           {loading ? "Logging in..." : "Login"}
         </button>
-        <button className="text-sm text-gray-500 underline">Forgot password?</button>
+        <button onClick={() => navigate("/app/forgot-password")} className="text-sm text-gray-500 underline">
+          Forgot password?
+        </button>
         <p className="text-sm text-gray-600">
           Don't have an account?{" "}
           <button onClick={() => navigate("/app/invite-code")} className="text-[#F97316] font-semibold">Sign up</button>
