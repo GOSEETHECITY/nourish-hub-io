@@ -13,7 +13,7 @@ export default function Impact() {
   const { data: listings = [] } = useQuery({
     queryKey: ["impact-listings"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("food_listings").select("*").eq("status", "completed");
+      const { data, error } = await supabase.from("food_listings").select("*").eq("listing_type", "donation").in("status", ["completed", "claimed", "picked_up", "pending_impact_report"]);
       if (error) throw error;
       return data as FoodListing[];
     },
