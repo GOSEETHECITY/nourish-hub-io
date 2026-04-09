@@ -86,10 +86,25 @@ import ConsumerNotifications from "./pages/consumer/ConsumerNotifications";
 import ConsumerFeedback from "./pages/consumer/ConsumerFeedback";
 import ConsumerInviteFriends from "./pages/consumer/ConsumerInviteFriends";
 
+import ConsumerForgotPassword from "./pages/consumer/ConsumerForgotPassword";
+import ConsumerResetPassword from "./pages/consumer/ConsumerResetPassword";
+import ConsumerWaitlist from "./pages/consumer/ConsumerWaitlist";
+
 import EventPreview from "./pages/consumer/EventPreview";
+import ErrorBoundary from "./components/ErrorBoundary";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+
+const ConsumerWrapper = ({ children }: { children: React.ReactNode }) => (
+  <ConsumerAuthProvider>
+    <ConsumerCartProvider>
+      <ErrorBoundary>
+        {children}
+      </ErrorBoundary>
+    </ConsumerCartProvider>
+  </ConsumerAuthProvider>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -188,30 +203,33 @@ const App = () => (
             </Route>
 
             {/* GO SEE THE CITY CONSUMER ROUTES */}
-            <Route path="/app" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerLoading /></ConsumerCartProvider></ConsumerAuthProvider>} />
-            <Route path="/app/splash" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerSplash /></ConsumerCartProvider></ConsumerAuthProvider>} />
-            <Route path="/app/invite-code" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerInviteCode /></ConsumerCartProvider></ConsumerAuthProvider>} />
-            <Route path="/app/phone-entry" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerPhoneEntry /></ConsumerCartProvider></ConsumerAuthProvider>} />
-            <Route path="/app/verification" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerVerification /></ConsumerCartProvider></ConsumerAuthProvider>} />
-            <Route path="/app/login" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerLogin /></ConsumerCartProvider></ConsumerAuthProvider>} />
-            <Route path="/app/signup" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerSignup /></ConsumerCartProvider></ConsumerAuthProvider>} />
-            <Route path="/app/location-permission" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerLocationPermission /></ConsumerCartProvider></ConsumerAuthProvider>} />
-            <Route path="/app/home" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerHome /></ConsumerCartProvider></ConsumerAuthProvider>} />
-            <Route path="/app/restaurants" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerRestaurants /></ConsumerCartProvider></ConsumerAuthProvider>} />
-            <Route path="/app/restaurant/:id" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerRestaurantDetail /></ConsumerCartProvider></ConsumerAuthProvider>} />
-            <Route path="/app/coupon/:id" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerCouponDetail /></ConsumerCartProvider></ConsumerAuthProvider>} />
-            <Route path="/app/events" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerEvents /></ConsumerCartProvider></ConsumerAuthProvider>} />
-            <Route path="/app/event/:id" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerEventDetail /></ConsumerCartProvider></ConsumerAuthProvider>} />
-            <Route path="/app/profile" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerProfile /></ConsumerCartProvider></ConsumerAuthProvider>} />
-            <Route path="/app/profile/edit" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerProfileEdit /></ConsumerCartProvider></ConsumerAuthProvider>} />
-            <Route path="/app/checkins" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerCheckIns /></ConsumerCartProvider></ConsumerAuthProvider>} />
-            <Route path="/app/cart" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerCart /></ConsumerCartProvider></ConsumerAuthProvider>} />
-            <Route path="/app/add-payment" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerAddPayment /></ConsumerCartProvider></ConsumerAuthProvider>} />
-            <Route path="/app/orders" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerOrders /></ConsumerCartProvider></ConsumerAuthProvider>} />
-            <Route path="/app/follows" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerFollows /></ConsumerCartProvider></ConsumerAuthProvider>} />
-            <Route path="/app/notifications" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerNotifications /></ConsumerCartProvider></ConsumerAuthProvider>} />
-            <Route path="/app/feedback" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerFeedback /></ConsumerCartProvider></ConsumerAuthProvider>} />
-            <Route path="/app/invite-friends" element={<ConsumerAuthProvider><ConsumerCartProvider><ConsumerInviteFriends /></ConsumerCartProvider></ConsumerAuthProvider>} />
+            <Route path="/app" element={<ConsumerWrapper><ConsumerLoading /></ConsumerWrapper>} />
+            <Route path="/app/splash" element={<ConsumerWrapper><ConsumerSplash /></ConsumerWrapper>} />
+            <Route path="/app/invite-code" element={<ConsumerWrapper><ConsumerInviteCode /></ConsumerWrapper>} />
+            <Route path="/app/phone-entry" element={<ConsumerWrapper><ConsumerPhoneEntry /></ConsumerWrapper>} />
+            <Route path="/app/verification" element={<ConsumerWrapper><ConsumerVerification /></ConsumerWrapper>} />
+            <Route path="/app/login" element={<ConsumerWrapper><ConsumerLogin /></ConsumerWrapper>} />
+            <Route path="/app/signup" element={<ConsumerWrapper><ConsumerSignup /></ConsumerWrapper>} />
+            <Route path="/app/forgot-password" element={<ConsumerWrapper><ConsumerForgotPassword /></ConsumerWrapper>} />
+            <Route path="/app/reset-password" element={<ConsumerWrapper><ConsumerResetPassword /></ConsumerWrapper>} />
+            <Route path="/app/waitlist" element={<ConsumerWrapper><ConsumerWaitlist /></ConsumerWrapper>} />
+            <Route path="/app/location-permission" element={<ConsumerWrapper><ConsumerLocationPermission /></ConsumerWrapper>} />
+            <Route path="/app/home" element={<ConsumerWrapper><ConsumerHome /></ConsumerWrapper>} />
+            <Route path="/app/restaurants" element={<ConsumerWrapper><ConsumerRestaurants /></ConsumerWrapper>} />
+            <Route path="/app/restaurant/:id" element={<ConsumerWrapper><ConsumerRestaurantDetail /></ConsumerWrapper>} />
+            <Route path="/app/coupon/:id" element={<ConsumerWrapper><ConsumerCouponDetail /></ConsumerWrapper>} />
+            <Route path="/app/events" element={<ConsumerWrapper><ConsumerEvents /></ConsumerWrapper>} />
+            <Route path="/app/event/:id" element={<ConsumerWrapper><ConsumerEventDetail /></ConsumerWrapper>} />
+            <Route path="/app/profile" element={<ConsumerWrapper><ConsumerProfile /></ConsumerWrapper>} />
+            <Route path="/app/profile/edit" element={<ConsumerWrapper><ConsumerProfileEdit /></ConsumerWrapper>} />
+            <Route path="/app/checkins" element={<ConsumerWrapper><ConsumerCheckIns /></ConsumerWrapper>} />
+            <Route path="/app/cart" element={<ConsumerWrapper><ConsumerCart /></ConsumerWrapper>} />
+            <Route path="/app/add-payment" element={<ConsumerWrapper><ConsumerAddPayment /></ConsumerWrapper>} />
+            <Route path="/app/orders" element={<ConsumerWrapper><ConsumerOrders /></ConsumerWrapper>} />
+            <Route path="/app/follows" element={<ConsumerWrapper><ConsumerFollows /></ConsumerWrapper>} />
+            <Route path="/app/notifications" element={<ConsumerWrapper><ConsumerNotifications /></ConsumerWrapper>} />
+            <Route path="/app/feedback" element={<ConsumerWrapper><ConsumerFeedback /></ConsumerWrapper>} />
+            <Route path="/app/invite-friends" element={<ConsumerWrapper><ConsumerInviteFriends /></ConsumerWrapper>} />
 
             {/* Public gated event preview */}
             <Route path="/event-preview/:id" element={<EventPreview />} />

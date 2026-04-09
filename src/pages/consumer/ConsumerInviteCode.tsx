@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import ConsumerMobileLayout from "@/components/consumer/ConsumerMobileLayout";
 import ConsumerDecorativeBackground from "@/components/consumer/ConsumerDecorativeBackground";
@@ -35,17 +36,23 @@ const ConsumerInviteCode = () => {
   return (
     <ConsumerMobileLayout className="flex flex-col items-center justify-center overflow-hidden">
       <ConsumerDecorativeBackground />
-      <div className="relative z-10 flex flex-col items-center gap-6 px-8 w-full">
-        <div className="text-3xl font-extrabold tracking-tight">
+      <div className="relative z-10 flex flex-col items-center gap-5 px-8 w-full">
+        <button onClick={() => navigate("/app/login")} className="self-start flex items-center gap-1 text-sm text-gray-500">
+          <ArrowLeft className="w-4 h-4" /> Back to login
+        </button>
+        <h1 className="text-3xl font-extrabold tracking-tight">
           <span className="text-[#F97316]">GO</span>{" "}
           <span className="text-[#1B2A4A]">See The City</span>
-        </div>
+        </h1>
         <p className="text-xl font-bold text-[#1B2A4A]">Enter invitation code</p>
+        <p className="text-sm text-gray-500 text-center">
+          Your code was included in the invitation email from GO See The City. If you don't have one yet, join the waitlist below.
+        </p>
         <input
           value={inviteCode}
           onChange={(e) => setInviteCode(e.target.value)}
           placeholder="Enter code"
-          className="w-full py-3 px-4 rounded-full border border-gray-300 text-center text-lg uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-[#F97316]"
+          className="w-full py-3 px-4 rounded-full border border-gray-300 text-center text-lg uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-[#F97316] placeholder:text-gray-400"
         />
         {error && <p className="text-red-500 text-sm">{error}</p>}
         <button
@@ -55,6 +62,12 @@ const ConsumerInviteCode = () => {
         >
           {loading ? "Validating..." : "Join"}
         </button>
+        <p className="text-sm text-gray-500">
+          Don't have a code yet?{" "}
+          <button onClick={() => navigate("/app/waitlist")} className="text-[#F97316] font-semibold underline">
+            Join the waitlist
+          </button>
+        </p>
       </div>
     </ConsumerMobileLayout>
   );

@@ -1249,6 +1249,30 @@ export type Database = {
           },
         ]
       }
+      waitlist_signups: {
+        Row: {
+          city: string
+          created_at: string
+          email: string
+          id: string
+          zip: string | null
+        }
+        Insert: {
+          city: string
+          created_at?: string
+          email: string
+          id?: string
+          zip?: string | null
+        }
+        Update: {
+          city?: string
+          created_at?: string
+          email?: string
+          id?: string
+          zip?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       locations_public: {
