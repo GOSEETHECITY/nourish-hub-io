@@ -37,10 +37,11 @@ const ConsumerHome = () => {
         await import("leaflet/dist/leaflet.css");
         const RL = await import("react-leaflet");
 
-        // Fix default icon
-        const iconUrl = (await import("leaflet/dist/images/marker-icon.png")).default;
-        const iconRetinaUrl = (await import("leaflet/dist/images/marker-icon-2x.png")).default;
-        const shadowUrl = (await import("leaflet/dist/images/marker-shadow.png")).default;
+        // Fix default icon — handle both string and module-object returns from Vite
+        const resolveDefault = (mod: any) => (typeof mod === "string" ? mod : mod?.default ?? mod);
+        const iconUrl = resolveDefault(await import("leaflet/dist/images/marker-icon.png"));
+        const iconRetinaUrl = resolveDefault(await import("leaflet/dist/images/marker-icon-2x.png"));
+        const shadowUrl = resolveDefault(await import("leaflet/dist/images/marker-shadow.png"));
 
         delete (L.Icon.Default.prototype as any)._getIconUrl;
         L.Icon.Default.mergeOptions({ iconUrl, iconRetinaUrl, shadowUrl });
