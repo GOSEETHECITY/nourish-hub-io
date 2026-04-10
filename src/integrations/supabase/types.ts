@@ -616,6 +616,9 @@ export type Database = {
           expiration_date: string | null
           id: string
           label: string | null
+          max_uses: number
+          role_type: string
+          state: string
           status: Database["public"]["Enums"]["invitation_code_status"]
           times_used: number
         }
@@ -626,6 +629,9 @@ export type Database = {
           expiration_date?: string | null
           id?: string
           label?: string | null
+          max_uses?: number
+          role_type?: string
+          state?: string
           status?: Database["public"]["Enums"]["invitation_code_status"]
           times_used?: number
         }
@@ -636,6 +642,9 @@ export type Database = {
           expiration_date?: string | null
           id?: string
           label?: string | null
+          max_uses?: number
+          role_type?: string
+          state?: string
           status?: Database["public"]["Enums"]["invitation_code_status"]
           times_used?: number
         }
