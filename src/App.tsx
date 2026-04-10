@@ -26,6 +26,8 @@ import UsersPage from "./pages/UsersPage";
 import Billing from "./pages/Billing";
 import Support from "./pages/Support";
 import SettingsPage from "./pages/SettingsPage";
+import Regions from "./pages/Regions";
+import Notifications from "./pages/Notifications";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 import ForgotPassword from "./pages/auth/ForgotPassword";
@@ -140,11 +142,13 @@ const App = () => (
               <Route path="/nonprofits" element={<Nonprofits />} />
               <Route path="/nonprofits/:id" element={<NonprofitDetail />} />
               <Route path="/events" element={<Events />} />
+              <Route path="/regions" element={<Regions />} />
               <Route path="/marketplace" element={<Marketplace />} />
               <Route path="/marketplace/:orgId" element={<MarketplacePartnerDetail />} />
               <Route path="/impact" element={<Impact />} />
               <Route path="/users" element={<UsersPage />} />
               <Route path="/billing" element={<Billing />} />
+              <Route path="/notifications" element={<Notifications />} />
               <Route path="/support" element={<Support />} />
               <Route path="/settings" element={<SettingsPage />} />
             </Route>

@@ -22,6 +22,7 @@ const mainNav = [
   },
   { icon: Heart, label: "Nonprofits", path: "/nonprofits" },
   { icon: CalendarDays, label: "Events", path: "/events" },
+  { icon: MapPin, label: "Regions", path: "/regions" },
   { icon: Store, label: "Marketplace", path: "/marketplace" },
   { icon: BarChart3, label: "Impact", path: "/impact" },
   { icon: Users, label: "Users", path: "/users" },
