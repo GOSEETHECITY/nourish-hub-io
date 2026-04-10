@@ -28,6 +28,7 @@ import Support from "./pages/Support";
 import SettingsPage from "./pages/SettingsPage";
 import Regions from "./pages/Regions";
 import Notifications from "./pages/Notifications";
+import ImportLogs from "./pages/ImportLogs";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 import ForgotPassword from "./pages/auth/ForgotPassword";
@@ -149,6 +150,7 @@ const App = () => (
               <Route path="/users" element={<UsersPage />} />
               <Route path="/billing" element={<Billing />} />
               <Route path="/notifications" element={<Notifications />} />
+              <Route path="/import-logs" element={<ImportLogs />} />
               <Route path="/support" element={<Support />} />
               <Route path="/settings" element={<SettingsPage />} />
             </Route>

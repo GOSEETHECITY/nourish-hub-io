@@ -239,7 +239,23 @@ export interface HarietEvent {
   share_count: number;
   flyer_url: string | null;
   ai_generated_description: boolean;
+  created_from_import: boolean;
+  source_type: string | null;
+  import_batch_id: string | null;
   created_at: string;
+}
+
+export type ImportLogStatus = "success" | "skipped" | "pending_image_retry" | "error";
+
+export interface ImportLog {
+  id: string;
+  batch_id: string;
+  event_name: string;
+  status: ImportLogStatus;
+  error_message: string | null;
+  csv_filename: string;
+  processed_at: string;
+  created_event_id: string | null;
 }
 
 export interface CityThreshold {

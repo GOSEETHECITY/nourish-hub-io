@@ -2,7 +2,7 @@ import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Building2, UtensilsCrossed, Heart, CalendarDays,
   Store, BarChart3, Users, CreditCard, Headphones, Settings, LogOut,
-  Search, MapPin, ChevronDown, ChevronRight, Menu, X,
+  Search, MapPin, ChevronDown, ChevronRight, Menu, X, FileText,
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -27,6 +27,7 @@ const mainNav = [
   { icon: BarChart3, label: "Impact", path: "/impact" },
   { icon: Users, label: "Users", path: "/users" },
   { icon: CreditCard, label: "Billing", path: "/billing" },
+  { icon: FileText, label: "Import Logs", path: "/import-logs" },
 ];
 
 const otherNav = [
