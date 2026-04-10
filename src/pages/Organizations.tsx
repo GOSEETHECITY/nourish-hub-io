@@ -61,6 +61,24 @@ export default function Organizations() {
     },
   });
 
+  const { data: pricingOverrides = [] } = useQuery({
+    queryKey: ["org-pricing-for-orgs"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("organization_pricing").select("*");
+      if (error) throw error;
+      return data as { id: string; organization_id: string; override_amount: number; billing_cycle: string; effective_from: string; effective_to: string | null }[];
+    },
+  });
+
+  const getOrgPricing = (orgId: string): string => {
+    const today = new Date().toISOString().split("T")[0];
+    const active = pricingOverrides.find((p) =>
+      p.organization_id === orgId && p.effective_from <= today && (!p.effective_to || p.effective_to >= today)
+    );
+    if (active) return `Custom: $${active.override_amount}/${active.billing_cycle === "monthly" ? "mo" : "yr"}`;
+    return "—";
+  };
+
   const saveOrg = useMutation({
     mutationFn: async () => {
       if (editingOrg) {
@@ -185,15 +203,15 @@ export default function Organizations() {
           <TableHeader>
             <TableRow>
               <TableHead>Organization Name</TableHead><TableHead>Type</TableHead><TableHead>Primary Contact</TableHead>
-              <TableHead>Email</TableHead><TableHead>Locations</TableHead><TableHead>Status</TableHead>
+              <TableHead>Email</TableHead><TableHead>Locations</TableHead><TableHead>Pricing</TableHead><TableHead>Status</TableHead>
               <TableHead>City</TableHead><TableHead>State</TableHead><TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow><TableCell colSpan={9} className="text-center py-12 text-muted-foreground">Loading...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={10} className="text-center py-12 text-muted-foreground">Loading...</TableCell></TableRow>
             ) : filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={9} className="text-center py-12 text-muted-foreground">No organizations found</TableCell></TableRow>
+              <TableRow><TableCell colSpan={10} className="text-center py-12 text-muted-foreground">No organizations found</TableCell></TableRow>
             ) : filtered.map((org) => (
               <TableRow key={org.id} className="cursor-pointer" onClick={() => navigate(`/organizations/${org.id}`)}>
                 <TableCell className="font-medium">{org.name}</TableCell>
@@ -201,6 +219,7 @@ export default function Organizations() {
                 <TableCell>{org.primary_contact_name || "—"}</TableCell>
                 <TableCell>{org.primary_contact_email || "—"}</TableCell>
                 <TableCell>{locationCounts[org.id] || 0}</TableCell>
+                <TableCell className="text-xs">{getOrgPricing(org.id)}</TableCell>
                 <TableCell><StatusChip status={org.approval_status} /></TableCell>
                 <TableCell>{org.city || "—"}</TableCell>
                 <TableCell>{toStateAbbr(org.state)}</TableCell>
