@@ -63,9 +63,15 @@ export default function Billing() {
         <p className="text-sm text-muted-foreground mt-1">Organization billing and subscription management</p>
       </div>
 
-      <div className="flex gap-3">
-        <Select value={filterPayment} onValueChange={setFilterPayment}><SelectTrigger className="w-[160px]"><SelectValue placeholder="Payment Status" /></SelectTrigger><SelectContent><SelectItem value="all">All</SelectItem><SelectItem value="paid">Paid</SelectItem><SelectItem value="unpaid">Unpaid</SelectItem><SelectItem value="free">Free</SelectItem></SelectContent></Select>
-        <Select value={filterCycle} onValueChange={setFilterCycle}><SelectTrigger className="w-[160px]"><SelectValue placeholder="Billing Cycle" /></SelectTrigger><SelectContent><SelectItem value="all">All</SelectItem><SelectItem value="free">Free</SelectItem><SelectItem value="monthly">Monthly</SelectItem><SelectItem value="annual">Annual</SelectItem></SelectContent></Select>
+      <div className="flex flex-wrap gap-3 items-end">
+        <div>
+          <Label className="text-xs text-muted-foreground mb-1 block">Filter by Status</Label>
+          <Select value={filterPayment} onValueChange={setFilterPayment}><SelectTrigger className="w-[160px]"><SelectValue placeholder="Payment Status" /></SelectTrigger><SelectContent><SelectItem value="all">All</SelectItem><SelectItem value="paid">Paid</SelectItem><SelectItem value="unpaid">Unpaid</SelectItem><SelectItem value="free">Free</SelectItem></SelectContent></Select>
+        </div>
+        <div>
+          <Label className="text-xs text-muted-foreground mb-1 block">Filter by Plan</Label>
+          <Select value={filterCycle} onValueChange={setFilterCycle}><SelectTrigger className="w-[160px]"><SelectValue placeholder="Billing Cycle" /></SelectTrigger><SelectContent><SelectItem value="all">All</SelectItem><SelectItem value="free">Free</SelectItem><SelectItem value="monthly">Monthly</SelectItem><SelectItem value="annual">Annual</SelectItem></SelectContent></Select>
+        </div>
       </div>
 
       <div className="bg-card rounded-xl border">
