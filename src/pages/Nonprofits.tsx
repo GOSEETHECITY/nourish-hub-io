@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { Plus, Search, Pencil } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -11,14 +11,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import StatusChip, { toStateAbbr } from "@/components/admin/StatusChip";
+import ActionsMenu from "@/components/admin/ActionsMenu";
 import type { Nonprofit, ApprovalStatus } from "@/types/database";
-
-const STATUS_COLORS: Record<ApprovalStatus, string> = {
-  pending: "bg-chart-4/15 text-chart-4",
-  approved: "bg-success/15 text-success",
-  rejected: "bg-destructive/15 text-destructive",
-  deactivated: "bg-muted text-muted-foreground",
-};
 
 const emptyForm = {
   organization_name: "", ein: "", website: "", primary_contact: "",
@@ -35,6 +30,7 @@ export default function Nonprofits() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingNp, setEditingNp] = useState<Nonprofit | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [search, setSearch] = useState("");
 
   const { data: nonprofits = [], isLoading } = useQuery({
     queryKey: ["nonprofits"],
@@ -47,6 +43,15 @@ export default function Nonprofits() {
       else { const { error } = await supabase.from("nonprofits").insert({ ...form, approval_status: "pending" as ApprovalStatus }); if (error) throw error; }
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["nonprofits"] }); toast.success(editingNp ? "Nonprofit updated" : "Nonprofit added"); closeDialog(); },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const deleteNonprofit = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("nonprofits").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["nonprofits"] }); toast.success("Nonprofit deleted"); },
     onError: (e) => toast.error(e.message),
   });
 
@@ -71,9 +76,13 @@ export default function Nonprofits() {
     return nonprofits.filter((n) => {
       if (filterStatus !== "all" && n.approval_status !== filterStatus) return false;
       if (filterCity !== "all" && n.city !== filterCity) return false;
+      if (search.trim()) {
+        const q = search.toLowerCase();
+        if (![n.organization_name, n.primary_contact, n.city].filter(Boolean).some((f) => f!.toLowerCase().includes(q))) return false;
+      }
       return true;
     });
-  }, [nonprofits, filterStatus, filterCity]);
+  }, [nonprofits, filterStatus, filterCity, search]);
 
   return (
     <div className="space-y-6">
@@ -82,15 +91,25 @@ export default function Nonprofits() {
         <Button onClick={() => { setEditingNp(null); setForm(emptyForm); setDialogOpen(true); }}><Plus className="w-4 h-4 mr-2" />Add Nonprofit</Button>
       </div>
 
-      <div className="flex gap-3">
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-[160px]"><SelectValue placeholder="Status" /></SelectTrigger>
-          <SelectContent><SelectItem value="all">All Statuses</SelectItem><SelectItem value="pending">Pending</SelectItem><SelectItem value="approved">Approved</SelectItem><SelectItem value="rejected">Rejected</SelectItem><SelectItem value="deactivated">Deactivated</SelectItem></SelectContent>
-        </Select>
-        <Select value={filterCity} onValueChange={setFilterCity}>
-          <SelectTrigger className="w-[140px]"><SelectValue placeholder="City" /></SelectTrigger>
-          <SelectContent><SelectItem value="all">All Cities</SelectItem>{cities.map((c) => <SelectItem key={c!} value={c!}>{c}</SelectItem>)}</SelectContent>
-        </Select>
+      <div className="flex flex-wrap gap-3 items-end">
+        <div className="relative flex-1 min-w-[200px] max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input className="pl-9" placeholder="Search nonprofits..." value={search} onChange={(e) => setSearch(e.target.value)} />
+        </div>
+        <div>
+          <Label className="text-xs text-muted-foreground mb-1 block">Filter by status</Label>
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <SelectTrigger className="w-[160px]"><SelectValue placeholder="Status" /></SelectTrigger>
+            <SelectContent><SelectItem value="all">All Statuses</SelectItem><SelectItem value="pending">Pending</SelectItem><SelectItem value="approved">Approved</SelectItem><SelectItem value="rejected">Rejected</SelectItem><SelectItem value="deactivated">Deactivated</SelectItem></SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label className="text-xs text-muted-foreground mb-1 block">Filter by city</Label>
+          <Select value={filterCity} onValueChange={setFilterCity}>
+            <SelectTrigger className="w-[140px]"><SelectValue placeholder="City" /></SelectTrigger>
+            <SelectContent><SelectItem value="all">All Cities</SelectItem>{cities.map((c) => <SelectItem key={c!} value={c!}>{c}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="bg-card rounded-xl border">
@@ -104,11 +123,18 @@ export default function Nonprofits() {
                 <TableCell className="font-medium">{n.organization_name}</TableCell>
                 <TableCell>{n.primary_contact || "—"}</TableCell>
                 <TableCell>{n.city || "—"}</TableCell>
-                <TableCell>{n.state || "—"}</TableCell>
+                <TableCell>{toStateAbbr(n.state)}</TableCell>
                 <TableCell>{n.county || "—"}</TableCell>
-                <TableCell><span className={`px-2.5 py-0.5 text-xs font-semibold rounded capitalize ${STATUS_COLORS[n.approval_status]}`}>{n.approval_status}</span></TableCell>
+                <TableCell><StatusChip status={n.approval_status} /></TableCell>
                 <TableCell>{new Date(n.created_at).toLocaleDateString()}</TableCell>
-                <TableCell><Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); openEdit(n); }}><Pencil className="w-3 h-3" /></Button></TableCell>
+                <TableCell>
+                  <ActionsMenu
+                    entityName={n.organization_name}
+                    onView={() => navigate(`/nonprofits/${n.id}`)}
+                    onEdit={() => { openEdit(n); }}
+                    onDelete={() => deleteNonprofit.mutate(n.id)}
+                  />
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
