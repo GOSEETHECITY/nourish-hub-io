@@ -14,14 +14,11 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import SustainabilityBaselineForm, { emptySustainabilityBaseline, type SustainabilityBaselineData } from "@/components/forms/SustainabilityBaselineForm";
 import { ORG_CATEGORIES, LOCATION_TYPES, formatOrgType } from "@/lib/constants";
+import StatusChip, { toStateAbbr } from "@/components/admin/StatusChip";
+import ActionsMenu from "@/components/admin/ActionsMenu";
 import type { Organization, ApprovalStatus } from "@/types/database";
 
-const STATUS_COLORS: Record<ApprovalStatus, string> = {
-  pending: "bg-chart-4/15 text-chart-4",
-  approved: "bg-success/15 text-success",
-  rejected: "bg-destructive/15 text-destructive",
-  deactivated: "bg-muted text-muted-foreground",
-};
+// Status colors removed — using StatusChip component
 
 const emptyForm = {
   name: "", type: "food_beverage_group" as any,
@@ -141,35 +138,46 @@ export default function Organizations() {
         </Button>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-3 items-end">
         <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input placeholder="Search organizations..." className="pl-10" value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
-        <Select value={filterType} onValueChange={setFilterType}>
-          <SelectTrigger className="w-[200px]"><Filter className="w-3 h-3 mr-2" /><SelectValue placeholder="Type" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
-            {ORG_CATEGORIES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
-          </SelectContent>
-        </Select>
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-[160px]"><SelectValue placeholder="Status" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem><SelectItem value="approved">Approved</SelectItem>
-            <SelectItem value="rejected">Rejected</SelectItem><SelectItem value="deactivated">Deactivated</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={filterCity} onValueChange={setFilterCity}>
-          <SelectTrigger className="w-[140px]"><SelectValue placeholder="City" /></SelectTrigger>
-          <SelectContent><SelectItem value="all">All Cities</SelectItem>{cities.map((c) => <SelectItem key={c!} value={c!}>{c}</SelectItem>)}</SelectContent>
-        </Select>
-        <Select value={filterState} onValueChange={setFilterState}>
-          <SelectTrigger className="w-[120px]"><SelectValue placeholder="State" /></SelectTrigger>
-          <SelectContent><SelectItem value="all">All States</SelectItem>{states.map((s) => <SelectItem key={s!} value={s!}>{s}</SelectItem>)}</SelectContent>
-        </Select>
+        <div>
+          <Label className="text-xs text-muted-foreground mb-1 block">Filter by type</Label>
+          <Select value={filterType} onValueChange={setFilterType}>
+            <SelectTrigger className="w-[200px]"><Filter className="w-3 h-3 mr-2" /><SelectValue placeholder="Type" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Types</SelectItem>
+              {ORG_CATEGORIES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label className="text-xs text-muted-foreground mb-1 block">Filter by status</Label>
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <SelectTrigger className="w-[160px]"><SelectValue placeholder="Status" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem><SelectItem value="approved">Approved</SelectItem>
+              <SelectItem value="rejected">Rejected</SelectItem><SelectItem value="deactivated">Deactivated</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label className="text-xs text-muted-foreground mb-1 block">Filter by city</Label>
+          <Select value={filterCity} onValueChange={setFilterCity}>
+            <SelectTrigger className="w-[140px]"><SelectValue placeholder="City" /></SelectTrigger>
+            <SelectContent><SelectItem value="all">All Cities</SelectItem>{cities.map((c) => <SelectItem key={c!} value={c!}>{c}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label className="text-xs text-muted-foreground mb-1 block">Filter by state</Label>
+          <Select value={filterState} onValueChange={setFilterState}>
+            <SelectTrigger className="w-[120px]"><SelectValue placeholder="State" /></SelectTrigger>
+            <SelectContent><SelectItem value="all">All States</SelectItem>{states.map((s) => <SelectItem key={s!} value={s!}>{s}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="bg-card rounded-xl border">
@@ -178,14 +186,14 @@ export default function Organizations() {
             <TableRow>
               <TableHead>Organization Name</TableHead><TableHead>Type</TableHead><TableHead>Primary Contact</TableHead>
               <TableHead>Email</TableHead><TableHead>Locations</TableHead><TableHead>Status</TableHead>
-              <TableHead>City</TableHead><TableHead>State</TableHead>
+              <TableHead>City</TableHead><TableHead>State</TableHead><TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow><TableCell colSpan={8} className="text-center py-12 text-muted-foreground">Loading...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} className="text-center py-12 text-muted-foreground">Loading...</TableCell></TableRow>
             ) : filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={8} className="text-center py-12 text-muted-foreground">No organizations found</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} className="text-center py-12 text-muted-foreground">No organizations found</TableCell></TableRow>
             ) : filtered.map((org) => (
               <TableRow key={org.id} className="cursor-pointer" onClick={() => navigate(`/organizations/${org.id}`)}>
                 <TableCell className="font-medium">{org.name}</TableCell>
@@ -193,9 +201,17 @@ export default function Organizations() {
                 <TableCell>{org.primary_contact_name || "—"}</TableCell>
                 <TableCell>{org.primary_contact_email || "—"}</TableCell>
                 <TableCell>{locationCounts[org.id] || 0}</TableCell>
-                <TableCell><span className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded capitalize ${STATUS_COLORS[org.approval_status]}`}>{org.approval_status}</span></TableCell>
+                <TableCell><StatusChip status={org.approval_status} /></TableCell>
                 <TableCell>{org.city || "—"}</TableCell>
-                <TableCell>{org.state || "—"}</TableCell>
+                <TableCell>{toStateAbbr(org.state)}</TableCell>
+                <TableCell>
+                  <ActionsMenu
+                    entityName={org.name}
+                    onView={() => navigate(`/organizations/${org.id}`)}
+                    onEdit={() => openEdit(org)}
+                    onDelete={() => {}}
+                  />
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
