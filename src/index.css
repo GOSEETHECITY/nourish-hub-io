@@ -115,3 +115,8 @@
     transition: background-color 5000s ease-in-out 0s;
   }
 }
+
+/* Tint bundled Leaflet marker to orange for consumer map pins */
+.map-marker-orange {
+  filter: hue-rotate(30deg) saturate(2) brightness(1.1);
+}

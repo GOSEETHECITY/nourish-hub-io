@@ -99,15 +99,17 @@ export default function ConsumerMapView({ center, markers, onMarkerClick }: MapV
         delete (L.Icon.Default.prototype as any)._getIconUrl;
         L.Icon.Default.mergeOptions({ iconUrl, iconRetinaUrl, shadowUrl });
 
+        // Use the same bundled marker as the default icon but tinted via CSS class
+        // to avoid depending on an external GitHub CDN URL that can fail.
         const orangeIcon = new L.Icon({
-          iconUrl:
-            "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png",
-          shadowUrl:
-            "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+          iconUrl: iconUrl,
+          iconRetinaUrl: iconRetinaUrl,
+          shadowUrl: shadowUrl,
           iconSize: [25, 41],
           iconAnchor: [12, 41],
           popupAnchor: [1, -34],
           shadowSize: [41, 41],
+          className: "map-marker-orange",
         });
 
         // Import react-leaflet and destructure named exports explicitly
