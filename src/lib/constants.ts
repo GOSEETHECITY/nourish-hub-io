@@ -57,6 +57,15 @@ export const US_STATES = [
   "West Virginia", "Wisconsin", "Wyoming",
 ] as const;
 
+// ─── US State 2-letter codes ───
+export const US_STATE_CODES = [
+  "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
+  "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
+  "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
+  "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
+  "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
+] as const;
+
 // Format org type for display (handles both old specific types and new categories)
 export function formatOrgType(type: string | null | undefined): string {
   if (!type) return "—";

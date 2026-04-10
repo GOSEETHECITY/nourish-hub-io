@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Mail } from "lucide-react";
 import { validatePassword } from "@/lib/validatePassword";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -109,7 +110,7 @@ export default function SettingsPage() {
           <Switch checked={notifications} onCheckedChange={setNotifications} />
         </div>
         <div className="bg-muted/50 rounded-lg border border-dashed p-4">
-          <p className="text-sm text-muted-foreground">📧 Email notification settings — placeholder for when email API is connected</p>
+          <p className="text-sm text-muted-foreground flex items-center gap-2"><Mail className="w-4 h-4" /> Email notification settings — placeholder for when email API is connected</p>
         </div>
       </section>
     </div>

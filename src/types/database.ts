@@ -230,6 +230,7 @@ export interface HarietEvent {
   address: string | null;
   city: string | null;
   state: string | null;
+  county: string;
   external_link: string | null;
   status: EventStatus;
   attendee_count: number;
@@ -237,6 +238,7 @@ export interface HarietEvent {
   share_url: string | null;
   share_count: number;
   flyer_url: string | null;
+  ai_generated_description: boolean;
   created_at: string;
 }
 
@@ -265,6 +267,9 @@ export interface InvitationCode {
   code: string;
   label: string | null;
   city: string | null;
+  state: string;
+  role_type: string;
+  max_uses: number;
   times_used: number;
   expiration_date: string | null;
   status: InvitationCodeStatus;

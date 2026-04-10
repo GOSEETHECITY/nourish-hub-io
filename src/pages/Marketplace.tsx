@@ -1,12 +1,15 @@
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { Store, DollarSign, Ticket, Users } from "lucide-react";
+import { Store, DollarSign, Ticket, Users, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import StatusChip from "@/components/admin/StatusChip";
 import type { Organization, Location, Coupon } from "@/types/database";
 
 export default function Marketplace() {
   const navigate = useNavigate();
+  const [search, setSearch] = useState("");
 
   const { data: locations = [] } = useQuery({
     queryKey: ["marketplace-locations"],
@@ -53,15 +56,21 @@ export default function Marketplace() {
   const getMarketplaceStatus = (orgId: string) => {
     const orgLocs = locations.filter((l) => l.organization_id === orgId);
     const hasStripe = orgLocs.some((l) => l.stripe_onboarding_status === "complete");
-    if (hasStripe) return { label: "Live", color: "bg-success/15 text-success", emoji: "🟢" };
-    return { label: "Pending", color: "bg-chart-4/15 text-chart-4", emoji: "🟡" };
+    if (hasStripe) return "active";
+    return "pending";
   };
+
+  const filteredOrgs = useMemo(() => {
+    if (!search.trim()) return orgs;
+    const q = search.toLowerCase();
+    return orgs.filter((o) => o.name.toLowerCase().includes(q));
+  }, [orgs, search]);
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Marketplace</h1>
-        <p className="text-sm text-muted-foreground mt-1">Marketplace partners and surplus food coupon management</p>
+        <p className="text-sm text-muted-foreground mt-1">Marketplace partners and surplus food coupon management (marketplace-enabled locations only)</p>
       </div>
 
       {/* Overview Stats */}
@@ -72,13 +81,18 @@ export default function Marketplace() {
         <div className="bg-card rounded-xl border p-5"><p className="text-sm text-muted-foreground flex items-center gap-2"><Store className="w-4 h-4" />Platform Fee Earned</p><p className="text-3xl font-bold text-foreground mt-2">${totalFee.toFixed(2)}</p></div>
       </div>
 
+      <div className="relative max-w-sm">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input className="pl-9" placeholder="Search marketplace..." value={search} onChange={(e) => setSearch(e.target.value)} />
+      </div>
+
       {/* Partner Cards */}
       <div className="grid grid-cols-2 gap-4">
-        {orgs.length === 0 ? (
+        {filteredOrgs.length === 0 ? (
           <div className="col-span-2 bg-card rounded-xl border p-12 text-center">
             <p className="text-muted-foreground">No marketplace partners yet.</p>
           </div>
-        ) : orgs.map((org) => {
+        ) : filteredOrgs.map((org) => {
           const orgLocs = locations.filter((l) => l.organization_id === org.id);
           const orgCoupons = coupons.filter((c) => orgLocs.some((l) => l.id === c.location_id));
           const activeCoupons = orgCoupons.filter((c) => c.status === "active").length;
@@ -93,7 +107,7 @@ export default function Marketplace() {
                   <h3 className="text-lg font-bold text-foreground">{org.name}</h3>
                   <p className="text-sm text-muted-foreground">{formatType(org.type)}</p>
                 </div>
-                <span className={`px-2.5 py-0.5 text-xs font-semibold rounded ${status.color}`}>{status.emoji} {status.label}</span>
+                <StatusChip status={status} />
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div><p className="text-xs text-muted-foreground">Active Locations</p><p className="text-lg font-bold text-foreground">{orgLocs.length}</p></div>

@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { CreditCard } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -127,7 +128,7 @@ export default function Billing() {
       </div>
 
       <div className="bg-muted/50 rounded-xl border border-dashed p-6 text-center">
-        <p className="text-sm text-muted-foreground">💳 Stripe Billing integration placeholder — ready for future activation</p>
+        <p className="text-sm text-muted-foreground flex items-center justify-center gap-2"><CreditCard className="w-4 h-4" /> Stripe Billing integration placeholder — ready for future activation</p>
       </div>
     </div>
   );
