@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Leaf, Trophy, Building2, Heart, Droplets, TreeDeciduous, Trash2, BarChart3 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { filterByRegion, type GovernmentRegions } from "@/lib/regionFilter";
 import type { FoodListing, ImpactReport, Organization, Nonprofit } from "@/types/database";
 
 export default function GovernmentDashboardHome() {
@@ -20,7 +21,7 @@ export default function GovernmentDashboardHome() {
     enabled: !!profile?.organization_id,
   });
 
-  const regions = myOrg?.government_regions as { state?: string; cities?: string[]; counties?: string[]; is_state_wide?: boolean } | null;
+  const regions = (myOrg?.government_regions as GovernmentRegions) ?? null;
 
   const { data: locs = [] } = useQuery({
     queryKey: ["gov-locs"],
@@ -62,6 +63,12 @@ export default function GovernmentDashboardHome() {
   const orgMap = useMemo(() => Object.fromEntries(orgs.map((o) => [o.id, o])), [orgs]);
   const cities = useMemo(() => [...new Set(regionFilteredLocs.map((l: any) => l.city).filter(Boolean))].sort(), [regionFilteredLocs]);
 
+  // Scope "Active Organizations" and "Active Nonprofits" counts to the
+  // government user's assigned region. Previously these counts included every
+  // approved org/nonprofit across the entire platform.
+  const regionOrgs = useMemo(() => filterByRegion(orgs, regions), [orgs, regions]);
+  const regionNonprofits = useMemo(() => filterByRegion(nonprofits, regions), [nonprofits, regions]);
+
   const filteredListings = useMemo(() => {
     return listings.filter((l) => {
       if (!regionLocIds.has(l.location_id)) return false;
@@ -96,8 +103,8 @@ export default function GovernmentDashboardHome() {
     { label: "Total Meals Served", value: totalMeals.toLocaleString(), icon: Trophy },
     { label: "Est. Donation Value", value: `$${totalValue.toLocaleString()}`, icon: BarChart3 },
     { label: "CO₂ Prevented", value: `${co2.toLocaleString()} lbs`, icon: Leaf },
-    { label: "Active Organizations", value: orgs.filter((o) => o.approval_status === "approved").length.toString(), icon: Building2 },
-    { label: "Active Nonprofits", value: nonprofits.filter((n) => n.approval_status === "approved").length.toString(), icon: Heart },
+    { label: "Active Organizations", value: regionOrgs.filter((o) => o.approval_status === "approved").length.toString(), icon: Building2 },
+    { label: "Active Nonprofits", value: regionNonprofits.filter((n) => n.approval_status === "approved").length.toString(), icon: Heart },
   ];
 
   return (
