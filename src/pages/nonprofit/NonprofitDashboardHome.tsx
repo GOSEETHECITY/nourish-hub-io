@@ -47,7 +47,13 @@ export default function NonprofitDashboardHome() {
     enabled: !!profile?.nonprofit_id,
   });
 
-  const totalPounds = claimed.reduce((s, l) => s + (l.pounds || 0), 0);
+  // Pounds Received should only count donations that have actually been
+  // delivered / impact-reported (status = "completed"). Counting claimed-but-
+  // not-yet-picked-up donations overstates the nonprofit's real impact and
+  // diverges from the government dashboard which already filters on completed.
+  const totalPounds = claimed
+    .filter((l) => l.status === "completed")
+    .reduce((s, l) => s + (l.pounds || 0), 0);
   const totalMeals = reports.reduce((s, r) => s + (r.meals_served || 0), 0);
   const completedCount = claimed.filter((c) => c.status === "completed").length;
 
