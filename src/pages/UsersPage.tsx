@@ -12,6 +12,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import type { Profile, InvitationCode, InvitationCodeStatus, AppRole, CityThreshold } from "@/types/database";
+import { US_STATE_CODES } from "@/lib/constants";
+import StatusChip from "@/components/admin/StatusChip";
+import ActionsMenu from "@/components/admin/ActionsMenu";
 
 export default function UsersPage() {
   const queryClient = useQueryClient();
@@ -20,7 +23,8 @@ export default function UsersPage() {
   const [editingCode, setEditingCode] = useState<InvitationCode | null>(null);
   const [codeFilterCity, setCodeFilterCity] = useState("all");
   const [codeFilterStatus, setCodeFilterStatus] = useState("all");
-  const [codeForm, setCodeForm] = useState({ code: "", label: "", city: "", expiration_date: "", status: "active" as InvitationCodeStatus });
+  const [codeForm, setCodeForm] = useState({ code: "", label: "", city: "", state: "", role_type: "Consumer", max_uses: 100, expiration_date: "", status: "active" as InvitationCodeStatus });
+  const [codeSearch, setCodeSearch] = useState("");
 
   // User management state
   const [editUserOpen, setEditUserOpen] = useState(false);
@@ -126,18 +130,19 @@ export default function UsersPage() {
     setEditUserOpen(true);
   };
 
-  // Invitation code mutations
   const saveCode = useMutation({
     mutationFn: async () => {
       if (editingCode) {
         const { error } = await supabase.from("invitation_codes").update({
-          label: codeForm.label, city: codeForm.city,
+          label: codeForm.label, city: codeForm.city, state: codeForm.state,
+          role_type: codeForm.role_type, max_uses: codeForm.max_uses,
           expiration_date: codeForm.expiration_date || null, status: codeForm.status,
         }).eq("id", editingCode.id);
         if (error) throw error;
       } else {
-        const payload = { ...codeForm, code: codeForm.code || Math.random().toString(36).substring(2, 10).toUpperCase() };
-        if (!payload.expiration_date) delete (payload as any).expiration_date;
+        const payload: any = { ...codeForm, code: codeForm.code || Math.random().toString(36).substring(2, 10).toUpperCase() };
+        if (!payload.expiration_date) delete payload.expiration_date;
+        delete payload.status;
         const { error } = await supabase.from("invitation_codes").insert(payload);
         if (error) throw error;
       }
@@ -150,6 +155,15 @@ export default function UsersPage() {
     onError: (e) => toast.error(e.message),
   });
 
+  const deleteCode = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("invitation_codes").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["invitation-codes"] }); toast.success("Code deleted"); },
+    onError: (e) => toast.error(e.message),
+  });
+
   const deactivateCode = useMutation({
     mutationFn: async (codeId: string) => {
       const { error } = await supabase.from("invitation_codes").update({ status: "inactive" as InvitationCodeStatus }).eq("id", codeId);
@@ -158,11 +172,11 @@ export default function UsersPage() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["invitation-codes"] }); toast.success("Code deactivated"); },
   });
 
-  const closeCodeDialog = () => { setCodeDialogOpen(false); setEditingCode(null); setCodeForm({ code: "", label: "", city: "", expiration_date: "", status: "active" }); };
+  const closeCodeDialog = () => { setCodeDialogOpen(false); setEditingCode(null); setCodeForm({ code: "", label: "", city: "", state: "", role_type: "Consumer", max_uses: 100, expiration_date: "", status: "active" }); };
 
   const openEditCode = (c: InvitationCode) => {
     setEditingCode(c);
-    setCodeForm({ code: c.code, label: c.label || "", city: c.city || "", expiration_date: c.expiration_date || "", status: c.status });
+    setCodeForm({ code: c.code, label: c.label || "", city: c.city || "", state: c.state || "", role_type: c.role_type || "Consumer", max_uses: c.max_uses || 100, expiration_date: c.expiration_date || "", status: c.status });
     setCodeDialogOpen(true);
   };
 
@@ -171,9 +185,18 @@ export default function UsersPage() {
     return codes.filter((c) => {
       if (codeFilterCity !== "all" && c.city !== codeFilterCity) return false;
       if (codeFilterStatus !== "all" && c.status !== codeFilterStatus) return false;
+      if (codeSearch.trim()) {
+        const q = codeSearch.toLowerCase();
+        if (![c.code, c.label, c.city].filter(Boolean).some((f) => f!.toLowerCase().includes(q))) return false;
+      }
       return true;
     });
-  }, [codes, codeFilterCity, codeFilterStatus]);
+  }, [codes, codeFilterCity, codeFilterStatus, codeSearch]);
+
+  const getEffectiveStatus = (c: InvitationCode) => {
+    if (c.times_used >= c.max_uses) return "expired";
+    return c.status;
+  };
 
   const getRoleBadge = (userId: string) => {
     const role = roleMap.get(userId);
@@ -264,38 +287,52 @@ export default function UsersPage() {
 
         <TabsContent value="codes" className="space-y-4 mt-4">
           <div className="flex items-center justify-between">
-            <div className="flex gap-3">
-              <Select value={codeFilterCity} onValueChange={setCodeFilterCity}><SelectTrigger className="w-[140px]"><SelectValue placeholder="City" /></SelectTrigger><SelectContent><SelectItem value="all">All Cities</SelectItem>{codeCities.map((c) => <SelectItem key={c!} value={c!}>{c}</SelectItem>)}</SelectContent></Select>
-              <Select value={codeFilterStatus} onValueChange={setCodeFilterStatus}><SelectTrigger className="w-[140px]"><SelectValue placeholder="Status" /></SelectTrigger><SelectContent><SelectItem value="all">All</SelectItem><SelectItem value="active">Active</SelectItem><SelectItem value="inactive">Inactive</SelectItem></SelectContent></Select>
+            <div className="flex gap-3 items-end flex-1">
+              <div className="relative max-w-sm flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input className="pl-9" placeholder="Search invitation codes..." value={codeSearch} onChange={(e) => setCodeSearch(e.target.value)} />
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Filter by city</Label>
+                <Select value={codeFilterCity} onValueChange={setCodeFilterCity}><SelectTrigger className="w-[140px]"><SelectValue placeholder="City" /></SelectTrigger><SelectContent><SelectItem value="all">All Cities</SelectItem>{codeCities.map((c) => <SelectItem key={c!} value={c!}>{c}</SelectItem>)}</SelectContent></Select>
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground mb-1 block">Filter by status</Label>
+                <Select value={codeFilterStatus} onValueChange={setCodeFilterStatus}><SelectTrigger className="w-[140px]"><SelectValue placeholder="Status" /></SelectTrigger><SelectContent><SelectItem value="all">All</SelectItem><SelectItem value="active">Active</SelectItem><SelectItem value="inactive">Inactive</SelectItem></SelectContent></Select>
+              </div>
             </div>
-            <Button onClick={() => { setEditingCode(null); setCodeForm({ code: "", label: "", city: "", expiration_date: "", status: "active" }); setCodeDialogOpen(true); }}><Plus className="w-4 h-4 mr-2" />Create Code</Button>
+            <Button onClick={() => { setEditingCode(null); setCodeForm({ code: "", label: "", city: "", state: "", role_type: "Consumer", max_uses: 100, expiration_date: "", status: "active" }); setCodeDialogOpen(true); }}><Plus className="w-4 h-4 mr-2" />Create Code</Button>
           </div>
           <div className="bg-card rounded-xl border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Code</TableHead><TableHead>Label</TableHead><TableHead>City</TableHead><TableHead>Times Used</TableHead><TableHead>Expiration</TableHead><TableHead>Status</TableHead><TableHead>Created</TableHead><TableHead>Actions</TableHead>
+                  <TableHead>Code</TableHead><TableHead>Label</TableHead><TableHead>City</TableHead><TableHead>State</TableHead><TableHead>Role</TableHead><TableHead>Used / Max</TableHead><TableHead>Expiration</TableHead><TableHead>Status</TableHead><TableHead>Created</TableHead><TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {codesLoading ? (
-                  <TableRow><TableCell colSpan={8} className="text-center py-12 text-muted-foreground">Loading...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={10} className="text-center py-12 text-muted-foreground">Loading...</TableCell></TableRow>
                 ) : filteredCodes.length === 0 ? (
-                  <TableRow><TableCell colSpan={8} className="text-center py-12 text-muted-foreground">No codes found</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={10} className="text-center py-12 text-muted-foreground">No codes found</TableCell></TableRow>
                 ) : filteredCodes.map((c) => (
                   <TableRow key={c.id}>
                     <TableCell className="font-mono font-bold">{c.code}</TableCell>
                     <TableCell>{c.label || "—"}</TableCell>
                     <TableCell>{c.city || "—"}</TableCell>
-                    <TableCell>{c.times_used}</TableCell>
+                    <TableCell>{c.state || "—"}</TableCell>
+                    <TableCell>{c.role_type || "Consumer"}</TableCell>
+                    <TableCell>{c.times_used} / {c.max_uses}</TableCell>
                     <TableCell>{c.expiration_date ? new Date(c.expiration_date).toLocaleDateString() : "Never"}</TableCell>
-                    <TableCell><span className={`px-2.5 py-0.5 text-xs font-semibold rounded capitalize ${c.status === "active" ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>{c.status}</span></TableCell>
+                    <TableCell><StatusChip status={getEffectiveStatus(c)} /></TableCell>
                     <TableCell>{new Date(c.created_at).toLocaleDateString()}</TableCell>
                     <TableCell>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="ghost" onClick={() => openEditCode(c)}><Pencil className="w-3 h-3" /></Button>
-                        {c.status === "active" && <Button size="sm" variant="outline" onClick={() => deactivateCode.mutate(c.id)}>Deactivate</Button>}
-                      </div>
+                      <ActionsMenu
+                        entityName={c.code}
+                        onView={() => openEditCode(c)}
+                        onEdit={() => openEditCode(c)}
+                        onDelete={() => deleteCode.mutate(c.id)}
+                      />
                     </TableCell>
                   </TableRow>
                 ))}
@@ -355,7 +392,33 @@ export default function UsersPage() {
           <div className="space-y-4 pt-4">
             <div><Label>Code {editingCode ? "(read-only)" : "(leave blank to auto-generate)"}</Label><Input value={codeForm.code} onChange={(e) => setCodeForm({ ...codeForm, code: e.target.value })} disabled={!!editingCode} placeholder="e.g. OKC2025" /></div>
             <div><Label>Label / Description</Label><Input value={codeForm.label} onChange={(e) => setCodeForm({ ...codeForm, label: e.target.value })} placeholder="e.g. Oklahoma City Launch" /></div>
-            <div><Label>City</Label><Input value={codeForm.city} onChange={(e) => setCodeForm({ ...codeForm, city: e.target.value })} /></div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><Label>City</Label><Input value={codeForm.city} onChange={(e) => setCodeForm({ ...codeForm, city: e.target.value })} /></div>
+              <div>
+                <Label>State *</Label>
+                <Select value={codeForm.state} onValueChange={(v) => setCodeForm({ ...codeForm, state: v })}>
+                  <SelectTrigger><SelectValue placeholder="Select state" /></SelectTrigger>
+                  <SelectContent>{US_STATE_CODES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label>Role / Type *</Label>
+              <Select value={codeForm.role_type} onValueChange={(v) => setCodeForm({ ...codeForm, role_type: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Consumer">Consumer</SelectItem>
+                  <SelectItem value="Restaurant">Restaurant</SelectItem>
+                  <SelectItem value="Nonprofit">Nonprofit</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">Controls which signup flow this code unlocks.</p>
+            </div>
+            <div>
+              <Label>Max Uses *</Label>
+              <Input type="number" min={1} value={codeForm.max_uses} onChange={(e) => setCodeForm({ ...codeForm, max_uses: Math.max(1, Number(e.target.value)) })} />
+              <p className="text-xs text-muted-foreground mt-1">When times_used reaches this number, the code auto-expires regardless of expiration date.</p>
+            </div>
             <div><Label>Expiration Date (optional)</Label><Input type="date" value={codeForm.expiration_date} onChange={(e) => setCodeForm({ ...codeForm, expiration_date: e.target.value })} /></div>
             {editingCode && (
               <div>
@@ -366,7 +429,7 @@ export default function UsersPage() {
                 </Select>
               </div>
             )}
-            <Button className="w-full" onClick={() => saveCode.mutate()} disabled={saveCode.isPending}>
+            <Button className="w-full" onClick={() => saveCode.mutate()} disabled={!codeForm.state || saveCode.isPending}>
               {saveCode.isPending ? "Saving..." : editingCode ? "Save Changes" : "Create Code"}
             </Button>
           </div>
