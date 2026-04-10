@@ -8,7 +8,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import StatusChip from "@/components/admin/StatusChip";
+import OrganizationOverrides from "@/components/billing/OrganizationOverrides";
 import type { BillingRecord, Organization, BillingCycle, PaymentStatus } from "@/types/database";
 
 export default function Billing() {
@@ -64,79 +67,92 @@ export default function Billing() {
         <p className="text-sm text-muted-foreground mt-1">Organization billing and subscription management</p>
       </div>
 
-      <div className="flex flex-wrap gap-3 items-end">
-        <div>
-          <Label className="text-xs text-muted-foreground mb-1 block">Filter by Status</Label>
-          <Select value={filterPayment} onValueChange={setFilterPayment}><SelectTrigger className="w-[160px]"><SelectValue placeholder="Payment Status" /></SelectTrigger><SelectContent><SelectItem value="all">All</SelectItem><SelectItem value="paid">Paid</SelectItem><SelectItem value="unpaid">Unpaid</SelectItem><SelectItem value="free">Free</SelectItem></SelectContent></Select>
-        </div>
-        <div>
-          <Label className="text-xs text-muted-foreground mb-1 block">Filter by Plan</Label>
-          <Select value={filterCycle} onValueChange={setFilterCycle}><SelectTrigger className="w-[160px]"><SelectValue placeholder="Billing Cycle" /></SelectTrigger><SelectContent><SelectItem value="all">All</SelectItem><SelectItem value="free">Free</SelectItem><SelectItem value="monthly">Monthly</SelectItem><SelectItem value="annual">Annual</SelectItem></SelectContent></Select>
-        </div>
-      </div>
+      <Tabs defaultValue="billing" className="w-full">
+        <TabsList>
+          <TabsTrigger value="billing">Billing Records</TabsTrigger>
+          <TabsTrigger value="overrides">Organization Overrides</TabsTrigger>
+        </TabsList>
 
-      <div className="bg-card rounded-xl border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Organization</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Price</TableHead>
-              <TableHead>Cycle</TableHead>
-              <TableHead>Payment Status</TableHead>
-              <TableHead>Next Billing</TableHead>
-              <TableHead>Notes</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow><TableCell colSpan={8} className="text-center py-12 text-muted-foreground">Loading...</TableCell></TableRow>
-            ) : filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={8} className="text-center py-12 text-muted-foreground">No billing records found</TableCell></TableRow>
-            ) : filtered.map((r) => {
-              const org = orgMap[r.organization_id];
-              const isEditing = editingId === r.id;
+        <TabsContent value="billing" className="space-y-4 mt-4">
+          <div className="flex flex-wrap gap-3 items-end">
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1 block">Filter by Status</Label>
+              <Select value={filterPayment} onValueChange={setFilterPayment}><SelectTrigger className="w-[160px]"><SelectValue placeholder="Payment Status" /></SelectTrigger><SelectContent><SelectItem value="all">All</SelectItem><SelectItem value="paid">Paid</SelectItem><SelectItem value="unpaid">Unpaid</SelectItem><SelectItem value="free">Free</SelectItem></SelectContent></Select>
+            </div>
+            <div>
+              <Label className="text-xs text-muted-foreground mb-1 block">Filter by Plan</Label>
+              <Select value={filterCycle} onValueChange={setFilterCycle}><SelectTrigger className="w-[160px]"><SelectValue placeholder="Billing Cycle" /></SelectTrigger><SelectContent><SelectItem value="all">All</SelectItem><SelectItem value="free">Free</SelectItem><SelectItem value="monthly">Monthly</SelectItem><SelectItem value="annual">Annual</SelectItem></SelectContent></Select>
+            </div>
+          </div>
 
-              return (
-                <TableRow key={r.id}>
-                  <TableCell className="font-medium">{org?.name || "—"}</TableCell>
-                  <TableCell>{org ? formatType(org.type) : "—"}</TableCell>
-                  <TableCell>{isEditing ? <Input type="number" className="w-24" defaultValue={r.assigned_price ?? ""} onChange={(e) => setEditForm({ ...editForm, assigned_price: Number(e.target.value) })} /> : r.assigned_price != null ? `$${r.assigned_price}` : "—"}</TableCell>
-                  <TableCell>{isEditing ? (
-                    <Select defaultValue={r.billing_cycle} onValueChange={(v) => setEditForm({ ...editForm, billing_cycle: v as BillingCycle })}>
-                      <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
-                      <SelectContent><SelectItem value="free">Free</SelectItem><SelectItem value="monthly">Monthly</SelectItem><SelectItem value="annual">Annual</SelectItem></SelectContent>
-                    </Select>
-                  ) : <span className="capitalize">{r.billing_cycle}</span>}</TableCell>
-                  <TableCell>{isEditing ? (
-                    <Select defaultValue={r.payment_status} onValueChange={(v) => setEditForm({ ...editForm, payment_status: v as PaymentStatus })}>
-                      <SelectTrigger className="w-24"><SelectValue /></SelectTrigger>
-                      <SelectContent><SelectItem value="paid">Paid</SelectItem><SelectItem value="unpaid">Unpaid</SelectItem><SelectItem value="free">Free</SelectItem></SelectContent>
-                    </Select>
-                  ) : <span className={`px-2.5 py-0.5 text-xs font-semibold rounded capitalize ${r.payment_status === "paid" ? "bg-success/15 text-success" : r.payment_status === "unpaid" ? "bg-destructive/15 text-destructive" : "bg-muted text-muted-foreground"}`}>{r.payment_status}</span>}</TableCell>
-                  <TableCell>{r.next_billing_date ? new Date(r.next_billing_date).toLocaleDateString() : "—"}</TableCell>
-                  <TableCell className="max-w-[150px] truncate">{isEditing ? <Input defaultValue={r.notes || ""} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} /> : r.notes || "—"}</TableCell>
-                  <TableCell>
-                    {isEditing ? (
-                      <div className="flex gap-2">
-                        <Button size="sm" onClick={() => updateBilling.mutate()}>Save</Button>
-                        <Button size="sm" variant="outline" onClick={() => setEditingId(null)}>Cancel</Button>
-                      </div>
-                    ) : (
-                      <Button size="sm" variant="outline" onClick={() => { setEditingId(r.id); setEditForm({}); }}>Edit</Button>
-                    )}
-                  </TableCell>
+          <div className="bg-card rounded-xl border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Organization</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Price</TableHead>
+                  <TableHead>Cycle</TableHead>
+                  <TableHead>Payment Status</TableHead>
+                  <TableHead>Next Billing</TableHead>
+                  <TableHead>Notes</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </div>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow><TableCell colSpan={8} className="text-center py-12 text-muted-foreground">Loading...</TableCell></TableRow>
+                ) : filtered.length === 0 ? (
+                  <TableRow><TableCell colSpan={8} className="text-center py-12 text-muted-foreground">No billing records found</TableCell></TableRow>
+                ) : filtered.map((r) => {
+                  const org = orgMap[r.organization_id];
+                  const isEditing = editingId === r.id;
 
-      <div className="bg-muted/50 rounded-xl border border-dashed p-6 text-center">
-        <p className="text-sm text-muted-foreground flex items-center justify-center gap-2"><CreditCard className="w-4 h-4" /> Stripe Billing integration placeholder — ready for future activation</p>
-      </div>
+                  return (
+                    <TableRow key={r.id}>
+                      <TableCell className="font-medium">{org?.name || "—"}</TableCell>
+                      <TableCell>{org ? formatType(org.type) : "—"}</TableCell>
+                      <TableCell>{isEditing ? <Input type="number" className="w-24" defaultValue={r.assigned_price ?? ""} onChange={(e) => setEditForm({ ...editForm, assigned_price: Number(e.target.value) })} /> : r.assigned_price != null ? `$${r.assigned_price}` : "—"}</TableCell>
+                      <TableCell>{isEditing ? (
+                        <Select defaultValue={r.billing_cycle} onValueChange={(v) => setEditForm({ ...editForm, billing_cycle: v as BillingCycle })}>
+                          <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
+                          <SelectContent><SelectItem value="free">Free</SelectItem><SelectItem value="monthly">Monthly</SelectItem><SelectItem value="annual">Annual</SelectItem></SelectContent>
+                        </Select>
+                      ) : <span className="capitalize">{r.billing_cycle}</span>}</TableCell>
+                      <TableCell>{isEditing ? (
+                        <Select defaultValue={r.payment_status} onValueChange={(v) => setEditForm({ ...editForm, payment_status: v as PaymentStatus })}>
+                          <SelectTrigger className="w-24"><SelectValue /></SelectTrigger>
+                          <SelectContent><SelectItem value="paid">Paid</SelectItem><SelectItem value="unpaid">Unpaid</SelectItem><SelectItem value="free">Free</SelectItem></SelectContent>
+                        </Select>
+                      ) : <StatusChip status={r.payment_status} />}</TableCell>
+                      <TableCell>{r.next_billing_date ? new Date(r.next_billing_date).toLocaleDateString() : "—"}</TableCell>
+                      <TableCell className="max-w-[150px] truncate">{isEditing ? <Input defaultValue={r.notes || ""} onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })} /> : r.notes || "—"}</TableCell>
+                      <TableCell>
+                        {isEditing ? (
+                          <div className="flex gap-2">
+                            <Button size="sm" onClick={() => updateBilling.mutate()}>Save</Button>
+                            <Button size="sm" variant="outline" onClick={() => setEditingId(null)}>Cancel</Button>
+                          </div>
+                        ) : (
+                          <Button size="sm" variant="outline" onClick={() => { setEditingId(r.id); setEditForm({}); }}>Edit</Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+
+          <div className="bg-muted/50 rounded-xl border border-dashed p-6 text-center">
+            <p className="text-sm text-muted-foreground flex items-center justify-center gap-2"><CreditCard className="w-4 h-4" /> Stripe Billing integration placeholder — ready for future activation</p>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="overrides" className="mt-4">
+          <OrganizationOverrides />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
