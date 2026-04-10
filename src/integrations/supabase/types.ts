@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_notifications: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_read: boolean
+          link: string | null
+          title: string
+          type: Database["public"]["Enums"]["admin_notification_type"]
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_read?: boolean
+          link?: string | null
+          title: string
+          type?: Database["public"]["Enums"]["admin_notification_type"]
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_read?: boolean
+          link?: string | null
+          title?: string
+          type?: Database["public"]["Enums"]["admin_notification_type"]
+        }
+        Relationships: []
+      }
       billing: {
         Row: {
           assigned_price: number | null
@@ -965,6 +995,60 @@ export type Database = {
         }
         Relationships: []
       }
+      organization_pricing: {
+        Row: {
+          billing_cycle: Database["public"]["Enums"]["override_billing_cycle"]
+          created_at: string
+          effective_from: string
+          effective_to: string | null
+          id: string
+          notes: string | null
+          organization_id: string
+          override_amount: number
+          override_currency: string
+          updated_at: string
+        }
+        Insert: {
+          billing_cycle?: Database["public"]["Enums"]["override_billing_cycle"]
+          created_at?: string
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          notes?: string | null
+          organization_id: string
+          override_amount: number
+          override_currency?: string
+          updated_at?: string
+        }
+        Update: {
+          billing_cycle?: Database["public"]["Enums"]["override_billing_cycle"]
+          created_at?: string
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          notes?: string | null
+          organization_id?: string
+          override_amount?: number
+          override_currency?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_pricing_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organization_pricing_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           address: string | null
@@ -1110,6 +1194,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      regions: {
+        Row: {
+          cities: Json | null
+          created_at: string
+          id: string
+          name: string
+          state: string
+          status: Database["public"]["Enums"]["region_status"]
+          unlocked_at: string | null
+          updated_at: string
+          user_count: number
+        }
+        Insert: {
+          cities?: Json | null
+          created_at?: string
+          id?: string
+          name: string
+          state: string
+          status?: Database["public"]["Enums"]["region_status"]
+          unlocked_at?: string | null
+          updated_at?: string
+          user_count?: number
+        }
+        Update: {
+          cities?: Json | null
+          created_at?: string
+          id?: string
+          name?: string
+          state?: string
+          status?: Database["public"]["Enums"]["region_status"]
+          unlocked_at?: string | null
+          updated_at?: string
+          user_count?: number
+        }
+        Relationships: []
       }
       support_requests: {
         Row: {
@@ -1549,6 +1669,13 @@ export type Database = {
       validate_join_code: { Args: { p_code: string }; Returns: Json }
     }
     Enums: {
+      admin_notification_type:
+        | "new_donation"
+        | "new_signup"
+        | "new_coupon"
+        | "region_unlocked"
+        | "billing_alert"
+        | "system"
       app_role:
         | "admin"
         | "venue_partner"
@@ -1599,7 +1726,10 @@ export type Database = {
         | "farm_grocery_group"
         | "government_entity"
         | "nonprofit_organization"
+      override_billing_cycle: "monthly" | "annual"
+      override_status: "active" | "expired" | "scheduled"
       payment_status: "paid" | "unpaid" | "free"
+      region_status: "locked" | "unlocked"
       support_status: "new" | "in_progress" | "resolved"
     }
     CompositeTypes: {
@@ -1728,6 +1858,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      admin_notification_type: [
+        "new_donation",
+        "new_signup",
+        "new_coupon",
+        "region_unlocked",
+        "billing_alert",
+        "system",
+      ],
       app_role: [
         "admin",
         "venue_partner",
@@ -1782,7 +1920,10 @@ export const Constants = {
         "government_entity",
         "nonprofit_organization",
       ],
+      override_billing_cycle: ["monthly", "annual"],
+      override_status: ["active", "expired", "scheduled"],
       payment_status: ["paid", "unpaid", "free"],
+      region_status: ["locked", "unlocked"],
       support_status: ["new", "in_progress", "resolved"],
     },
   },
