@@ -126,7 +126,7 @@ export default function Impact() {
       {/* Rankings */}
       <div className="grid grid-cols-2 gap-6">
         <div className="bg-card rounded-xl border p-6">
-          <h2 className="text-lg font-bold text-foreground mb-4">🏆 Top Organizations by Food Diverted</h2>
+          <h2 className="text-lg font-bold text-foreground mb-4"><Trophy className="w-5 h-5 inline mr-2" />Top Organizations by Food Diverted</h2>
           {orgRanking.length === 0 ? <p className="text-sm text-muted-foreground">No data yet.</p> : (
             <div className="space-y-3">
               {orgRanking.slice(0, 10).map((r, i) => (
@@ -140,7 +140,7 @@ export default function Impact() {
           )}
         </div>
         <div className="bg-card rounded-xl border p-6">
-          <h2 className="text-lg font-bold text-foreground mb-4">🏆 Top Nonprofits by Food Claimed</h2>
+          <h2 className="text-lg font-bold text-foreground mb-4"><Trophy className="w-5 h-5 inline mr-2" />Top Nonprofits by Food Claimed</h2>
           {npRanking.length === 0 ? <p className="text-sm text-muted-foreground">No data yet.</p> : (
             <div className="space-y-3">
               {npRanking.slice(0, 10).map((r, i) => (
