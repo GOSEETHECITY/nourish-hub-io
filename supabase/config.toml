@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.assign-government-role]
 verify_jwt = false
+
+[functions.process-grand-openings]
+verify_jwt = false
