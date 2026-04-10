@@ -46,6 +46,7 @@ export default function Marketplace() {
   });
 
   const totalPartners = orgs.length;
+  // Count active coupons from marketplace-enabled locations only
   const totalCoupons = coupons.filter((c) => c.status === "active").length;
   const totalRevenue = coupons.reduce((s, c) => s + c.price * c.quantity_sold, 0);
   const totalFee = coupons.reduce((s, c) => {
