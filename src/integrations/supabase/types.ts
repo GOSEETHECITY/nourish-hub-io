@@ -390,8 +390,10 @@ export type Database = {
       events: {
         Row: {
           address: string | null
+          ai_generated_description: boolean
           attendee_count: number
           city: string | null
+          county: string
           created_at: string
           description: string | null
           end_time: string | null
@@ -410,8 +412,10 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          ai_generated_description?: boolean
           attendee_count?: number
           city?: string | null
+          county?: string
           created_at?: string
           description?: string | null
           end_time?: string | null
@@ -430,8 +434,10 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          ai_generated_description?: boolean
           attendee_count?: number
           city?: string | null
+          county?: string
           created_at?: string
           description?: string | null
           end_time?: string | null
