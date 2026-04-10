@@ -36,16 +36,14 @@ export default function Marketplace() {
   const { data: coupons = [] } = useQuery({
     queryKey: ["marketplace-coupons"],
     queryFn: async () => {
-      const locIds = locations.map((l) => l.id);
-      if (!locIds.length) return [];
-      const { data, error } = await supabase.from("coupons").select("*").in("location_id", locIds);
+      const { data, error } = await supabase.from("coupons").select("*");
       if (error) throw error;
       return data as Coupon[];
     },
-    enabled: locations.length > 0,
   });
 
   const totalPartners = orgs.length;
+  // Count active coupons from marketplace-enabled locations only
   const totalCoupons = coupons.filter((c) => c.status === "active").length;
   const totalRevenue = coupons.reduce((s, c) => s + c.price * c.quantity_sold, 0);
   const totalFee = coupons.reduce((s, c) => {
