@@ -425,6 +425,7 @@ export type Database = {
           city: string | null
           county: string
           created_at: string
+          created_from_import: boolean
           description: string | null
           end_time: string | null
           event_date: string | null
@@ -432,9 +433,11 @@ export type Database = {
           flyer_url: string | null
           id: string
           image_url: string | null
+          import_batch_id: string | null
           offer_badge: string | null
           share_count: number
           share_url: string | null
+          source_type: string | null
           start_time: string | null
           state: string | null
           status: Database["public"]["Enums"]["event_status"]
@@ -447,6 +450,7 @@ export type Database = {
           city?: string | null
           county?: string
           created_at?: string
+          created_from_import?: boolean
           description?: string | null
           end_time?: string | null
           event_date?: string | null
@@ -454,9 +458,11 @@ export type Database = {
           flyer_url?: string | null
           id?: string
           image_url?: string | null
+          import_batch_id?: string | null
           offer_badge?: string | null
           share_count?: number
           share_url?: string | null
+          source_type?: string | null
           start_time?: string | null
           state?: string | null
           status?: Database["public"]["Enums"]["event_status"]
@@ -469,6 +475,7 @@ export type Database = {
           city?: string | null
           county?: string
           created_at?: string
+          created_from_import?: boolean
           description?: string | null
           end_time?: string | null
           event_date?: string | null
@@ -476,9 +483,11 @@ export type Database = {
           flyer_url?: string | null
           id?: string
           image_url?: string | null
+          import_batch_id?: string | null
           offer_badge?: string | null
           share_count?: number
           share_url?: string | null
+          source_type?: string | null
           start_time?: string | null
           state?: string | null
           status?: Database["public"]["Enums"]["event_status"]
@@ -634,6 +643,47 @@ export type Database = {
             columns: ["nonprofit_id"]
             isOneToOne: false
             referencedRelation: "nonprofits_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      import_logs: {
+        Row: {
+          batch_id: string
+          created_event_id: string | null
+          csv_filename: string
+          error_message: string | null
+          event_name: string
+          id: string
+          processed_at: string
+          status: Database["public"]["Enums"]["import_log_status"]
+        }
+        Insert: {
+          batch_id: string
+          created_event_id?: string | null
+          csv_filename: string
+          error_message?: string | null
+          event_name: string
+          id?: string
+          processed_at?: string
+          status?: Database["public"]["Enums"]["import_log_status"]
+        }
+        Update: {
+          batch_id?: string
+          created_event_id?: string | null
+          csv_filename?: string
+          error_message?: string | null
+          event_name?: string
+          id?: string
+          processed_at?: string
+          status?: Database["public"]["Enums"]["import_log_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_logs_created_event_id_fkey"
+            columns: ["created_event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
             referencedColumns: ["id"]
           },
         ]
@@ -1693,6 +1743,7 @@ export type Database = {
         | "baked_goods"
         | "shelf_stable"
         | "frozen"
+      import_log_status: "success" | "skipped" | "pending_image_retry" | "error"
       invitation_code_status: "active" | "inactive"
       listing_status:
         | "posted"
@@ -1885,6 +1936,7 @@ export const Constants = {
         "shelf_stable",
         "frozen",
       ],
+      import_log_status: ["success", "skipped", "pending_image_retry", "error"],
       invitation_code_status: ["active", "inactive"],
       listing_status: [
         "posted",
