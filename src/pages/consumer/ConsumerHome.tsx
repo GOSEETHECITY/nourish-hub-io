@@ -94,20 +94,18 @@ const ConsumerHome = () => {
   }, []);
 
   return (
-    <ConsumerMobileLayout className="flex flex-col">
+    <ConsumerMobileLayout>
       <ConsumerAppHeader />
 
-      <div className="flex-1 relative" style={{ minHeight: 0 }}>
-        <div className="h-full rounded-xl overflow-hidden mx-2">
-          <ConsumerMapView
-            center={center}
-            markers={loading ? [] : markers}
-            onMarkerClick={(id) => {
-              const m = markers.find((mk) => mk.id === id);
-              navigate(m?.type === "event" ? `/app/event/${id}` : `/app/restaurant/${id}`);
-            }}
-          />
-        </div>
+      <div className="rounded-xl overflow-hidden mx-2" style={{ height: "calc(100vh - 130px)" }}>
+        <ConsumerMapView
+          center={center}
+          markers={loading ? [] : markers}
+          onMarkerClick={(id) => {
+            const m = markers.find((mk) => mk.id === id);
+            navigate(m?.type === "event" ? `/app/event/${id}` : `/app/restaurant/${id}`);
+          }}
+        />
       </div>
 
       <ConsumerBottomNav />
