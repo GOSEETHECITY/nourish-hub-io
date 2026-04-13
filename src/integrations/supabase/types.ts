@@ -419,28 +419,28 @@ export type Database = {
       }
       event_checkins: {
         Row: {
-          id: string
+          checked_in_at: string | null
           event_id: string
-          user_id: string
+          id: string
           latitude: number | null
           longitude: number | null
-          checked_in_at: string
+          user_id: string
         }
         Insert: {
-          id?: string
+          checked_in_at?: string | null
           event_id: string
-          user_id: string
+          id?: string
           latitude?: number | null
           longitude?: number | null
-          checked_in_at?: string
+          user_id: string
         }
         Update: {
-          id?: string
+          checked_in_at?: string | null
           event_id?: string
-          user_id?: string
+          id?: string
           latitude?: number | null
           longitude?: number | null
-          checked_in_at?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -1729,10 +1729,6 @@ export type Database = {
       }
     }
     Functions: {
-      increment_attendee_count: {
-        Args: { eid: string }
-        Returns: undefined
-      }
       get_nonprofit_join_code: {
         Args: { _nonprofit_id: string }
         Returns: string
@@ -1745,6 +1741,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_attendee_count: { Args: { eid: string }; Returns: undefined }
       update_own_profile: {
         Args: { p_first_name?: string; p_last_name?: string; p_phone?: string }
         Returns: undefined
