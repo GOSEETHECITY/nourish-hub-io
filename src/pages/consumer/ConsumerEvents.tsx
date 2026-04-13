@@ -3,9 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useLocation } from "@/contexts/LocationContext";
+import { formatTime, formatDateShort } from "@/lib/formatters";
 import ConsumerMobileLayout from "@/components/consumer/ConsumerMobileLayout";
 import ConsumerAppHeader from "@/components/consumer/ConsumerAppHeader";
 import ConsumerBottomNav from "@/components/consumer/ConsumerBottomNav";
+import EventsMap from "@/components/consumer/EventsMap";
 
 const ConsumerEvents = () => {
   const navigate = useNavigate();
@@ -41,6 +43,7 @@ const ConsumerEvents = () => {
       <ConsumerAppHeader />
       <div className="px-4 pb-24">
         <h2 className="text-lg font-bold text-[#1B2A4A] my-3">Events</h2>
+        {events.length > 0 && <EventsMap events={events} city={city} />}
         <div className="flex flex-col gap-4">
           {events.map((ev) => (
             <button key={ev.id} onClick={() => navigate(`/app/event/${ev.id}`)} className="bg-white rounded-2xl shadow-md overflow-hidden text-left relative">
@@ -72,8 +75,8 @@ const ConsumerEvents = () => {
                 <p className="text-xs text-gray-500 mt-0.5">{ev.city}{ev.state ? `, ${ev.state}` : ""}</p>
                 {ev.event_date && (
                   <p className="text-xs text-[#F97316] mt-1">
-                    {new Date(ev.event_date + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
-                    {ev.start_time && ` · ${ev.start_time}`}
+                    {formatDateShort(ev.event_date)}
+                    {ev.start_time && ` · ${formatTime(ev.start_time)}`}
                   </p>
                 )}
               </div>

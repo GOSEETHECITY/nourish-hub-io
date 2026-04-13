@@ -417,6 +417,41 @@ export type Database = {
           },
         ]
       }
+      event_checkins: {
+        Row: {
+          id: string
+          event_id: string
+          user_id: string
+          latitude: number | null
+          longitude: number | null
+          checked_in_at: string
+        }
+        Insert: {
+          id?: string
+          event_id: string
+          user_id: string
+          latitude?: number | null
+          longitude?: number | null
+          checked_in_at?: string
+        }
+        Update: {
+          id?: string
+          event_id?: string
+          user_id?: string
+          latitude?: number | null
+          longitude?: number | null
+          checked_in_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_checkins_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           address: string | null
@@ -1694,6 +1729,10 @@ export type Database = {
       }
     }
     Functions: {
+      increment_attendee_count: {
+        Args: { eid: string }
+        Returns: undefined
+      }
       get_nonprofit_join_code: {
         Args: { _nonprofit_id: string }
         Returns: string
