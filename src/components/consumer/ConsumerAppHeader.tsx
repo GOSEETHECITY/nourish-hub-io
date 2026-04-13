@@ -1,13 +1,17 @@
-import { Menu, ShoppingCart } from "lucide-react";
+import { Menu, ShoppingCart, MapPin, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useConsumerCart } from "@/contexts/ConsumerCartContext";
+import { useLocation } from "@/contexts/LocationContext";
 import ConsumerSideDrawer from "./ConsumerSideDrawer";
+import CitySearchModal from "./CitySearchModal";
 
 const ConsumerAppHeader = () => {
   const navigate = useNavigate();
   const { totalItems } = useConsumerCart();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [cityModalOpen, setCityModalOpen] = useState(false);
+  const { locationLabel } = useLocation();
 
   return (
     <>
@@ -15,7 +19,11 @@ const ConsumerAppHeader = () => {
         <button onClick={() => setDrawerOpen(true)}>
           <Menu className="w-6 h-6 text-[#F97316]" />
         </button>
-        <span className="text-sm font-semibold text-gray-700">Orlando, FL</span>
+        <button onClick={() => setCityModalOpen(true)} className="flex items-center gap-1">
+          <MapPin className="w-4 h-4 text-[#F97316]" />
+          <span className="text-sm font-semibold text-gray-700">{locationLabel}</span>
+          <ChevronDown className="w-3 h-3 text-gray-400" />
+        </button>
         <button onClick={() => navigate("/app/cart")} className="relative">
           <ShoppingCart className="w-6 h-6 text-[#F97316]" />
           {totalItems > 0 && (
@@ -26,6 +34,7 @@ const ConsumerAppHeader = () => {
         </button>
       </header>
       <ConsumerSideDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+      <CitySearchModal open={cityModalOpen} onClose={() => setCityModalOpen(false)} />
     </>
   );
 };

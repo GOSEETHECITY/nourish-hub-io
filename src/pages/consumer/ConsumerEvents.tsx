@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useLocation } from "@/contexts/LocationContext";
 import ConsumerMobileLayout from "@/components/consumer/ConsumerMobileLayout";
 import ConsumerAppHeader from "@/components/consumer/ConsumerAppHeader";
 import ConsumerBottomNav from "@/components/consumer/ConsumerBottomNav";
@@ -9,10 +10,19 @@ import ConsumerBottomNav from "@/components/consumer/ConsumerBottomNav";
 const ConsumerEvents = () => {
   const navigate = useNavigate();
   const [events, setEvents] = useState<any[]>([]);
+  const { city, state } = useLocation();
 
   useEffect(() => {
-    supabase.from("events").select("*").eq("status", "published").order("event_date", { ascending: true }).then(({ data }) => setEvents(data || []));
-  }, []);
+    const today = new Date().toISOString().split("T")[0];
+    supabase
+      .from("events")
+      .select("*")
+      .eq("status", "published")
+      .eq("city", city)
+      .gte("event_date", today)
+      .order("event_date", { ascending: true })
+      .then(({ data }) => setEvents(data || []));
+  }, [city, state]);
 
   const handleShare = async (e: React.MouseEvent, ev: any) => {
     e.stopPropagation();

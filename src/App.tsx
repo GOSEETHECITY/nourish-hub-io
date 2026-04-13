@@ -96,15 +96,18 @@ import ConsumerWaitlist from "./pages/consumer/ConsumerWaitlist";
 import EventPreview from "./pages/consumer/EventPreview";
 import ErrorBoundary from "./components/ErrorBoundary";
 import NotFound from "./pages/NotFound";
+import { LocationProvider } from "./contexts/LocationContext";
 
 const queryClient = new QueryClient();
 
 const ConsumerWrapper = ({ children }: { children: React.ReactNode }) => (
   <ConsumerAuthProvider>
     <ConsumerCartProvider>
-      <ErrorBoundary>
-        {children}
-      </ErrorBoundary>
+      <LocationProvider>
+        <ErrorBoundary>
+          {children}
+        </ErrorBoundary>
+      </LocationProvider>
     </ConsumerCartProvider>
   </ConsumerAuthProvider>
 );
