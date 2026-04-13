@@ -102,20 +102,22 @@ export default function ConsumerMapView({ center, markers, onMarkerClick }: MapV
         delete (L.Icon.Default.prototype as any)._getIconUrl;
         L.Icon.Default.mergeOptions({ iconUrl, iconRetinaUrl, shadowUrl });
 
-        const makeIcon = (className: string) =>
-          new L.Icon({
-            iconUrl,
-            iconRetinaUrl,
-            shadowUrl,
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            shadowSize: [41, 41],
-            className,
+        const makeSvgIcon = (color: string) => {
+          const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="42" viewBox="0 0 28 42">
+            <path d="M14 0C6.3 0 0 6.3 0 14c0 10.5 14 28 14 28s14-17.5 14-28C28 6.3 21.7 0 14 0z" fill="${color}" stroke="#fff" stroke-width="1.5"/>
+            <circle cx="14" cy="14" r="6" fill="#fff"/>
+          </svg>`;
+          return L.divIcon({
+            html: svg,
+            className: "",
+            iconSize: [28, 42],
+            iconAnchor: [14, 42],
+            popupAnchor: [0, -36],
           });
+        };
 
-        const orangeIcon = makeIcon("map-marker-orange");
-        const greenIcon = makeIcon("map-marker-green");
+        const orangeIcon = makeSvgIcon("#F97316");
+        const greenIcon = makeSvgIcon("#8DC63F");
 
         // Import react-leaflet and destructure named exports explicitly
         const RL = await import("react-leaflet");

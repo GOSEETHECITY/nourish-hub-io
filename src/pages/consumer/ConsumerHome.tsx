@@ -92,7 +92,7 @@ const ConsumerHome = () => {
     <ConsumerMobileLayout>
       <ConsumerAppHeader />
 
-      <div className="rounded-xl overflow-hidden mx-2" style={{ height: "calc(100vh - 130px)" }}>
+      <div className="rounded-xl overflow-hidden mx-2" style={{ height: "calc(100dvh - 180px)" }}>
         <ConsumerMapView
           center={center}
           markers={loading ? [] : markers}
