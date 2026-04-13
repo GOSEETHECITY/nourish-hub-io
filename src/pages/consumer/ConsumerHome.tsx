@@ -62,9 +62,18 @@ const ConsumerHome = () => {
 
         const eventMarkers: MapLocation[] = [];
         for (const ev of events || []) {
-          const fullAddress = [ev.address, ev.city, ev.state].filter(Boolean).join(", ");
-          if (!fullAddress) continue;
-          const coords = await geocode(fullAddress);
+          // Try the address field first (it usually already includes city/state/zip)
+          let coords: { lat: number; lng: number } | null = null;
+          if (ev.address) {
+            coords = await geocode(ev.address);
+            await new Promise((r) => setTimeout(r, 1100));
+          }
+          // Fallback: try city + state if full address fails
+          if (!coords && ev.city) {
+            const fallback = [ev.city, ev.state].filter(Boolean).join(", ");
+            coords = await geocode(fallback);
+            await new Promise((r) => setTimeout(r, 1100));
+          }
           if (coords) {
             eventMarkers.push({
               id: ev.id,
@@ -74,8 +83,6 @@ const ConsumerHome = () => {
               type: "event" as const,
             });
           }
-          // Nominatim rate limit: 1 req/sec
-          await new Promise((r) => setTimeout(r, 1100));
         }
 
         setMarkers([...locMarkers, ...eventMarkers]);

@@ -39,9 +39,21 @@ class MapErrorBoundary extends Component<
   }
 }
 
+/* ── auto-fit map bounds to show all markers ── */
+function FitBounds({ markers, useMap, L }: { markers: MapLocation[]; useMap: any; L: any }) {
+  const map = useMap();
+  useEffect(() => {
+    if (markers.length > 0) {
+      const bounds = L.latLngBounds(markers.map((m) => [m.lat, m.lng]));
+      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
+    }
+  }, [markers, map, L]);
+  return null;
+}
+
 /* ── inner map component, only rendered once leaflet is loaded ── */
 function LeafletMap({ center, markers, onMarkerClick, modules }: MapViewProps & { modules: any }) {
-  const { MapContainer, TileLayer, Marker, Popup, orangeIcon, greenIcon } = modules;
+  const { MapContainer, TileLayer, Marker, Popup, orangeIcon, greenIcon, useMap, L } = modules;
 
   return (
     <MapContainer center={center} zoom={13} style={{ height: "100%", width: "100%" }} zoomControl={false}>
@@ -49,6 +61,7 @@ function LeafletMap({ center, markers, onMarkerClick, modules }: MapViewProps & 
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution="&copy; OpenStreetMap contributors"
       />
+      <FitBounds markers={markers} useMap={useMap} L={L} />
       {markers.map((m) => (
         <Marker key={m.id} position={[m.lat, m.lng]} icon={m.type === "event" ? greenIcon : orangeIcon}>
           <Popup>
@@ -126,8 +139,10 @@ export default function ConsumerMapView({ center, markers, onMarkerClick }: MapV
         const Marker = RL.Marker;
         const Popup = RL.Popup;
 
+        const useMap = RL.useMap;
+
         if (!cancelled) {
-          setModules({ MapContainer, TileLayer, Marker, Popup, orangeIcon, greenIcon });
+          setModules({ MapContainer, TileLayer, Marker, Popup, orangeIcon, greenIcon, useMap, L });
         }
       } catch (err) {
         console.error("Failed to load map:", err);
