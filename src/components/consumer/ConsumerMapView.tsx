@@ -44,7 +44,7 @@ function LeafletMap({ center, markers, onMarkerClick, modules }: MapViewProps & 
   const { MapContainer, TileLayer, Marker, Popup, orangeIcon } = modules;
 
   return (
-    <MapContainer center={center} zoom={13} style={{ height: "100vh", width: "100%" }} zoomControl={false}>
+    <MapContainer center={center} zoom={13} style={{ height: "100%", width: "100%" }} zoomControl={false}>
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution="&copy; OpenStreetMap contributors"
@@ -134,7 +134,7 @@ export default function ConsumerMapView({ center, markers, onMarkerClick }: MapV
 
   if (failed) {
     return (
-      <div className="h-screen w-full flex items-center justify-center pt-16">
+      <div className="h-full w-full flex items-center justify-center pt-16">
         <p className="text-gray-400 text-sm">Map could not be loaded.</p>
       </div>
     );
@@ -142,7 +142,7 @@ export default function ConsumerMapView({ center, markers, onMarkerClick }: MapV
 
   if (!modules) {
     return (
-      <div className="h-screen w-full flex flex-col items-center justify-center gap-4 pt-16">
+      <div className="h-full w-full flex flex-col items-center justify-center gap-4 pt-16">
         <Skeleton className="w-3/4 h-4" />
         <Skeleton className="w-1/2 h-4" />
         <Skeleton className="w-full h-[60vh] rounded-xl mx-4" />

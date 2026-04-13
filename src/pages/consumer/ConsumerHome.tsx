@@ -55,16 +55,18 @@ const ConsumerHome = () => {
   }, []);
 
   return (
-    <ConsumerMobileLayout className="relative">
-      <div className="absolute top-0 left-0 right-0 z-30">
-        <ConsumerAppHeader />
-      </div>
+    <ConsumerMobileLayout className="flex flex-col">
+      <ConsumerAppHeader />
 
-      <ConsumerMapView
-        center={center}
-        markers={loading ? [] : markers}
-        onMarkerClick={(id) => navigate(`/app/restaurant/${id}`)}
-      />
+      <div className="flex-1 relative" style={{ minHeight: 0 }}>
+        <div className="h-full rounded-xl overflow-hidden mx-2">
+          <ConsumerMapView
+            center={center}
+            markers={loading ? [] : markers}
+            onMarkerClick={(id) => navigate(`/app/restaurant/${id}`)}
+          />
+        </div>
+      </div>
 
       <ConsumerBottomNav />
     </ConsumerMobileLayout>
