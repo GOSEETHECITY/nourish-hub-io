@@ -14,6 +14,17 @@ interface MapLocation {
   type: "restaurant" | "event";
 }
 
+async function geocode(address: string): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(address)}`
+    );
+    const data = await res.json();
+    if (data?.[0]) return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+  } catch {}
+  return null;
+}
+
 const ConsumerHome = () => {
   const navigate = useNavigate();
   const [center, setCenter] = useState<[number, number]>([28.5383, -81.3792]);
@@ -30,6 +41,7 @@ const ConsumerHome = () => {
   useEffect(() => {
     const load = async () => {
       try {
+        // Fetch restaurant locations
         const { data: locs } = await supabase
           .from("locations")
           .select("id, name, latitude, longitude")
@@ -44,7 +56,34 @@ const ConsumerHome = () => {
             lng: l.longitude!,
             type: "restaurant" as const,
           }));
-        setMarkers(locMarkers);
+
+        // Fetch published events and geocode their addresses
+        const today = new Date().toISOString().split("T")[0];
+        const { data: events } = await supabase
+          .from("events")
+          .select("id, title, address, city, state")
+          .eq("status", "published")
+          .gte("event_date", today);
+
+        const eventMarkers: MapLocation[] = [];
+        for (const ev of events || []) {
+          const fullAddress = [ev.address, ev.city, ev.state].filter(Boolean).join(", ");
+          if (!fullAddress) continue;
+          const coords = await geocode(fullAddress);
+          if (coords) {
+            eventMarkers.push({
+              id: ev.id,
+              name: ev.title,
+              lat: coords.lat,
+              lng: coords.lng,
+              type: "event" as const,
+            });
+          }
+          // Nominatim rate limit: 1 req/sec
+          await new Promise((r) => setTimeout(r, 1100));
+        }
+
+        setMarkers([...locMarkers, ...eventMarkers]);
       } catch (err) {
         console.error("Failed to load markers:", err);
       } finally {
@@ -63,7 +102,10 @@ const ConsumerHome = () => {
           <ConsumerMapView
             center={center}
             markers={loading ? [] : markers}
-            onMarkerClick={(id) => navigate(`/app/restaurant/${id}`)}
+            onMarkerClick={(id) => {
+              const m = markers.find((mk) => mk.id === id);
+              navigate(m?.type === "event" ? `/app/event/${id}` : `/app/restaurant/${id}`);
+            }}
           />
         </div>
       </div>

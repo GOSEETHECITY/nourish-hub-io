@@ -116,7 +116,12 @@
   }
 }
 
-/* Tint bundled Leaflet marker to orange for consumer map pins */
+/* Tint bundled Leaflet marker to orange for restaurant map pins */
 .map-marker-orange {
   filter: hue-rotate(30deg) saturate(2) brightness(1.1);
+}
+
+/* Tint bundled Leaflet marker to green for event map pins */
+.map-marker-green {
+  filter: hue-rotate(120deg) saturate(1.5) brightness(1.1);
 }

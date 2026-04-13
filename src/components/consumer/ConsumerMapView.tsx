@@ -41,7 +41,7 @@ class MapErrorBoundary extends Component<
 
 /* ── inner map component, only rendered once leaflet is loaded ── */
 function LeafletMap({ center, markers, onMarkerClick, modules }: MapViewProps & { modules: any }) {
-  const { MapContainer, TileLayer, Marker, Popup, orangeIcon } = modules;
+  const { MapContainer, TileLayer, Marker, Popup, orangeIcon, greenIcon } = modules;
 
   return (
     <MapContainer center={center} zoom={13} style={{ height: "100%", width: "100%" }} zoomControl={false}>
@@ -50,13 +50,16 @@ function LeafletMap({ center, markers, onMarkerClick, modules }: MapViewProps & 
         attribution="&copy; OpenStreetMap contributors"
       />
       {markers.map((m) => (
-        <Marker key={m.id} position={[m.lat, m.lng]} icon={orangeIcon}>
+        <Marker key={m.id} position={[m.lat, m.lng]} icon={m.type === "event" ? greenIcon : orangeIcon}>
           <Popup>
             <div className="text-center">
               <p className="font-semibold">{m.name}</p>
+              <p className="text-xs text-gray-500">{m.type === "event" ? "Event" : "Restaurant"}</p>
               <button
                 onClick={() => onMarkerClick(m.id)}
-                className="mt-1 px-3 py-1 bg-[#F97316] text-white rounded-full text-xs font-semibold"
+                className={`mt-1 px-3 py-1 text-white rounded-full text-xs font-semibold ${
+                  m.type === "event" ? "bg-[#8DC63F]" : "bg-[#F97316]"
+                }`}
               >
                 View
               </button>
@@ -99,18 +102,20 @@ export default function ConsumerMapView({ center, markers, onMarkerClick }: MapV
         delete (L.Icon.Default.prototype as any)._getIconUrl;
         L.Icon.Default.mergeOptions({ iconUrl, iconRetinaUrl, shadowUrl });
 
-        // Use the same bundled marker as the default icon but tinted via CSS class
-        // to avoid depending on an external GitHub CDN URL that can fail.
-        const orangeIcon = new L.Icon({
-          iconUrl: iconUrl,
-          iconRetinaUrl: iconRetinaUrl,
-          shadowUrl: shadowUrl,
-          iconSize: [25, 41],
-          iconAnchor: [12, 41],
-          popupAnchor: [1, -34],
-          shadowSize: [41, 41],
-          className: "map-marker-orange",
-        });
+        const makeIcon = (className: string) =>
+          new L.Icon({
+            iconUrl,
+            iconRetinaUrl,
+            shadowUrl,
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41],
+            className,
+          });
+
+        const orangeIcon = makeIcon("map-marker-orange");
+        const greenIcon = makeIcon("map-marker-green");
 
         // Import react-leaflet and destructure named exports explicitly
         const RL = await import("react-leaflet");
@@ -120,7 +125,7 @@ export default function ConsumerMapView({ center, markers, onMarkerClick }: MapV
         const Popup = RL.Popup;
 
         if (!cancelled) {
-          setModules({ MapContainer, TileLayer, Marker, Popup, orangeIcon });
+          setModules({ MapContainer, TileLayer, Marker, Popup, orangeIcon, greenIcon });
         }
       } catch (err) {
         console.error("Failed to load map:", err);
