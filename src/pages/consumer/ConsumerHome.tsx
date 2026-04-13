@@ -27,7 +27,7 @@ async function geocode(address: string): Promise<{ lat: number; lng: number } | 
 
 const ConsumerHome = () => {
   const navigate = useNavigate();
-  const [center, setCenter] = useState<[number, number]>([28.5383, -81.3792]);
+  const [center, setCenter] = useState<[number, number]>([33.749, -84.388]);
   const [markers, setMarkers] = useState<MapLocation[]>([]);
   const [loading, setLoading] = useState(true);
 
