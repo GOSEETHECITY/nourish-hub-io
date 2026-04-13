@@ -1,22 +1,6 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, Component, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
 import { formatTime, formatDateShort } from "@/lib/formatters";
-
-// Fix Leaflet default marker icon issue with bundlers
-const defaultIcon = L.icon({
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  iconRetinaUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});
-L.Marker.prototype.options.icon = defaultIcon;
 
 // City center coordinates for initial map view
 const CITY_CENTERS: Record<string, [number, number]> = {
@@ -54,15 +38,123 @@ interface GeocodedEvent {
   lng: number;
 }
 
-const EventsMap = ({ events, city }: EventsMapProps) => {
+/* ── Error boundary so map crashes never bubble up ── */
+class MapErrorBoundary extends Component<
+  { children: ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  render() {
+    if (this.state.hasError) return null;
+    return this.props.children;
+  }
+}
+
+/* ── Inner map rendered only after leaflet loads ── */
+function LeafletEventsMap({
+  center,
+  geocoded,
+  modules,
+}: {
+  center: [number, number];
+  geocoded: GeocodedEvent[];
+  modules: any;
+}) {
   const navigate = useNavigate();
+  const { MapContainer, TileLayer, Marker, Popup } = modules;
+
+  return (
+    <MapContainer
+      key={`${center[0]}-${center[1]}`}
+      center={center}
+      zoom={11}
+      scrollWheelZoom={false}
+      style={{ width: "100%", height: "100%" }}
+      attributionControl={false}
+    >
+      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+      {geocoded.map((g) => (
+        <Marker key={g.event.id} position={[g.lat, g.lng]}>
+          <Popup>
+            <div
+              className="cursor-pointer"
+              onClick={() => navigate(`/app/event/${g.event.id}`)}
+            >
+              <p className="font-semibold text-sm">{g.event.title}</p>
+              {g.event.event_date && (
+                <p className="text-xs text-gray-500">
+                  {formatDateShort(g.event.event_date)}
+                  {g.event.start_time &&
+                    ` · ${formatTime(g.event.start_time)}`}
+                </p>
+              )}
+            </div>
+          </Popup>
+        </Marker>
+      ))}
+    </MapContainer>
+  );
+}
+
+/* ── Public wrapper: lazy-loads Leaflet, geocodes events ── */
+export default function EventsMap({ events, city }: EventsMapProps) {
+  const [modules, setModules] = useState<any>(null);
+  const [failed, setFailed] = useState(false);
   const [geocoded, setGeocoded] = useState<GeocodedEvent[]>([]);
 
-  const center = useMemo(
-    () => CITY_CENTERS[city] || [33.749, -84.388],
-    [city]
-  );
+  const center: [number, number] = CITY_CENTERS[city] || [33.749, -84.388];
 
+  // Lazy-load Leaflet + react-leaflet (same pattern as ConsumerMapView)
+  useEffect(() => {
+    let cancelled = false;
+
+    const load = async () => {
+      try {
+        const L = await import("leaflet");
+        await import("leaflet/dist/leaflet.css");
+
+        const resolve = (mod: any) =>
+          typeof mod === "string" ? mod : mod?.default ?? mod;
+
+        const iconUrl = resolve(
+          await import("leaflet/dist/images/marker-icon.png")
+        );
+        const iconRetinaUrl = resolve(
+          await import("leaflet/dist/images/marker-icon-2x.png")
+        );
+        const shadowUrl = resolve(
+          await import("leaflet/dist/images/marker-shadow.png")
+        );
+
+        delete (L.Icon.Default.prototype as any)._getIconUrl;
+        L.Icon.Default.mergeOptions({ iconUrl, iconRetinaUrl, shadowUrl });
+
+        const RL = await import("react-leaflet");
+
+        if (!cancelled) {
+          setModules({
+            MapContainer: RL.MapContainer,
+            TileLayer: RL.TileLayer,
+            Marker: RL.Marker,
+            Popup: RL.Popup,
+          });
+        }
+      } catch (err) {
+        console.error("Failed to load map:", err);
+        if (!cancelled) setFailed(true);
+      }
+    };
+
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Geocode event addresses
   useEffect(() => {
     let cancelled = false;
 
@@ -110,39 +202,25 @@ const EventsMap = ({ events, city }: EventsMapProps) => {
     };
   }, [events]);
 
-  return (
-    <div className="w-full h-48 rounded-xl overflow-hidden shadow-md mb-4">
-      <MapContainer
-        key={`${center[0]}-${center[1]}`}
-        center={center}
-        zoom={11}
-        scrollWheelZoom={false}
-        style={{ width: "100%", height: "100%" }}
-        attributionControl={false}
-      >
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        {geocoded.map((g) => (
-          <Marker key={g.event.id} position={[g.lat, g.lng]}>
-            <Popup>
-              <div
-                className="cursor-pointer"
-                onClick={() => navigate(`/app/event/${g.event.id}`)}
-              >
-                <p className="font-semibold text-sm">{g.event.title}</p>
-                {g.event.event_date && (
-                  <p className="text-xs text-gray-500">
-                    {formatDateShort(g.event.event_date)}
-                    {g.event.start_time &&
-                      ` · ${formatTime(g.event.start_time)}`}
-                  </p>
-                )}
-              </div>
-            </Popup>
-          </Marker>
-        ))}
-      </MapContainer>
-    </div>
-  );
-};
+  if (failed) return null;
 
-export default EventsMap;
+  if (!modules) {
+    return (
+      <div className="w-full h-48 rounded-xl overflow-hidden shadow-md mb-4 bg-gray-100 flex items-center justify-center">
+        <p className="text-sm text-gray-400">Loading map...</p>
+      </div>
+    );
+  }
+
+  return (
+    <MapErrorBoundary>
+      <div className="w-full h-48 rounded-xl overflow-hidden shadow-md mb-4">
+        <LeafletEventsMap
+          center={center}
+          geocoded={geocoded}
+          modules={modules}
+        />
+      </div>
+    </MapErrorBoundary>
+  );
+}
