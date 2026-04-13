@@ -17,6 +17,34 @@ interface CsvRow {
   flyer_image_url: string;
 }
 
+function parseCityState(location: string): { city: string | null; state: string | null } {
+  if (!location) return { city: null, state: null };
+  // Try to extract city and state from address like "123 Main St, Atlanta, GA 30301"
+  // or "Atlanta, GA" or "Atlanta, GA 30301"
+  const parts = location.split(",").map((p) => p.trim());
+  if (parts.length >= 2) {
+    // Last part with state abbreviation (and optional zip)
+    const lastPart = parts[parts.length - 1].trim();
+    const stateMatch = lastPart.match(/^([A-Z]{2})\b/);
+    if (stateMatch) {
+      return {
+        city: parts[parts.length - 2].trim(),
+        state: stateMatch[1],
+      };
+    }
+    // Try second-to-last part for "City, ST ZIP" pattern
+    const secondLast = parts[parts.length - 1].trim();
+    const cityStateZip = secondLast.match(/^(.+?)\s+([A-Z]{2})\s*\d{0,5}$/);
+    if (cityStateZip) {
+      return {
+        city: cityStateZip[1].trim(),
+        state: cityStateZip[2],
+      };
+    }
+  }
+  return { city: null, state: null };
+}
+
 function parseCsv(text: string): CsvRow[] {
   const lines = text.trim().split("\n");
   if (lines.length < 2) return [];
@@ -333,13 +361,18 @@ Deno.serve(async (req) => {
           }
         }
 
-        // Step 4: Create event
+        // Step 4: Parse city/state from location
+        const { city, state } = parseCityState(row.location || "");
+
+        // Step 5: Create event
         const { data: evt, error: evtError } = await sb.from("events").insert({
           title: row.event_name,
           description: rewritten,
           event_date: eventDate,
           start_time: startTime,
           address: row.location || null,
+          city: city,
+          state: state,
           image_url: flyerUrl,
           flyer_url: flyerUrl,
           status: "draft",
