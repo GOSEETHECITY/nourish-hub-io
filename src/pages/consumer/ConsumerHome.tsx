@@ -31,12 +31,7 @@ const ConsumerHome = () => {
   const [markers, setMarkers] = useState<MapLocation[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    navigator.geolocation.getCurrentPosition(
-      (pos) => setCenter([pos.coords.latitude, pos.coords.longitude]),
-      () => {}
-    );
-  }, []);
+  // Map always centers on Atlanta, GA (matches header city selector)
 
   useEffect(() => {
     const load = async () => {
