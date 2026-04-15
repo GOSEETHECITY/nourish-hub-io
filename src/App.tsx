@@ -8,6 +8,7 @@ import { ConsumerAuthProvider } from "@/contexts/ConsumerAuthContext";
 import { ConsumerCartProvider } from "@/contexts/ConsumerCartContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import ConsumerAuthGuard from "@/components/auth/ConsumerAuthGuard";
+import MarketingHome from "./pages/marketing/MarketingHome";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Dashboard from "./pages/Index";
 import Organizations from "./pages/Organizations";
@@ -129,6 +130,9 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
+            {/* ── Public marketing site ── */}
+            <Route path="/" element={<MarketingHome />} />
+
             {/* Public auth routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
@@ -136,7 +140,7 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/accept-invitation" element={<AcceptInvitation />} />
 
-            {/* Admin routes */}
+            {/* Admin routes — moved from / to /dashboard */}
             <Route
               element={
                 <ProtectedRoute allowedRoles={["admin"]}>
@@ -144,7 +148,7 @@ const App = () => (
                 </ProtectedRoute>
               }
             >
-              <Route path="/" element={<Dashboard />} />
+              <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/organizations" element={<Organizations />} />
               <Route path="/organizations/:id" element={<OrganizationDetail />} />
               <Route path="/organizations/:id/locations/:locationId" element={<LocationDetail />} />

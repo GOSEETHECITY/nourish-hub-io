@@ -134,7 +134,7 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
   if (allowedRoles && role && !allowedRoles.includes(role)) {
     switch (role) {
       case "admin":
-        return <Navigate to="/" replace />;
+        return <Navigate to="/dashboard" replace />;
       case "venue_partner":
         return <Navigate to="/venue" replace />;
       case "nonprofit_partner":

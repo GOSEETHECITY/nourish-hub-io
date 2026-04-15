@@ -37,7 +37,7 @@ export default function Login() {
       const role = roleData?.role;
       switch (role) {
         case "admin":
-          navigate("/");
+          navigate("/dashboard");
           break;
         case "venue_partner":
           navigate("/venue");
@@ -49,7 +49,7 @@ export default function Login() {
           navigate("/government");
           break;
         default:
-          navigate("/");
+          navigate("/dashboard");
       }
     }
 

@@ -73,7 +73,7 @@ export default function AcceptInvitation() {
         case "venue_partner": navigate("/venue"); break;
         case "nonprofit_partner": navigate("/nonprofit"); break;
         case "government_partner": navigate("/government"); break;
-        default: navigate("/"); break;
+        default: navigate("/dashboard"); break;
       }
     } else {
       navigate("/login");
