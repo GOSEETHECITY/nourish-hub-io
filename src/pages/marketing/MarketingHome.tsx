@@ -50,7 +50,7 @@ export default function MarketingHome() {
               Enterprise Food Diversion Platform
             </div>
 
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-tight tracking-tight text-[#1c0e07] mb-6">
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-tight tracking-tight text-black mb-6">
               Food doesn't have to{" "}
               <span className="text-[#6d412a]">go to waste.</span>
             </h1>
@@ -79,13 +79,13 @@ export default function MarketingHome() {
         </div>
 
         {/* Stats bar */}
-        <div className="border-t border-b border-[#ede5dc] bg-[#fdf8f4]">
+        <div className="bg-black">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-[#ede5dc]">
+            <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/10">
               {stats.map((s) => (
-                <div key={s.label} className="py-6 px-8 text-center">
-                  <div className="text-3xl font-bold text-[#6d412a] mb-1">{s.value}</div>
-                  <div className="text-sm text-[#6d412a]/60">{s.label}</div>
+                <div key={s.label} className="py-7 px-8 text-center">
+                  <div className="text-3xl font-bold text-white mb-1">{s.value}</div>
+                  <div className="text-sm text-white/50">{s.label}</div>
                 </div>
               ))}
             </div>
@@ -97,7 +97,7 @@ export default function MarketingHome() {
       <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-[#1c0e07] mb-4">One platform. Two pathways.</h2>
+            <h2 className="text-4xl font-bold text-black mb-4">One platform. Two pathways.</h2>
             <p className="text-lg text-[#6d412a]/70 max-w-2xl mx-auto">
               Every venue operates differently. Hariet.AI handles both — whether
               you donate everything or sell surplus before donating the rest.
@@ -111,7 +111,7 @@ export default function MarketingHome() {
                 <Heart className="w-3.5 h-3.5" />
                 Donate Pathway
               </div>
-              <h3 className="text-2xl font-bold text-[#1c0e07] mb-2">Donate your surplus</h3>
+              <h3 className="text-2xl font-bold text-black mb-2">Donate your surplus</h3>
               <p className="text-[#6d412a]/70 mb-8">
                 For stadiums, arenas, convention centers, and institutions that
                 route all surplus directly to nonprofit partners — no consumer
@@ -124,7 +124,7 @@ export default function MarketingHome() {
                       {step.num}
                     </div>
                     <div>
-                      <div className="font-semibold text-[#1c0e07] mb-1">{step.title}</div>
+                      <div className="font-semibold text-black mb-1">{step.title}</div>
                       <div className="text-sm text-[#6d412a]/70 leading-relaxed">{step.desc}</div>
                     </div>
                   </div>
@@ -182,7 +182,7 @@ export default function MarketingHome() {
       <section className="py-24 bg-[#fdf8f4]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-[#1c0e07] mb-4">Built for every venue that serves food</h2>
+            <h2 className="text-4xl font-bold text-black mb-4">Built for every venue that serves food</h2>
             <p className="text-lg text-[#6d412a]/70 max-w-2xl mx-auto">
               From post-game stadium kitchens to end-of-service restaurant prep —
               Hariet.AI fits your operation.
@@ -204,7 +204,7 @@ export default function MarketingHome() {
                     {ind.pathway}
                   </span>
                 </div>
-                <h3 className="font-bold text-[#1c0e07] mb-2">{ind.title}</h3>
+                <h3 className="font-bold text-black mb-2">{ind.title}</h3>
                 <p className="text-sm text-[#6d412a]/70 leading-relaxed">{ind.desc}</p>
               </div>
             ))}
@@ -287,14 +287,14 @@ export default function MarketingHome() {
             <div className="order-2 lg:order-1">
               <div className="bg-[#fdf8f4] rounded-3xl border border-[#ede5dc] p-8">
                 <div className="text-5xl mb-6">🌾</div>
-                <blockquote className="text-xl font-medium text-[#1c0e07] italic leading-relaxed">
+                <blockquote className="text-xl font-medium text-black italic leading-relaxed">
                   "Just as Harriet Tubman guided people to freedom and opportunity,
                   Hariet.AI guides surplus food to the communities who need it most."
                 </blockquote>
               </div>
             </div>
             <div className="order-1 lg:order-2">
-              <h2 className="text-4xl font-bold text-[#1c0e07] mb-6">Built on a legacy of purpose</h2>
+              <h2 className="text-4xl font-bold text-black mb-6">Built on a legacy of purpose</h2>
               <p className="text-[#6d412a]/80 text-lg leading-relaxed mb-6">
                 The name Hariet.AI draws inspiration from Harriet Tubman — someone
                 who used the resources and systems available to her to create
@@ -319,7 +319,7 @@ export default function MarketingHome() {
       {/* ── FINAL CTA ────────────────────────────── */}
       <section className="py-24 bg-[#fdf8f4] border-t border-[#ede5dc]">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl sm:text-5xl font-bold text-[#1c0e07] mb-6">
+          <h2 className="text-4xl sm:text-5xl font-bold text-black mb-6">
             Ready to divert your surplus?
           </h2>
           <p className="text-[#6d412a]/70 text-lg mb-10 leading-relaxed">
