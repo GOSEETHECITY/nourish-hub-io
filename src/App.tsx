@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ConsumerAuthProvider } from "@/contexts/ConsumerAuthContext";
 import { ConsumerCartProvider } from "@/contexts/ConsumerCartContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import ConsumerAuthGuard from "@/components/auth/ConsumerAuthGuard";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Dashboard from "./pages/Index";
 import Organizations from "./pages/Organizations";
@@ -110,6 +111,14 @@ const ConsumerWrapper = ({ children }: { children: React.ReactNode }) => (
       </LocationProvider>
     </ConsumerCartProvider>
   </ConsumerAuthProvider>
+);
+
+// Same as ConsumerWrapper but also requires the user to be logged in.
+// Use for any /app/* route that needs an authenticated consumer session.
+const ProtectedConsumerWrapper = ({ children }: { children: React.ReactNode }) => (
+  <ConsumerWrapper>
+    <ConsumerAuthGuard>{children}</ConsumerAuthGuard>
+  </ConsumerWrapper>
 );
 
 const App = () => (
@@ -223,22 +232,22 @@ const App = () => (
             <Route path="/app/reset-password" element={<ConsumerWrapper><ConsumerResetPassword /></ConsumerWrapper>} />
             <Route path="/app/waitlist" element={<ConsumerWrapper><ConsumerWaitlist /></ConsumerWrapper>} />
             <Route path="/app/location-permission" element={<ConsumerWrapper><ConsumerLocationPermission /></ConsumerWrapper>} />
-            <Route path="/app/home" element={<ConsumerWrapper><ConsumerHome /></ConsumerWrapper>} />
-            <Route path="/app/restaurants" element={<ConsumerWrapper><ConsumerRestaurants /></ConsumerWrapper>} />
-            <Route path="/app/restaurant/:id" element={<ConsumerWrapper><ConsumerRestaurantDetail /></ConsumerWrapper>} />
-            <Route path="/app/coupon/:id" element={<ConsumerWrapper><ConsumerCouponDetail /></ConsumerWrapper>} />
-            <Route path="/app/events" element={<ConsumerWrapper><ConsumerEvents /></ConsumerWrapper>} />
-            <Route path="/app/event/:id" element={<ConsumerWrapper><ConsumerEventDetail /></ConsumerWrapper>} />
-            <Route path="/app/profile" element={<ConsumerWrapper><ConsumerProfile /></ConsumerWrapper>} />
-            <Route path="/app/profile/edit" element={<ConsumerWrapper><ConsumerProfileEdit /></ConsumerWrapper>} />
-            <Route path="/app/checkins" element={<ConsumerWrapper><ConsumerCheckIns /></ConsumerWrapper>} />
-            <Route path="/app/cart" element={<ConsumerWrapper><ConsumerCart /></ConsumerWrapper>} />
-            <Route path="/app/add-payment" element={<ConsumerWrapper><ConsumerAddPayment /></ConsumerWrapper>} />
-            <Route path="/app/orders" element={<ConsumerWrapper><ConsumerOrders /></ConsumerWrapper>} />
-            <Route path="/app/follows" element={<ConsumerWrapper><ConsumerFollows /></ConsumerWrapper>} />
-            <Route path="/app/notifications" element={<ConsumerWrapper><ConsumerNotifications /></ConsumerWrapper>} />
-            <Route path="/app/feedback" element={<ConsumerWrapper><ConsumerFeedback /></ConsumerWrapper>} />
-            <Route path="/app/invite-friends" element={<ConsumerWrapper><ConsumerInviteFriends /></ConsumerWrapper>} />
+            <Route path="/app/home" element={<ProtectedConsumerWrapper><ConsumerHome /></ProtectedConsumerWrapper>} />
+            <Route path="/app/restaurants" element={<ProtectedConsumerWrapper><ConsumerRestaurants /></ProtectedConsumerWrapper>} />
+            <Route path="/app/restaurant/:id" element={<ProtectedConsumerWrapper><ConsumerRestaurantDetail /></ProtectedConsumerWrapper>} />
+            <Route path="/app/coupon/:id" element={<ProtectedConsumerWrapper><ConsumerCouponDetail /></ProtectedConsumerWrapper>} />
+            <Route path="/app/events" element={<ProtectedConsumerWrapper><ConsumerEvents /></ProtectedConsumerWrapper>} />
+            <Route path="/app/event/:id" element={<ProtectedConsumerWrapper><ConsumerEventDetail /></ProtectedConsumerWrapper>} />
+            <Route path="/app/profile" element={<ProtectedConsumerWrapper><ConsumerProfile /></ProtectedConsumerWrapper>} />
+            <Route path="/app/profile/edit" element={<ProtectedConsumerWrapper><ConsumerProfileEdit /></ProtectedConsumerWrapper>} />
+            <Route path="/app/checkins" element={<ProtectedConsumerWrapper><ConsumerCheckIns /></ProtectedConsumerWrapper>} />
+            <Route path="/app/cart" element={<ProtectedConsumerWrapper><ConsumerCart /></ProtectedConsumerWrapper>} />
+            <Route path="/app/add-payment" element={<ProtectedConsumerWrapper><ConsumerAddPayment /></ProtectedConsumerWrapper>} />
+            <Route path="/app/orders" element={<ProtectedConsumerWrapper><ConsumerOrders /></ProtectedConsumerWrapper>} />
+            <Route path="/app/follows" element={<ProtectedConsumerWrapper><ConsumerFollows /></ProtectedConsumerWrapper>} />
+            <Route path="/app/notifications" element={<ProtectedConsumerWrapper><ConsumerNotifications /></ProtectedConsumerWrapper>} />
+            <Route path="/app/feedback" element={<ProtectedConsumerWrapper><ConsumerFeedback /></ProtectedConsumerWrapper>} />
+            <Route path="/app/invite-friends" element={<ProtectedConsumerWrapper><ConsumerInviteFriends /></ProtectedConsumerWrapper>} />
 
             {/* Public gated event preview */}
             <Route path="/event-preview/:id" element={<EventPreview />} />
