@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useLocation } from "@/contexts/LocationContext";
 import ConsumerMobileLayout from "@/components/consumer/ConsumerMobileLayout";
 import ConsumerAppHeader from "@/components/consumer/ConsumerAppHeader";
 import ConsumerBottomNav from "@/components/consumer/ConsumerBottomNav";
@@ -25,23 +26,59 @@ async function geocode(address: string): Promise<{ lat: number; lng: number } | 
   return null;
 }
 
+// Pre-built city center coordinates so we don't need to geocode the selected city on every render
+const CITY_CENTERS: Record<string, [number, number]> = {
+  "Atlanta, GA": [33.749, -84.388],
+  "Orlando, FL": [28.5383, -81.3792],
+  "Miami, FL": [25.7617, -80.1918],
+  "Jacksonville, FL": [30.3322, -81.6557],
+  "St. Petersburg, FL": [27.7676, -82.6403],
+  "Hernando, FL": [28.8946, -82.3760],
+  "Dunedin, FL": [28.0197, -82.7723],
+  "Rogers, AR": [36.3320, -94.1185],
+  "Lowell, AR": [36.2562, -94.1316],
+  "Ashland, OH": [40.8689, -82.3187],
+  "Hampton, GA": [33.3879, -84.2828],
+  "Seattle, WA": [47.6062, -122.3321],
+  "St. Louis, MO": [38.6270, -90.1994],
+  "Minneapolis, MN": [44.9778, -93.2650],
+  "Albuquerque, NM": [35.0844, -106.6504],
+};
+
 const ConsumerHome = () => {
   const navigate = useNavigate();
-  const [center, setCenter] = useState<[number, number]>([33.749, -84.388]);
+  const { city, state } = useLocation();
+  const cityKey = `${city}, ${state}`;
+  const [center, setCenter] = useState<[number, number]>(
+    CITY_CENTERS[cityKey] || [33.749, -84.388]
+  );
   const [markers, setMarkers] = useState<MapLocation[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Map always centers on Atlanta, GA (matches header city selector)
+  // Update map center whenever the user changes their selected city
+  useEffect(() => {
+    const known = CITY_CENTERS[cityKey];
+    if (known) {
+      setCenter(known);
+      return;
+    }
+    // Unknown city — geocode it via Nominatim
+    geocode(`${city}, ${state}, USA`).then((coords) => {
+      if (coords) setCenter([coords.lat, coords.lng]);
+    });
+  }, [city, state, cityKey]);
 
   useEffect(() => {
     const load = async () => {
       try {
-        // Fetch restaurant locations
+        // Fetch restaurant locations in selected city
         const { data: locs } = await supabase
           .from("locations")
-          .select("id, name, latitude, longitude")
+          .select("id, name, latitude, longitude, city, state")
           .eq("approval_status", "approved")
-          .eq("marketplace_enabled", true);
+          .eq("marketplace_enabled", true)
+          .eq("city", city)
+          .eq("state", state);
         const locMarkers: MapLocation[] = (locs || [])
           .filter((l) => l.latitude && l.longitude)
           .map((l) => ({
@@ -52,23 +89,23 @@ const ConsumerHome = () => {
             type: "restaurant" as const,
           }));
 
-        // Fetch published events and geocode their addresses
+        // Fetch published events in selected city, then geocode their addresses
         const today = new Date().toISOString().split("T")[0];
         const { data: events } = await supabase
           .from("events")
           .select("id, title, address, city, state")
           .eq("status", "published")
-          .gte("event_date", today);
+          .gte("event_date", today)
+          .eq("city", city)
+          .eq("state", state);
 
         const eventMarkers: MapLocation[] = [];
         for (const ev of events || []) {
-          // Try the address field first (it usually already includes city/state/zip)
           let coords: { lat: number; lng: number } | null = null;
           if (ev.address) {
             coords = await geocode(ev.address);
             await new Promise((r) => setTimeout(r, 1100));
           }
-          // Fallback: try city + state if full address fails
           if (!coords && ev.city) {
             const fallback = [ev.city, ev.state].filter(Boolean).join(", ");
             coords = await geocode(fallback);
@@ -92,8 +129,9 @@ const ConsumerHome = () => {
         setLoading(false);
       }
     };
+    setLoading(true);
     load();
-  }, []);
+  }, [city, state]);
 
   return (
     <ConsumerMobileLayout>
