@@ -76,7 +76,7 @@ export default function Solutions() {
                   </li>
                   <li className="flex gap-3 items-start">
                     <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-[#92c216] mt-0.5" />
-                    <span>Donate everything, or sell some and donate the rest. Either way, nothing is wasted.</span>
+                    <span>Sell what you can. Donate what you don't. Waste nothing.</span>
                   </li>
                 </ul>
               </div>

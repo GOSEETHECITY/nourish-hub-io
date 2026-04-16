@@ -37,7 +37,12 @@ export default function Partners() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {partners.map((partner) => (
-                <div key={partner.title} className="bg-white rounded-2xl border border-[#ede5dc] p-6 hover:border-black/40 hover:shadow-md transition group">
+                <div
+                  key={partner.title}
+                  className={`bg-white rounded-2xl border border-[#ede5dc] p-6 hover:border-black/40 hover:shadow-md transition group ${
+                    partner.pathway === "Receive" ? "lg:col-start-2 sm:col-span-2 lg:col-span-1" : ""
+                  }`}
+                >
                   <div className="flex items-start justify-between mb-4">
                     <div className="w-10 h-10 rounded-xl bg-black/5 flex items-center justify-center group-hover:bg-black/10 transition">
                       <partner.icon className="w-5 h-5 text-black" />

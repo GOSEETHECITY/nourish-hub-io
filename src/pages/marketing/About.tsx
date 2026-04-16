@@ -24,36 +24,58 @@ export default function About() {
 
         {/* Mission */}
         <section className="py-24 bg-white">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid lg:grid-cols-2 gap-16 items-center">
-              <div>
-                <div className="bg-[#fdf8f4] rounded-3xl border border-[#ede5dc] p-8">
-                  <div className="text-5xl mb-4">🌾</div>
-                  <blockquote className="text-xl font-medium text-black italic leading-relaxed">
-                    "Harriet Tubman used the systems she had to guide people to freedom.
-                    Hariet.AI uses the systems we have to guide surplus food to the people who need it."
-                  </blockquote>
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 className="text-4xl font-bold text-black mb-8 text-center">A supply chain problem, solved</h2>
+
+            <div className="space-y-6 text-lg leading-relaxed">
+              <p className="text-[#6d412a]/80">
+                Hariet.AI is named for Harriet Tubman, a woman who worked the tools of her time
+                to build a pathway that changed a country. The American food system has a similar
+                opportunity in front of it today.
+              </p>
+              <p className="text-[#6d412a]/80">
+                Roughly 40% of food produced in the United States goes to waste every year while
+                one in six Americans faces food insecurity. That gap is a supply chain problem.
+                Good food already exists. The infrastructure to move it from the kitchens that
+                have it to the people who need it does not.
+              </p>
+              <p className="text-[#6d412a]/80">
+                Hariet.AI is that infrastructure. Our platform runs on two pathways, and
+                operators pick the one that fits how they already work:
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6 mt-10">
+              <div className="rounded-2xl border border-[#ede5dc] bg-[#fdf8f4] p-6">
+                <div className="text-xs font-bold text-[#6d412a] uppercase tracking-widest mb-3">
+                  Donate Pathway
                 </div>
-              </div>
-              <div>
-                <h2 className="text-4xl font-bold text-black mb-6">A name, and a mission, with history behind it</h2>
-                <p className="text-[#6d412a]/80 text-lg leading-relaxed mb-6">
-                  Hariet.AI is named for Harriet Tubman, a woman who worked the tools of her time
-                  to build a pathway that changed a country. The American food system has a similar
-                  opportunity in front of it today.
-                </p>
-                <p className="text-[#6d412a]/70 leading-relaxed mb-6">
-                  Roughly 40% of the food produced in the United States goes to waste every year,
-                  while one in six Americans faces food insecurity. That gap is not a supply problem.
-                  It is a logistics, incentives, and software problem.
-                </p>
+                <h3 className="text-xl font-bold text-black mb-2">
+                  Stadiums, convention centers, corporate cafeterias, and hospitals
+                </h3>
                 <p className="text-[#6d412a]/70 leading-relaxed">
-                  Hariet.AI solves it by giving stadiums, restaurants, hotels, and hospitals one
-                  dashboard to sell or donate their surplus, and by putting a consumer marketplace,
-                  GO See The City, on top of it so diners can buy what's left before it's gone.
+                  Route every pound of surplus directly to vetted nonprofit partners nearby. No
+                  consumer transactions. Tax documentation and ESG reporting handled automatically.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-black bg-[#1c0e07] text-white p-6">
+                <div className="text-xs font-bold text-white uppercase tracking-widest mb-3">
+                  Sell + Donate Pathway
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">
+                  Restaurants, cafes, hotels, and food festivals
+                </h3>
+                <p className="text-white/80 leading-relaxed">
+                  Recover revenue on same-day surplus through GO See The City, our consumer
+                  marketplace, and donate whatever doesn't sell before close.
                 </p>
               </div>
             </div>
+
+            <p className="text-[#6d412a]/80 text-lg leading-relaxed mt-10 text-center">
+              One dashboard. Every meal accounted for. Nothing goes to the landfill.
+            </p>
           </div>
         </section>
 
@@ -92,7 +114,7 @@ export default function About() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 to="/get-started"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-[#6d412a] text-white font-semibold hover:bg-[#5a3422] transition shadow-sm text-lg"
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-black text-white font-bold hover:bg-[#222] transition shadow-sm text-lg"
               >
                 Partner with us <ArrowRight className="w-5 h-5" />
               </Link>

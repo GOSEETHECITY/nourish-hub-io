@@ -35,10 +35,12 @@ export default function MarketingNav({ variant = "light" }: { variant?: "light" 
             <Link
               key={item.href}
               to={item.href}
-              className={`text-sm font-medium transition ${
-                pathname === item.href
-                  ? isDark ? "text-white" : "text-black"
-                  : isDark ? "text-white/70 hover:text-white" : "text-black/70 hover:text-black"
+              className={`text-sm font-bold transition ${
+                isDark
+                  ? pathname === item.href
+                    ? "text-white"
+                    : "text-white/80 hover:text-white"
+                  : "text-black hover:text-[#6d412a]"
               }`}
             >
               {item.label}
@@ -82,7 +84,7 @@ export default function MarketingNav({ variant = "light" }: { variant?: "light" 
                 key={item.href}
                 to={item.href}
                 onClick={() => setOpen(false)}
-                className={`block px-3 py-2 rounded-lg text-sm font-medium ${
+                className={`block px-3 py-2 rounded-lg text-sm font-bold ${
                   isDark ? "text-white/80 hover:bg-white/5" : "text-black hover:bg-black/5"
                 }`}
               >

@@ -5,7 +5,6 @@ import {
   UtensilsCrossed,
   Heart,
   BarChart3,
-  Leaf,
   ChevronRight,
   Hotel,
   Briefcase,
@@ -34,7 +33,7 @@ const donateSteps = [
 const sellSteps = [
   { num: "01", title: "Post a same-day offer", desc: "Log available surplus in Hariet.AI, and it appears as a limited-time deal on GO See The City within minutes." },
   { num: "02", title: "Local diners buy before close", desc: "People in your city discover, buy, and pick up discounted meals before you lock up for the night." },
-  { num: "03", title: "The rest feeds the community", desc: "Sell + Donate partners can donate all of their surplus, or sell a portion and give the rest. Either way, nothing hits the landfill." },
+  { num: "03", title: "The rest feeds the community", desc: "Sell what you can. Donate what you don't. Waste nothing." },
 ];
 
 const industries = [
@@ -60,12 +59,7 @@ export default function MarketingHome() {
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24">
           <div className="max-w-4xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#6d412a]/10 border border-[#6d412a]/20 text-[#6d412a] text-sm font-medium mb-8">
-              <Leaf className="w-3.5 h-3.5" />
-              Enterprise Food Diversion Platform
-            </div>
-
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-tight tracking-tight text-black mb-6">
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-tight tracking-tight text-black mb-6 mt-4">
               Good food shouldn't{" "}
               <span className="text-[#6d412a]">go to waste.</span>
             </h1>
@@ -79,13 +73,13 @@ export default function MarketingHome() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 to="/get-started"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-[#6d412a] text-white font-semibold hover:bg-[#5a3422] transition shadow-sm"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-black text-white font-bold hover:bg-[#222] transition shadow-sm"
               >
                 Partner With Us <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
                 to="/solutions"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl border border-[#6d412a]/25 text-[#6d412a] font-semibold hover:bg-[#6d412a]/5 transition"
+                className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-black text-white font-bold hover:bg-[#222] transition shadow-sm"
               >
                 See How It Works <ChevronRight className="w-4 h-4" />
               </Link>
@@ -206,7 +200,12 @@ export default function MarketingHome() {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {industries.map((ind) => (
-              <div key={ind.title} className="bg-white rounded-2xl border border-[#ede5dc] p-6 hover:border-black/40 hover:shadow-md transition group">
+              <div
+                key={ind.title}
+                className={`bg-white rounded-2xl border border-[#ede5dc] p-6 hover:border-black/40 hover:shadow-md transition group ${
+                  ind.pathway === "Receive" ? "lg:col-start-2 sm:col-span-2 lg:col-span-1" : ""
+                }`}
+              >
                 <div className="flex items-start justify-between mb-4">
                   <div className="w-10 h-10 rounded-xl bg-black/5 flex items-center justify-center group-hover:bg-black/10 transition">
                     <ind.icon className="w-5 h-5 text-black" />
@@ -292,37 +291,24 @@ export default function MarketingHome() {
 
       {/* ── MISSION ──────────────────────────────── */}
       <section className="py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div className="order-2 lg:order-1">
-              <div className="bg-[#fdf8f4] rounded-3xl border border-[#ede5dc] p-8">
-                <div className="text-5xl mb-6">🌾</div>
-                <blockquote className="text-xl font-medium text-black italic leading-relaxed">
-                  "Harriet Tubman used the systems she had to guide people to freedom.
-                  Hariet.AI uses the systems we have to guide surplus food to the people who need it."
-                </blockquote>
-              </div>
-            </div>
-            <div className="order-1 lg:order-2">
-              <h2 className="text-4xl font-bold text-black mb-6">A name, and a mission, with history behind it</h2>
-              <p className="text-[#6d412a]/80 text-lg leading-relaxed mb-6">
-                Hariet.AI is named for Harriet Tubman, a woman who worked the tools of her time to
-                build a pathway that changed a country. The food system has a similar opportunity
-                right in front of it.
-              </p>
-              <p className="text-[#6d412a]/70 leading-relaxed mb-8">
-                There is no shortage of food in America. There is a shortage of infrastructure to
-                move it to where it's needed. Hariet.AI is that infrastructure, and every venue
-                that joins makes the network stronger.
-              </p>
-              <Link
-                to="/about"
-                className="inline-flex items-center gap-2 text-[#6d412a] font-semibold hover:gap-3 transition-all"
-              >
-                Read our story <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-          </div>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-4xl font-bold text-black mb-6">A supply chain problem, solved</h2>
+          <p className="text-[#6d412a]/80 text-lg leading-relaxed mb-6">
+            Roughly 40% of food produced in the United States goes to waste every year while one
+            in six Americans faces food insecurity. The gap is not about supply. Good food
+            already exists. The infrastructure to move it from the kitchens that have it to the
+            people who need it does not.
+          </p>
+          <p className="text-[#6d412a]/70 leading-relaxed mb-8">
+            Hariet.AI is that infrastructure. One dashboard connects venues to vetted nonprofits
+            and to local diners, and every meal is tracked and documented along the way.
+          </p>
+          <Link
+            to="/about"
+            className="inline-flex items-center gap-2 text-[#6d412a] font-semibold hover:gap-3 transition-all"
+          >
+            Read our story <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
       </section>
 
