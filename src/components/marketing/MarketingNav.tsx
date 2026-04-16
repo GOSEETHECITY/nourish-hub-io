@@ -1,10 +1,11 @@
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
+import HarietWordmark from "./HarietWordmark";
 
 const navItems = [
   { label: "Solutions", href: "/solutions" },
-  { label: "Industries", href: "/industries" },
+  { label: "Partners", href: "/partners" },
   { label: "About", href: "/about" },
   { label: "Press", href: "/press" },
   { label: "Contact", href: "/contact" },
@@ -24,11 +25,8 @@ export default function MarketingNav({ variant = "light" }: { variant?: "light" 
       }`}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-[#6d412a] flex items-center justify-center">
-            <span className="text-white font-bold text-sm">H</span>
-          </div>
-          <span className="font-semibold text-lg tracking-tight">Hariet.AI</span>
+        <Link to="/" className="flex items-center" aria-label="Hariet.AI home">
+          <HarietWordmark className={`h-7 w-auto ${isDark ? "text-white" : "text-[#6d412a]"}`} />
         </Link>
 
         <nav className="hidden md:flex items-center gap-8">
@@ -59,7 +57,7 @@ export default function MarketingNav({ variant = "light" }: { variant?: "light" 
             Log In
           </Link>
           <Link
-            to="/contact"
+            to="/get-started"
             className="text-sm font-semibold px-4 py-2 rounded-lg bg-[#6d412a] text-white hover:bg-[#5a3422] transition shadow-sm"
           >
             Get Started
@@ -101,7 +99,7 @@ export default function MarketingNav({ variant = "light" }: { variant?: "light" 
                 Log In
               </Link>
               <Link
-                to="/contact"
+                to="/get-started"
                 onClick={() => setOpen(false)}
                 className="block px-3 py-2 rounded-lg text-sm font-semibold bg-[#6d412a] text-white text-center"
               >

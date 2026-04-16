@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import HarietWordmark from "./HarietWordmark";
 
 export default function MarketingFooter() {
   return (
@@ -6,14 +7,11 @@ export default function MarketingFooter() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-12">
           <div className="col-span-2">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-[#6d412a] flex items-center justify-center">
-                <span className="text-white font-bold text-sm">H</span>
-              </div>
-              <span className="font-semibold text-lg text-white">Hariet.AI</span>
-            </div>
+            <Link to="/" aria-label="Hariet.AI home" className="inline-block mb-4">
+              <HarietWordmark className="h-8 w-auto text-white" />
+            </Link>
             <p className="text-sm text-white/60 max-w-sm leading-relaxed">
-              The enterprise platform for food waste diversion — routing surplus to communities and consumers across the country.
+              The enterprise platform for food waste diversion, routing surplus to communities and consumers across the country.
             </p>
           </div>
 
@@ -21,9 +19,9 @@ export default function MarketingFooter() {
             <h4 className="text-white font-semibold text-sm mb-4">Platform</h4>
             <ul className="space-y-3 text-sm">
               <li><Link to="/solutions" className="hover:text-white transition">Solutions</Link></li>
-              <li><Link to="/industries" className="hover:text-white transition">Industries</Link></li>
+              <li><Link to="/partners" className="hover:text-white transition">Partners</Link></li>
               <li><Link to="/login" className="hover:text-white transition">Log In</Link></li>
-              <li><Link to="/contact" className="hover:text-white transition">Get Started</Link></li>
+              <li><Link to="/get-started" className="hover:text-white transition">Get Started</Link></li>
             </ul>
           </div>
 

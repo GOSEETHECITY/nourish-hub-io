@@ -9,6 +9,7 @@ import { ConsumerCartProvider } from "@/contexts/ConsumerCartContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import ConsumerAuthGuard from "@/components/auth/ConsumerAuthGuard";
 import MarketingHome from "./pages/marketing/MarketingHome";
+import GetStarted from "./pages/marketing/GetStarted";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Dashboard from "./pages/Index";
 import Organizations from "./pages/Organizations";
@@ -132,6 +133,7 @@ const App = () => (
           <Routes>
             {/* ── Public marketing site ── */}
             <Route path="/" element={<MarketingHome />} />
+            <Route path="/get-started" element={<GetStarted />} />
 
             {/* Public auth routes */}
             <Route path="/login" element={<Login />} />
