@@ -84,18 +84,15 @@ export default function ImportLogs() {
   const handleRetryPending = async () => {
     setRetrying(true);
     try {
-      const { error } = await supabase.functions.invoke("process-grand-openings", {
-        body: {},
-        headers: {},
-      });
-      // Call with retry_pending query param
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error("Not authenticated");
       const resp = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/process-grand-openings?retry_pending=true`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            Authorization: `Bearer ${session.access_token}`,
           },
           body: "{}",
         }
@@ -112,13 +109,15 @@ export default function ImportLogs() {
   const handleRunImport = async () => {
     setRetrying(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error("Not authenticated");
       const resp = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/process-grand-openings`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            Authorization: `Bearer ${session.access_token}`,
           },
           body: "{}",
         }

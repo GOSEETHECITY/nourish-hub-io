@@ -1712,6 +1712,7 @@ export type Database = {
         Returns: boolean
       }
       increment_attendee_count: { Args: { eid: string }; Returns: undefined }
+      increment_share_count: { Args: { event_id: string }; Returns: undefined }
       update_own_profile: {
         Args: { p_first_name?: string; p_last_name?: string; p_phone?: string }
         Returns: undefined
