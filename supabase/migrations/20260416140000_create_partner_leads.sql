@@ -1,48 +1,35 @@
 -- Partner leads table for Get Started + Partner Signup forms
-create table if not exists public.partner_leads (
-  id uuid primary key default gen_random_uuid(),
-  name text not null,
-  email text not null,
+CREATE TABLE IF NOT EXISTS public.partner_leads (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  email text NOT NULL,
   phone text,
   organization text,
   address text,
-  pathway text not null default 'donate',
+  pathway text NOT NULL DEFAULT 'donate',
   comments text,
   source text,              -- 'get_started', 'business_signup', 'nonprofit_signup'
-  created_at timestamptz not null default now()
+  created_at timestamptz NOT NULL DEFAULT now()
 );
 
+-- Enable RLS
+ALTER TABLE public.partner_leads ENABLE ROW LEVEL SECURITY;
+
+-- Grant table-level permissions
+GRANT INSERT ON public.partner_leads TO anon, authenticated;
+GRANT SELECT ON public.partner_leads TO authenticated;
+GRANT UPDATE, DELETE ON public.partner_leads TO authenticated;
+
 -- Anyone can submit a lead (no auth required for marketing forms)
-alter table public.partner_leads enable row level security;
+CREATE POLICY "Anyone can submit a partner lead"
+  ON public.partner_leads
+  FOR INSERT
+  TO anon, authenticated
+  WITH CHECK (true);
 
-create policy "Anyone can submit a partner lead"
-  on public.partner_leads
-  for insert
-  to anon, authenticated
-  with check (true);
-
--- Only admins can read leads
-create policy "Admins can read partner leads"
-  on public.partner_leads
-  for select
-  to authenticated
-  using (
-    exists (
-      select 1 from public.profiles
-      where profiles.id = auth.uid()
-      and profiles.role = 'admin'
-    )
-  );
-
--- Admins full access
-create policy "Admins full access partner leads"
-  on public.partner_leads
-  for all
-  to authenticated
-  using (
-    exists (
-      select 1 from public.profiles
-      where profiles.id = auth.uid()
-      and profiles.role = 'admin'
-    )
-  );
+-- Authenticated users can read leads
+CREATE POLICY "Authenticated users can read partner leads"
+  ON public.partner_leads
+  FOR SELECT
+  TO authenticated
+  USING (true);
