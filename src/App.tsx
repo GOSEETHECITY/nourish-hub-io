@@ -10,6 +10,13 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import ConsumerAuthGuard from "@/components/auth/ConsumerAuthGuard";
 import MarketingHome from "./pages/marketing/MarketingHome";
 import GetStarted from "./pages/marketing/GetStarted";
+import Solutions from "./pages/marketing/Solutions";
+import Partners from "./pages/marketing/Partners";
+import About from "./pages/marketing/About";
+import Press from "./pages/marketing/Press";
+import Contact from "./pages/marketing/Contact";
+import Privacy from "./pages/marketing/Privacy";
+import Terms from "./pages/marketing/Terms";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Dashboard from "./pages/Index";
 import Organizations from "./pages/Organizations";
@@ -133,6 +140,13 @@ const App = () => (
           <Routes>
             {/* ── Public marketing site ── */}
             <Route path="/" element={<MarketingHome />} />
+            <Route path="/solutions" element={<Solutions />} />
+            <Route path="/partners" element={<Partners />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/press" element={<Press />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/terms" element={<Terms />} />
             <Route path="/get-started" element={<GetStarted />} />
 
             {/* Public auth routes */}

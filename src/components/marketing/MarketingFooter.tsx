@@ -35,25 +35,43 @@ export default function MarketingFooter() {
           </div>
 
           <div>
-            <h4 className="text-white font-semibold text-sm mb-4">Consumer App</h4>
+            <h4 className="text-white font-semibold text-sm mb-4">More</h4>
             <ul className="space-y-3 text-sm">
+              <li>
+                <a href="https://harietai.com" target="_blank" rel="noreferrer" className="hover:text-white transition">
+                  Shop Now
+                </a>
+              </li>
               <li>
                 <a href="https://goseethecity.com" target="_blank" rel="noreferrer" className="hover:text-white transition">
                   GO See The City
                 </a>
               </li>
-              <li className="text-white/50 text-xs pt-2">
-                Powered by Hariet.AI
-              </li>
             </ul>
           </div>
         </div>
 
-        <div className="pt-8 border-t border-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs text-white/50">
-          <p>&copy; {new Date().getFullYear()} Hariet.AI. All rights reserved.</p>
-          <div className="flex gap-6">
-            <Link to="/privacy" className="hover:text-white transition">Privacy</Link>
-            <Link to="/terms" className="hover:text-white transition">Terms</Link>
+        <div className="pt-8 border-t border-white/10">
+          <div className="grid sm:grid-cols-3 gap-6 mb-6 text-xs text-white/70">
+            <div>
+              <p className="font-semibold text-white mb-1">Email</p>
+              <a href="mailto:Hello@Hariet.AI" className="hover:text-white transition">Hello@Hariet.AI</a>
+            </div>
+            <div>
+              <p className="font-semibold text-white mb-1">Location</p>
+              <p>Tampa, FL</p>
+            </div>
+            <div>
+              <p className="font-semibold text-white mb-1">Phone</p>
+              <a href="tel:844-974-6277" className="hover:text-white transition">844-974-6277</a>
+            </div>
+          </div>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs text-white/50">
+            <p>&copy; {new Date().getFullYear()} Hariet.AI. All rights reserved.</p>
+            <div className="flex gap-6">
+              <Link to="/privacy" className="hover:text-white transition">Privacy</Link>
+              <Link to="/terms" className="hover:text-white transition">Terms</Link>
+            </div>
           </div>
         </div>
       </div>

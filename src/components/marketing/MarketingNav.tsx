@@ -36,8 +36,8 @@ export default function MarketingNav({ variant = "light" }: { variant?: "light" 
               to={item.href}
               className={`text-sm font-medium transition ${
                 pathname === item.href
-                  ? isDark ? "text-white" : "text-[#6d412a]"
-                  : isDark ? "text-white/70 hover:text-white" : "text-[#6d412a]/70 hover:text-[#6d412a]"
+                  ? isDark ? "text-white" : "text-black"
+                  : isDark ? "text-white/70 hover:text-white" : "text-black/70 hover:text-black"
               }`}
             >
               {item.label}
@@ -51,7 +51,7 @@ export default function MarketingNav({ variant = "light" }: { variant?: "light" 
             className={`text-sm font-medium px-4 py-2 rounded-lg transition ${
               isDark
                 ? "text-white hover:bg-white/10"
-                : "text-[#6d412a] hover:bg-[#6d412a]/5"
+                : "text-black hover:bg-black/5"
             }`}
           >
             Log In
@@ -82,7 +82,7 @@ export default function MarketingNav({ variant = "light" }: { variant?: "light" 
                 to={item.href}
                 onClick={() => setOpen(false)}
                 className={`block px-3 py-2 rounded-lg text-sm font-medium ${
-                  isDark ? "text-white/80 hover:bg-white/5" : "text-[#6d412a] hover:bg-[#6d412a]/5"
+                  isDark ? "text-white/80 hover:bg-white/5" : "text-black hover:bg-black/5"
                 }`}
               >
                 {item.label}
@@ -93,7 +93,7 @@ export default function MarketingNav({ variant = "light" }: { variant?: "light" 
                 to="/login"
                 onClick={() => setOpen(false)}
                 className={`block px-3 py-2 rounded-lg text-sm font-medium ${
-                  isDark ? "text-white hover:bg-white/5" : "text-[#6d412a] hover:bg-[#6d412a]/5"
+                  isDark ? "text-white hover:bg-white/5" : "text-black hover:bg-black/5"
                 }`}
               >
                 Log In

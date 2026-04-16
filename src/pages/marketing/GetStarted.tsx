@@ -239,7 +239,7 @@ export default function GetStarted() {
               </div>
               <h2 className="text-3xl font-bold text-black mb-3">Pick a time that works for you</h2>
               <p className="text-[#6d412a]/70 max-w-xl mx-auto">
-                Meet with the Hariet.AI team for a 30-minute walkthrough of the platform and the best pathway for your operation.
+                Meet with the Hariet.AI team for a 20-minute walkthrough of the platform and the best pathway for your operation.
               </p>
             </div>
 
