@@ -1424,71 +1424,38 @@ export type Database = {
         }
         Relationships: []
       }
-      venue_waitlist: {
-        Row: {
-          city: string | null
-          date_added: string
-          id: string
-          marketplace_unlocked: boolean
-          notified: boolean
-          organization_id: string
-          state: string | null
-        }
-        Insert: {
-          city?: string | null
-          date_added?: string
-          id?: string
-          marketplace_unlocked?: boolean
-          notified?: boolean
-          organization_id: string
-          state?: string | null
-        }
-        Update: {
-          city?: string | null
-          date_added?: string
-          id?: string
-          marketplace_unlocked?: boolean
-          notified?: boolean
-          organization_id?: string
-          state?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "venue_waitlist_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "venue_waitlist_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations_public"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       waitlist_signups: {
         Row: {
-          city: string
+          city: string | null
           created_at: string
           email: string
+          first_name: string | null
           id: string
+          last_name: string | null
+          phone: string | null
+          phone_verified: boolean
           zip: string | null
         }
         Insert: {
-          city: string
+          city?: string | null
           created_at?: string
           email: string
+          first_name?: string | null
           id?: string
+          last_name?: string | null
+          phone?: string | null
+          phone_verified?: boolean
           zip?: string | null
         }
         Update: {
-          city?: string
+          city?: string | null
           created_at?: string
           email?: string
+          first_name?: string | null
           id?: string
+          last_name?: string | null
+          phone?: string | null
+          phone_verified?: boolean
           zip?: string | null
         }
         Relationships: []
@@ -1501,6 +1468,8 @@ export type Database = {
           approval_status: Database["public"]["Enums"]["approval_status"] | null
           city: string | null
           county: string | null
+          created_at: string | null
+          estimated_surplus_frequency: string | null
           hours_of_operation: string | null
           id: string | null
           latitude: number | null
@@ -1511,7 +1480,6 @@ export type Database = {
           organization_id: string | null
           pickup_address: string | null
           pickup_instructions: string | null
-          platform_fee_percentage: number | null
           state: string | null
           zip: string | null
         }
@@ -1522,6 +1490,8 @@ export type Database = {
             | null
           city?: string | null
           county?: string | null
+          created_at?: string | null
+          estimated_surplus_frequency?: string | null
           hours_of_operation?: string | null
           id?: string | null
           latitude?: number | null
@@ -1532,7 +1502,6 @@ export type Database = {
           organization_id?: string | null
           pickup_address?: string | null
           pickup_instructions?: string | null
-          platform_fee_percentage?: number | null
           state?: string | null
           zip?: string | null
         }
@@ -1543,6 +1512,8 @@ export type Database = {
             | null
           city?: string | null
           county?: string | null
+          created_at?: string | null
+          estimated_surplus_frequency?: string | null
           hours_of_operation?: string | null
           id?: string | null
           latitude?: number | null
@@ -1553,7 +1524,6 @@ export type Database = {
           organization_id?: string | null
           pickup_address?: string | null
           pickup_instructions?: string | null
-          platform_fee_percentage?: number | null
           state?: string | null
           zip?: string | null
         }
