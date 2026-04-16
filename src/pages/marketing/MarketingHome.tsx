@@ -264,9 +264,7 @@ export default function MarketingHome() {
               </ul>
               <div className="flex flex-col sm:flex-row gap-4">
                 <a
-                  href="https://apps.apple.com/app/go-see-the-city/id1580226473"
-                  target="_blank"
-                  rel="noreferrer"
+                  href="https://hariet.ai/app/login"
                   className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-[#fb9014] text-white font-semibold hover:bg-[#e08010] transition shadow-lg"
                 >
                   Download the App <ArrowRight className="w-4 h-4" />
