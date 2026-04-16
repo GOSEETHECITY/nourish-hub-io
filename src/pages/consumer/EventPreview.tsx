@@ -15,9 +15,9 @@ const EventPreview = () => {
       const { data } = await supabase.from("events").select("*").eq("id", id).eq("status", "published").maybeSingle();
       setEvent(data);
       setLoading(false);
-      // Increment share_count
+      // Increment share_count via secure RPC
       if (data) {
-        await supabase.from("events").update({ share_count: (data.share_count || 0) + 1 }).eq("id", id);
+        await supabase.rpc("increment_share_count", { event_id: id });
       }
     };
     load();
