@@ -277,7 +277,7 @@ export default function EventGetStarted() {
                     disabled={submitting}
                     className="w-full bg-[#6d412a] hover:bg-[#5a3422] text-white font-semibold py-6 text-base rounded-xl shadow-sm"
                   >
-                    {submitting ? "Signing up..." : "Sign up"}
+                    {submitting ? "Signing up..." : "Signed up"}
                   </Button>
                   <p className="text-xs text-[#6d412a]/50 text-center">
                     By submitting, you agree to be contacted by the Hariet.AI team.
