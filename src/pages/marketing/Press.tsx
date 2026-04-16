@@ -108,9 +108,7 @@ export default function Press() {
                 Check us out in the news.
               </h1>
               <p className="text-xl text-black/70 leading-relaxed max-w-2xl">
-                Journalists and publications covering Hariet.AI, GO See The City, and the
-                venues, nonprofits, and communities working to turn surplus food into
-                something more.
+                Working to turn surplus food into something more.
               </p>
             </div>
           </div>
