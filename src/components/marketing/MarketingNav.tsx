@@ -4,6 +4,7 @@ import { Menu, X } from "lucide-react";
 import HarietWordmark from "./HarietWordmark";
 
 const navItems = [
+  { label: "Home", href: "/" },
   { label: "Solutions", href: "/solutions" },
   { label: "Partners", href: "/partners" },
   { label: "About", href: "/about" },

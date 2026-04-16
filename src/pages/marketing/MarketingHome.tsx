@@ -17,7 +17,7 @@ const donateSteps = [
 ];
 
 const sellSteps = [
-  { num: "01", title: "Post a same-day offer", desc: "Staff post available surplus in Hariet.AI — it appears as a discount offer on GO See The City within minutes." },
+  { num: "01", title: "Post a same-day offer", desc: "Staff post available surplus in Hariet.AI, and it appears as a discount offer on GO See The City within minutes." },
   { num: "02", title: "Consumers purchase", desc: "Local consumers buy discounted meals through the app before your close. Real revenue, zero waste." },
   { num: "03", title: "Donate the rest", desc: "Anything unsold automatically routes to nonprofits. Nothing goes to the landfill." },
 ];
@@ -57,7 +57,7 @@ export default function MarketingHome() {
 
             <p className="text-xl text-[#6d412a]/70 leading-relaxed max-w-2xl mx-auto mb-10">
               Hariet.AI connects venues, restaurants, and institutions with the
-              communities and consumers who need their surplus most —
+              communities and consumers who need their surplus most,
               automatically, compliantly, and at scale.
             </p>
 
@@ -99,7 +99,7 @@ export default function MarketingHome() {
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-black mb-4">One platform. Two pathways.</h2>
             <p className="text-lg text-[#6d412a]/70 max-w-2xl mx-auto">
-              Every venue operates differently. Hariet.AI handles both — whether
+              Every venue operates differently. Hariet.AI handles both, whether
               you donate everything or sell surplus before donating the rest.
             </p>
           </div>
@@ -114,8 +114,8 @@ export default function MarketingHome() {
               <h3 className="text-2xl font-bold text-black mb-2">Donate your surplus</h3>
               <p className="text-[#6d412a]/70 mb-8">
                 For stadiums, arenas, convention centers, and institutions that
-                route all surplus directly to nonprofit partners — no consumer
-                transactions, no complexity.
+                route all surplus directly to nonprofit partners, with no
+                consumer transactions and no complexity.
               </p>
               <div className="space-y-6">
                 {donateSteps.map((step) => (
@@ -149,7 +149,7 @@ export default function MarketingHome() {
               <h3 className="text-2xl font-bold mb-2">Sell surplus. Donate the rest.</h3>
               <p className="text-white/60 mb-8">
                 For restaurants, cafes, and hospitality venues that want to
-                recover revenue on same-day surplus — then donate whatever
+                recover revenue on same-day surplus, then donate whatever
                 doesn't sell.
               </p>
               <div className="space-y-6">
@@ -184,7 +184,7 @@ export default function MarketingHome() {
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-black mb-4">Built for every venue that serves food</h2>
             <p className="text-lg text-[#6d412a]/70 max-w-2xl mx-auto">
-              From post-game stadium kitchens to end-of-service restaurant prep —
+              From post-game stadium kitchens to end-of-service restaurant prep,
               Hariet.AI fits your operation.
             </p>
           </div>
@@ -212,48 +212,58 @@ export default function MarketingHome() {
         </div>
       </section>
 
-      {/* ── GO SEE THE CITY BRIDGE ───────────────── */}
+      {/* ── GO SEE THE CITY CONSUMER APP ──────────── */}
       <section className="py-24 bg-[#1a1a1a] text-white overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div>
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#fb9014]/20 text-[#fb9014] text-sm font-semibold mb-6">
                 <span className="w-2 h-2 rounded-full bg-[#fb9014]" />
-                Consumer Layer
+                For Food Lovers
               </div>
-              <h2 className="text-4xl font-bold mb-6">
-                Your surplus becomes a{" "}
-                <span className="text-[#fb9014]">same-day deal</span>{" "}
-                in your city.
+              <h2 className="text-4xl sm:text-5xl font-bold mb-6 leading-tight">
+                Your next meal.{" "}
+                <span className="text-[#fb9014]">Half the price.</span>{" "}
+                Right around the corner.
               </h2>
               <p className="text-white/70 text-lg leading-relaxed mb-8">
-                Restaurant and hospitality partners on the Sell + Donate pathway
-                automatically power the GO See The City consumer app. Your
-                surplus offers appear in real time, driving new customers through
-                your doors before close.
+                Download GO See The City and unlock same-day deals from the
+                best restaurants, cafes, and hospitality venues in your city.
+                Great food, better prices, and every order helps keep good
+                meals out of the landfill.
               </p>
               <ul className="space-y-4 mb-10">
                 {[
-                  "Offers posted in Hariet.AI appear on GO See The City in minutes",
-                  "Consumers in your city discover and purchase surplus items",
-                  "Unsold items auto-route to nonprofits — nothing is wasted",
+                  "Fresh surplus deals posted every day near you",
+                  "Up to 70% off full menu prices from local favorites",
+                  "Every purchase fights food waste and feeds your community",
                 ].map((point) => (
-                  <li key={point} className="flex items-start gap-3 text-white/70 text-sm">
-                    <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#92c216]/20 flex items-center justify-center mt-0.5">
+                  <li key={point} className="flex items-start gap-3 text-white/80 text-base">
+                    <span className="flex-shrink-0 w-5 h-5 rounded-full bg-[#92c216]/20 flex items-center justify-center mt-1">
                       <span className="w-2 h-2 rounded-full bg-[#92c216]" />
                     </span>
                     {point}
                   </li>
                 ))}
               </ul>
-              <a
-                href="https://goseethecity.com"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#fb9014] text-white font-semibold hover:bg-[#e08010] transition"
-              >
-                See GO See The City <ArrowRight className="w-4 h-4" />
-              </a>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <a
+                  href="https://apps.apple.com/app/go-see-the-city/id1580226473"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-[#fb9014] text-white font-semibold hover:bg-[#e08010] transition shadow-lg"
+                >
+                  Download the App <ArrowRight className="w-4 h-4" />
+                </a>
+                <a
+                  href="https://goseethecity.com"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl border border-white/20 text-white font-semibold hover:bg-white/10 transition"
+                >
+                  Learn More
+                </a>
+              </div>
             </div>
 
             <div className="relative">
@@ -262,7 +272,7 @@ export default function MarketingHome() {
                 <div className="text-6xl mb-4">📱</div>
                 <div className="text-2xl font-bold text-[#fb9014] mb-2">GO See The City</div>
                 <p className="text-white/60 text-sm mb-6">
-                  The consumer marketplace powered by Hariet.AI
+                  Same-day deals. Local favorites. Zero waste.
                 </p>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-white/5 rounded-2xl p-4">
@@ -270,8 +280,8 @@ export default function MarketingHome() {
                     <div className="text-xs text-white/50 mt-1">App Store rating</div>
                   </div>
                   <div className="bg-white/5 rounded-2xl p-4">
-                    <div className="text-2xl font-bold text-[#fb9014]">23</div>
-                    <div className="text-xs text-white/50 mt-1">Published events</div>
+                    <div className="text-2xl font-bold text-[#fb9014]">70%</div>
+                    <div className="text-xs text-white/50 mt-1">Average savings</div>
                   </div>
                 </div>
               </div>
@@ -296,13 +306,13 @@ export default function MarketingHome() {
             <div className="order-1 lg:order-2">
               <h2 className="text-4xl font-bold text-black mb-6">Built on a legacy of purpose</h2>
               <p className="text-[#6d412a]/80 text-lg leading-relaxed mb-6">
-                The name Hariet.AI draws inspiration from Harriet Tubman — someone
+                The name Hariet.AI draws inspiration from Harriet Tubman, someone
                 who used the resources and systems available to her to create
                 meaningful change for an entire community.
               </p>
               <p className="text-[#6d412a]/70 leading-relaxed mb-8">
                 We believe the food system has a similar opportunity. There is no
-                shortage of food — only a shortage of infrastructure to move it
+                shortage of food, only a shortage of infrastructure to move it
                 to where it's needed. Hariet.AI is that infrastructure.
               </p>
               <Link
@@ -324,7 +334,7 @@ export default function MarketingHome() {
           </h2>
           <p className="text-[#6d412a]/70 text-lg mb-10 leading-relaxed">
             Whether you're a stadium feeding thousands after a game or a restaurant
-            closing for the night — Hariet.AI has a pathway for your operation.
+            closing for the night, Hariet.AI has a pathway for your operation.
             Get set up in days, not months.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

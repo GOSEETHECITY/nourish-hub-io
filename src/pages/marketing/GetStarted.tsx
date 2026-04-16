@@ -133,12 +133,12 @@ export default function GetStarted() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="organization" className="text-sm font-medium text-black">Organization</Label>
+                      <Label htmlFor="organization" className="text-sm font-medium text-black">Organization Name</Label>
                       <Input
                         id="organization"
                         value={form.organization}
                         onChange={(e) => update("organization", e.target.value)}
-                        placeholder="Stadium, restaurant, nonprofit, etc."
+                        placeholder="Business name"
                       />
                     </div>
                   </div>
