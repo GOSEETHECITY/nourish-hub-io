@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 type Pathway = "donate" | "sell_donate" | "nonprofit";
 
@@ -59,14 +60,30 @@ export default function GetStarted() {
 
     setSubmitting(true);
     try {
-      // Log for now; this can be wired to a Supabase "partner_leads" table later.
-      // eslint-disable-next-line no-console
-      console.log("Partner lead submitted:", form);
-      await new Promise((r) => setTimeout(r, 500));
+      const { error } = await supabase.from("partner_leads" as any).insert({
+        name: form.name.trim(),
+        email: form.email.trim(),
+        phone: form.phone.trim() || null,
+        organization: form.organization.trim() || null,
+        address: form.address.trim() || null,
+        pathway: form.pathway,
+        comments: form.comments.trim() || null,
+        source: "get_started",
+      } as any);
+
+      if (error) throw error;
+
       setSubmitted(true);
       toast({
         title: "Thanks!",
         description: "We got your info. Pick a time below to meet with our team.",
+      });
+    } catch (err: any) {
+      console.error("Failed to submit lead:", err);
+      toast({
+        title: "Something went wrong",
+        description: "Please try again or email us directly.",
+        variant: "destructive",
       });
     } finally {
       setSubmitting(false);
