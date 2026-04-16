@@ -12,7 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 
 type Pathway = "donate" | "sell_donate" | "nonprofit";
 
-const CALENDLY_URL = "https://calendly.com/goseethecity/meeting-with-go-see-the-city";
+const CALENDLY_URL_BUSINESS = "https://calendly.com/goseethecity/meeting-with-go-see-the-city";
+const CALENDLY_URL_NONPROFIT = "https://calendly.com/goseethecity/20min";
 
 export type PartnerVariant = "business" | "nonprofit";
 
@@ -57,6 +58,7 @@ const copy: Record<
 export default function PartnerSignupForm({ variant }: PartnerSignupFormProps) {
   const { toast } = useToast();
   const v = copy[variant];
+  const calendlyUrl = variant === "nonprofit" ? CALENDLY_URL_NONPROFIT : CALENDLY_URL_BUSINESS;
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
@@ -290,8 +292,9 @@ export default function PartnerSignupForm({ variant }: PartnerSignupFormProps) {
             </div>
 
             <div
+              key={calendlyUrl}
               className="calendly-inline-widget rounded-2xl overflow-hidden border border-[#ede5dc] shadow-sm"
-              data-url={CALENDLY_URL}
+              data-url={calendlyUrl}
               style={{ minWidth: "320px", height: "720px" }}
             />
 

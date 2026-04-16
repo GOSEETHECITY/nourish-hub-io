@@ -68,7 +68,8 @@ export default function About() {
                 </h3>
                 <p className="text-white/80 leading-relaxed">
                   Recover revenue on same-day surplus through GO See The City, our consumer
-                  marketplace, and donate whatever doesn't sell before close.
+                  marketplace. Sell what you can. Donate what you don't. With no edible food
+                  going to waste.
                 </p>
               </div>
             </div>
