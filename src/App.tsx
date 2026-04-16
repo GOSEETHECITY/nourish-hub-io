@@ -10,6 +10,8 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import ConsumerAuthGuard from "@/components/auth/ConsumerAuthGuard";
 import MarketingHome from "./pages/marketing/MarketingHome";
 import GetStarted from "./pages/marketing/GetStarted";
+import BusinessSignup from "./pages/marketing/BusinessSignup";
+import NonprofitSignup from "./pages/marketing/NonprofitSignup";
 import Solutions from "./pages/marketing/Solutions";
 import Partners from "./pages/marketing/Partners";
 import About from "./pages/marketing/About";
@@ -148,6 +150,8 @@ const App = () => (
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/get-started" element={<GetStarted />} />
+            <Route path="/partners/business/signup" element={<BusinessSignup />} />
+            <Route path="/partners/nonprofit/signup" element={<NonprofitSignup />} />
 
             {/* Public auth routes */}
             <Route path="/login" element={<Login />} />
