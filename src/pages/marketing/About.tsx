@@ -16,34 +16,41 @@ export default function About() {
               About Hariet.AI
             </h1>
             <p className="text-lg text-[#6d412a]/70 max-w-2xl mx-auto leading-relaxed">
-              Built on a legacy of purpose. Powered by modern infrastructure.
+              We are building the infrastructure that turns America's food surplus into
+              somebody's next meal.
             </p>
           </div>
         </section>
 
         {/* Mission */}
         <section className="py-24 bg-white">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid lg:grid-cols-2 gap-16 items-center">
               <div>
-                <div className="bg-[#fdf8f4] rounded-3xl border border-[#ede5dc] p-8 mb-8">
+                <div className="bg-[#fdf8f4] rounded-3xl border border-[#ede5dc] p-8">
                   <div className="text-5xl mb-4">🌾</div>
                   <blockquote className="text-xl font-medium text-black italic leading-relaxed">
-                    "Just as Harriet Tubman guided people to freedom and opportunity,
-                    Hariet.AI guides surplus food to the communities who need it most."
+                    "Harriet Tubman used the systems she had to guide people to freedom.
+                    Hariet.AI uses the systems we have to guide surplus food to the people who need it."
                   </blockquote>
                 </div>
               </div>
               <div>
-                <h2 className="text-4xl font-bold text-black mb-6">Built on a legacy of purpose</h2>
+                <h2 className="text-4xl font-bold text-black mb-6">A name, and a mission, with history behind it</h2>
                 <p className="text-[#6d412a]/80 text-lg leading-relaxed mb-6">
-                  The name Hariet.AI draws inspiration from Harriet Tubman. Someone who used the resources and systems available to her to create meaningful change for an entire community.
+                  Hariet.AI is named for Harriet Tubman, a woman who worked the tools of her time
+                  to build a pathway that changed a country. The American food system has a similar
+                  opportunity in front of it today.
                 </p>
-                <p className="text-[#6d412a]/70 leading-relaxed mb-8">
-                  We believe the food system has a similar opportunity. There is no shortage of food, only a shortage of infrastructure to move it to where it's needed. Hariet.AI is that infrastructure.
+                <p className="text-[#6d412a]/70 leading-relaxed mb-6">
+                  Roughly 40% of the food produced in the United States goes to waste every year,
+                  while one in six Americans faces food insecurity. That gap is not a supply problem.
+                  It is a logistics, incentives, and software problem.
                 </p>
                 <p className="text-[#6d412a]/70 leading-relaxed">
-                  Every day, 40% of food produced in the US goes to waste while 1 in 6 Americans face food insecurity. That gap isn't about supply. It's about logistics and incentives.
+                  Hariet.AI solves it by giving stadiums, restaurants, hotels, and hospitals one
+                  dashboard to sell or donate their surplus, and by putting a consumer marketplace,
+                  GO See The City, on top of it so diners can buy what's left before it's gone.
                 </p>
               </div>
             </div>
@@ -75,18 +82,19 @@ export default function About() {
         </section>
 
         {/* CTA */}
-        <section className="py-24 bg-[#fdf8f4] border-t border-[#ede5dc]">
+        <section className="py-24 bg-white border-t border-[#ede5dc]">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-3xl font-bold text-black mb-6">Join the movement</h2>
+            <h2 className="text-3xl font-bold text-black mb-6">Join the network</h2>
             <p className="text-lg text-[#6d412a]/70 mb-10">
-              Whether you're a venue, nonprofit, or consumer, there's a place for you in the Hariet.AI ecosystem.
+              Venues partner with us. Nonprofits receive from us. Consumers download us.
+              There is a place here for you.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
                 to="/get-started"
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-[#6d412a] text-white font-semibold hover:bg-[#5a3422] transition shadow-sm text-lg"
               >
-                Get started <ArrowRight className="w-5 h-5" />
+                Partner with us <ArrowRight className="w-5 h-5" />
               </Link>
               <a
                 href="https://goseethecity.com"
