@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ConsumerAuthProvider } from "@/contexts/ConsumerAuthContext";
 import { ConsumerCartProvider } from "@/contexts/ConsumerCartContext";
@@ -132,6 +132,20 @@ const ProtectedConsumerWrapper = ({ children }: { children: React.ReactNode }) =
   </ConsumerWrapper>
 );
 
+// When a visitor lands on the root of thegoapp.co, send them into the consumer
+// app at /app. On hariet.ai (or any other host, including the Lovable preview
+// and localhost) the marketing home renders normally. Also handles www. prefix.
+const APP_HOSTS = new Set(["thegoapp.co", "www.thegoapp.co"]);
+
+const RootDomainRouter = () => {
+  const { pathname } = useLocation();
+  const hostname = typeof window !== "undefined" ? window.location.hostname : "";
+  if (APP_HOSTS.has(hostname) && pathname === "/") {
+    return <Navigate to="/app" replace />;
+  }
+  return <MarketingHome />;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -141,7 +155,7 @@ const App = () => (
         <AuthProvider>
           <Routes>
             {/* ── Public marketing site ── */}
-            <Route path="/" element={<MarketingHome />} />
+            <Route path="/" element={<RootDomainRouter />} />
             <Route path="/solutions" element={<Solutions />} />
             <Route path="/partners" element={<Partners />} />
             <Route path="/about" element={<About />} />
