@@ -120,9 +120,7 @@ export default function About() {
                 Partner with us <ArrowRight className="w-5 h-5" />
               </Link>
               <a
-                href="https://goseethecity.com"
-                target="_blank"
-                rel="noreferrer"
+                href="https://hariet.ai/app/login"
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl border border-[#6d412a]/25 text-[#6d412a] font-semibold hover:bg-[#6d412a]/5 transition text-lg"
               >
                 Download GO See The City
