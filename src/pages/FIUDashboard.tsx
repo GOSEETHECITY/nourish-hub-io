@@ -173,7 +173,7 @@ export default function FIUDashboard() {
         style={{ borderBottom: `1px solid ${BORDER}` }}
       >
         <div className="flex items-center gap-2">
-          <img src={harietLogo} alt="Hariet.AI" className="h-8 w-auto" />
+          <img src={harietLogo} alt="Hariet.AI" className="h-14 w-auto" />
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 text-xs font-medium" style={{ color: MUTED }}>
