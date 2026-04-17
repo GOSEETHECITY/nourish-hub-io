@@ -22,15 +22,13 @@ import {
   Droplets,
   MapPin,
 } from "lucide-react";
-import HarietWordmark from "@/components/marketing/HarietWordmark";
 
-const PRIMARY = "#6d412a"; // Hariet warm brown
-const PRIMARY_SOFT = "#f4ece6";
-const ACCENT = "#c9892f"; // warm amber
-const TEXT = "#2a1810";
-const MUTED = "#8a7468";
-const BORDER = "#ece2da";
-
+const PRIMARY = "#0F4C3A"; // dark green
+const PRIMARY_SOFT = "#E8F1ED";
+const ACCENT = "#D4A017"; // amber/gold
+const TEXT = "#0F1F1A";
+const MUTED = "#6B7C75";
+const BORDER = "#E2E8E4";
 
 const weeklyData = [
   { week: "W1", lbs: 1820, sem: "Fall" },
@@ -174,8 +172,16 @@ export default function FIUDashboard() {
         className="flex items-center justify-between px-8 h-16 bg-white"
         style={{ borderBottom: `1px solid ${BORDER}` }}
       >
-        <div style={{ color: PRIMARY }} className="h-8">
-          <HarietWordmark className="h-8 w-auto" />
+        <div className="flex items-center gap-2">
+          <div
+            className="w-7 h-7 rounded-md flex items-center justify-center text-white text-sm font-bold"
+            style={{ background: PRIMARY }}
+          >
+            H
+          </div>
+          <span className="text-lg font-bold tracking-tight" style={{ color: PRIMARY }}>
+            Hariet<span style={{ color: ACCENT }}>.AI</span>
+          </span>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 text-xs font-medium" style={{ color: MUTED }}>
