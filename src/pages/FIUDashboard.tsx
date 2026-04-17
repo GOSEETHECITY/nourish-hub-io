@@ -233,7 +233,7 @@ export default function FIUDashboard() {
                   Weekly Collection Volume
                 </h2>
                 <p className="text-xs mt-0.5" style={{ color: MUTED }}>
-                  12-week trend across Fall, Spring, and Summer semesters
+                  52-week trend across Fall, Spring, and Summer semesters
                 </p>
               </div>
               <div className="flex items-center gap-4 text-xs" style={{ color: MUTED }}>
