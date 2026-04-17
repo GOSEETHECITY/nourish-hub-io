@@ -273,7 +273,7 @@ export default function FIUDashboard() {
                     dataKey="lbs"
                     stroke={PRIMARY}
                     strokeWidth={2.5}
-                    dot={{ r: 3, fill: PRIMARY, strokeWidth: 0 }}
+                    dot={false}
                     activeDot={{ r: 5, fill: ACCENT, stroke: "#fff", strokeWidth: 2 }}
                   />
                 </LineChart>
