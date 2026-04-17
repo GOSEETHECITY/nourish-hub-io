@@ -265,9 +265,9 @@ export default function FIUDashboard() {
                     }}
                     formatter={(v: number) => [`${v.toLocaleString()} lbs`, "Collected"]}
                   />
-                  <ReferenceArea x1="W1" x2="W4" fill={PRIMARY} fillOpacity={0.04} label={{ value: "Fall", position: "insideTop", fontSize: 11, fill: MUTED, dy: 6 }} />
-                  <ReferenceArea x1="W5" x2="W8" fill={ACCENT} fillOpacity={0.05} label={{ value: "Spring", position: "insideTop", fontSize: 11, fill: MUTED, dy: 6 }} />
-                  <ReferenceArea x1="W9" x2="W12" fill={PRIMARY} fillOpacity={0.04} label={{ value: "Summer", position: "insideTop", fontSize: 11, fill: MUTED, dy: 6 }} />
+                  <ReferenceArea x1="W1" x2="W17" fill={PRIMARY} fillOpacity={0.04} label={{ value: "Fall", position: "insideTop", fontSize: 11, fill: MUTED, dy: 6 }} />
+                  <ReferenceArea x1="W18" x2="W34" fill={ACCENT} fillOpacity={0.05} label={{ value: "Spring", position: "insideTop", fontSize: 11, fill: MUTED, dy: 6 }} />
+                  <ReferenceArea x1="W35" x2="W52" fill={PRIMARY} fillOpacity={0.04} label={{ value: "Summer", position: "insideTop", fontSize: 11, fill: MUTED, dy: 6 }} />
                   <Line
                     type="monotone"
                     dataKey="lbs"
