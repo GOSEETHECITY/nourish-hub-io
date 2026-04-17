@@ -22,6 +22,7 @@ import {
   Droplets,
   MapPin,
 } from "lucide-react";
+import harietLogo from "@/assets/hariet-ai-logo.png";
 
 const PRIMARY = "#0F4C3A"; // dark green
 const PRIMARY_SOFT = "#E8F1ED";
