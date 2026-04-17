@@ -22,6 +22,7 @@ import {
   Droplets,
   MapPin,
 } from "lucide-react";
+import harietLogo from "@/assets/hariet-ai-logo.png";
 
 const PRIMARY = "#0F4C3A"; // dark green
 const PRIMARY_SOFT = "#E8F1ED";
@@ -172,15 +173,7 @@ export default function FIUDashboard() {
         style={{ borderBottom: `1px solid ${BORDER}` }}
       >
         <div className="flex items-center gap-2">
-          <div
-            className="w-7 h-7 rounded-md flex items-center justify-center text-white text-sm font-bold"
-            style={{ background: PRIMARY }}
-          >
-            H
-          </div>
-          <span className="text-lg font-bold tracking-tight" style={{ color: PRIMARY }}>
-            Hariet<span style={{ color: ACCENT }}>.AI</span>
-          </span>
+          <img src={harietLogo} alt="Hariet.AI" className="h-8 w-auto" />
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 text-xs font-medium" style={{ color: MUTED }}>
