@@ -47,6 +47,7 @@ import Signup from "./pages/auth/Signup";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import AcceptInvitation from "./pages/auth/AcceptInvitation";
+import FIUDashboard from "./pages/FIUDashboard";
 // Venue
 import VenueDashboard from "./pages/venue/VenueDashboard";
 import VenueDashboardHome from "./pages/venue/VenueDashboardHome";
