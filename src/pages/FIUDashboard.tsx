@@ -30,20 +30,19 @@ const TEXT = "#0F1F1A";
 const MUTED = "#6B7C75";
 const BORDER = "#E2E8E4";
 
-const weeklyData = [
-  { week: "W1", lbs: 1820, sem: "Fall" },
-  { week: "W2", lbs: 2010, sem: "Fall" },
-  { week: "W3", lbs: 2240, sem: "Fall" },
-  { week: "W4", lbs: 2380, sem: "Fall" },
-  { week: "W5", lbs: 2510, sem: "Spring" },
-  { week: "W6", lbs: 2690, sem: "Spring" },
-  { week: "W7", lbs: 2820, sem: "Spring" },
-  { week: "W8", lbs: 3010, sem: "Spring" },
-  { week: "W9", lbs: 3180, sem: "Summer" },
-  { week: "W10", lbs: 3340, sem: "Summer" },
-  { week: "W11", lbs: 3520, sem: "Summer" },
-  { week: "W12", lbs: 3710, sem: "Summer" },
-];
+const weeklyData = Array.from({ length: 52 }, (_, i) => {
+  const week = i + 1;
+  // Steady upward trend with mild seasonal variation
+  const base = 1600 + i * 95;
+  const seasonal = Math.sin((i / 52) * Math.PI * 2) * 180;
+  const noise = ((i * 37) % 11) * 18 - 90;
+  const lbs = Math.max(1200, Math.round(base + seasonal + noise));
+  let sem: "Fall" | "Spring" | "Summer";
+  if (week <= 17) sem = "Fall";
+  else if (week <= 34) sem = "Spring";
+  else sem = "Summer";
+  return { week: `W${week}`, lbs, sem };
+});
 
 const activity = [
   { loc: "Dining Hall A", lbs: 142, time: "10:42 AM" },
