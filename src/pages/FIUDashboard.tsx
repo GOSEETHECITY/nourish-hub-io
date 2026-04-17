@@ -253,7 +253,7 @@ export default function FIUDashboard() {
                     </linearGradient>
                   </defs>
                   <CartesianGrid stroke={BORDER} strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="week" tick={{ fontSize: 11, fill: MUTED }} axisLine={{ stroke: BORDER }} tickLine={false} />
+                  <XAxis dataKey="week" tick={{ fontSize: 11, fill: MUTED }} axisLine={{ stroke: BORDER }} tickLine={false} interval={3} />
                   <YAxis tick={{ fontSize: 11, fill: MUTED }} axisLine={false} tickLine={false} width={48} />
                   <Tooltip
                     contentStyle={{
