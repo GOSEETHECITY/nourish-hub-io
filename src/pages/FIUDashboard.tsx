@@ -205,7 +205,7 @@ export default function FIUDashboard() {
               Composting Operations
             </h1>
             <p className="text-sm mt-1" style={{ color: MUTED }}>
-              Real-time sustainability metrics — University Composting Program
+              Real-time sustainability metrics
             </p>
           </div>
           <div className="text-xs" style={{ color: MUTED }}>
