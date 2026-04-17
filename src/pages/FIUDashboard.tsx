@@ -174,16 +174,8 @@ export default function FIUDashboard() {
         className="flex items-center justify-between px-8 h-16 bg-white"
         style={{ borderBottom: `1px solid ${BORDER}` }}
       >
-        <div className="flex items-center gap-2">
-          <div
-            className="w-7 h-7 rounded-md flex items-center justify-center text-white text-sm font-bold"
-            style={{ background: PRIMARY }}
-          >
-            H
-          </div>
-          <span className="text-lg font-bold tracking-tight" style={{ color: PRIMARY }}>
-            Hariet<span style={{ color: ACCENT }}>.AI</span>
-          </span>
+        <div style={{ color: PRIMARY }} className="h-8">
+          <HarietWordmark className="h-8 w-auto" />
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 text-xs font-medium" style={{ color: MUTED }}>
