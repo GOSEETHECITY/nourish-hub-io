@@ -1191,6 +1191,45 @@ export type Database = {
         }
         Relationships: []
       }
+      partner_leads: {
+        Row: {
+          address: string | null
+          comments: string | null
+          created_at: string
+          email: string
+          id: string
+          name: string
+          organization: string | null
+          pathway: string
+          phone: string | null
+          source: string | null
+        }
+        Insert: {
+          address?: string | null
+          comments?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          organization?: string | null
+          pathway?: string
+          phone?: string | null
+          source?: string | null
+        }
+        Update: {
+          address?: string | null
+          comments?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          organization?: string | null
+          pathway?: string
+          phone?: string | null
+          source?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
