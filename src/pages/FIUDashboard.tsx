@@ -22,13 +22,15 @@ import {
   Droplets,
   MapPin,
 } from "lucide-react";
+import HarietWordmark from "@/components/marketing/HarietWordmark";
 
-const PRIMARY = "#0F4C3A"; // dark green
-const PRIMARY_SOFT = "#E8F1ED";
-const ACCENT = "#D4A017"; // amber/gold
-const TEXT = "#0F1F1A";
-const MUTED = "#6B7C75";
-const BORDER = "#E2E8E4";
+const PRIMARY = "#6d412a"; // Hariet warm brown
+const PRIMARY_SOFT = "#f4ece6";
+const ACCENT = "#c9892f"; // warm amber
+const TEXT = "#2a1810";
+const MUTED = "#8a7468";
+const BORDER = "#ece2da";
+
 
 const weeklyData = [
   { week: "W1", lbs: 1820, sem: "Fall" },
