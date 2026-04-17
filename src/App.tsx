@@ -47,6 +47,7 @@ import Signup from "./pages/auth/Signup";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import AcceptInvitation from "./pages/auth/AcceptInvitation";
+import FIUDashboard from "./pages/FIUDashboard";
 // Venue
 import VenueDashboard from "./pages/venue/VenueDashboard";
 import VenueDashboardHome from "./pages/venue/VenueDashboardHome";
@@ -175,6 +176,7 @@ const App = () => (
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/accept-invitation" element={<AcceptInvitation />} />
+            <Route path="/fiu" element={<FIUDashboard />} />
 
             {/* Admin routes — moved from / to /dashboard */}
             <Route
