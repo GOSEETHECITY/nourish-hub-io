@@ -44,7 +44,7 @@ export const ConsumerAuthProvider = ({ children }: { children: ReactNode }) => {
   const [consumer, setConsumer] = useState<Consumer | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const buildFallbackConsumer = async (authUser: User): Promise<Consumer> => {
+  const fetchProfileFallback = async (authUser: User) => {
     const userMeta = authUser.user_metadata ?? {};
     const { data: profile } = await supabase
       .from("profiles")
@@ -52,24 +52,17 @@ export const ConsumerAuthProvider = ({ children }: { children: ReactNode }) => {
       .eq("id", authUser.id)
       .maybeSingle();
 
-    const firstName = profile?.first_name || userMeta.first_name || "";
-    const lastName = profile?.last_name || userMeta.last_name || "";
-    const email = profile?.email || authUser.email || "";
-    const phone = profile?.phone || userMeta.phone || undefined;
-
     return {
-      id: `fallback-${authUser.id}`,
-      user_id: authUser.id,
-      first_name: firstName,
-      last_name: lastName,
-      email,
-      phone,
-      money_saved: 0,
-      pounds_rescued: 0,
+      first_name: profile?.first_name || userMeta.first_name || "",
+      last_name: profile?.last_name || userMeta.last_name || "",
+      email: profile?.email || authUser.email || "",
+      phone: profile?.phone || userMeta.phone || undefined,
     };
   };
 
-  const fetchConsumer = async (userId: string) => {
+  const fetchConsumer = async (userId: string, authUser?: User | null) => {
+    const fallbackFields = authUser ? await fetchProfileFallback(authUser) : null;
+
     for (let attempt = 0; attempt < 5; attempt++) {
       const { data } = await supabase
         .from("consumers")
@@ -77,19 +70,33 @@ export const ConsumerAuthProvider = ({ children }: { children: ReactNode }) => {
         .eq("user_id", userId)
         .maybeSingle();
       if (data) {
-        setConsumer(data as Consumer);
-        if (data.city) localStorage.setItem("consumer_city", data.city);
+        const nextConsumer = {
+          ...(data as Consumer),
+          first_name: data.first_name || fallbackFields?.first_name || "",
+          last_name: data.last_name || fallbackFields?.last_name || "",
+          email: data.email || fallbackFields?.email || "",
+          phone: data.phone || fallbackFields?.phone,
+        } as Consumer;
+        setConsumer(nextConsumer);
+        if (nextConsumer.city) localStorage.setItem("consumer_city", nextConsumer.city);
         if ((data as any).state) localStorage.setItem("consumer_state", (data as any).state);
-        return data;
+        return nextConsumer;
       }
       await new Promise((r) => setTimeout(r, 1000));
     }
 
-    const authUser = session?.user ?? user;
     if (authUser?.id === userId) {
-      const fallbackConsumer = await buildFallbackConsumer(authUser);
+      const fallbackConsumer: Consumer = {
+        id: `fallback-${authUser.id}`,
+        user_id: authUser.id,
+        first_name: fallbackFields?.first_name || "",
+        last_name: fallbackFields?.last_name || "",
+        email: fallbackFields?.email || authUser.email || "",
+        phone: fallbackFields?.phone,
+        money_saved: 0,
+        pounds_rescued: 0,
+      };
       setConsumer(fallbackConsumer);
-      if (fallbackConsumer.city) localStorage.setItem("consumer_city", fallbackConsumer.city);
       return fallbackConsumer;
     }
 
@@ -97,7 +104,7 @@ export const ConsumerAuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const refreshConsumer = async () => {
-    if (user) await fetchConsumer(user.id);
+    if (user) await fetchConsumer(user.id, user);
   };
 
   useEffect(() => {
@@ -106,7 +113,7 @@ export const ConsumerAuthProvider = ({ children }: { children: ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          await fetchConsumer(session.user.id);
+          await fetchConsumer(session.user.id, session.user);
         } else {
           setConsumer(null);
         }
@@ -117,7 +124,7 @@ export const ConsumerAuthProvider = ({ children }: { children: ReactNode }) => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      if (session?.user) fetchConsumer(session.user.id);
+      if (session?.user) fetchConsumer(session.user.id, session.user);
       setLoading(false);
     });
 
