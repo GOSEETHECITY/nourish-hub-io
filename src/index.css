@@ -126,15 +126,36 @@
   filter: hue-rotate(120deg) saturate(1.5) brightness(1.1);
 }
 
-.consumer-static-map,
+.consumer-static-map {
+  position: relative !important;
+  z-index: 0 !important;
+  isolation: isolate;
+}
+
 .consumer-static-map .leaflet-container,
 .consumer-static-map .leaflet-pane,
+.consumer-static-map .leaflet-top,
+.consumer-static-map .leaflet-bottom,
+.consumer-static-map .leaflet-control-container,
 .consumer-static-map .leaflet-tile,
 .consumer-static-map .leaflet-marker-pane,
-.consumer-static-map .leaflet-overlay-pane {
+.consumer-static-map .leaflet-overlay-pane,
+.consumer-static-map .leaflet-popup-pane,
+.consumer-static-map .leaflet-shadow-pane {
   transform: none !important;
   transition: none !important;
   will-change: auto !important;
+  z-index: 0 !important;
+}
+
+.consumer-static-map .leaflet-map-pane,
+.consumer-static-map .leaflet-tile-pane,
+.consumer-static-map .leaflet-overlay-pane,
+.consumer-static-map .leaflet-shadow-pane,
+.consumer-static-map .leaflet-marker-pane,
+.consumer-static-map .leaflet-tooltip-pane,
+.consumer-static-map .leaflet-popup-pane {
+  z-index: 0 !important;
 }
 
 .consumer-static-map .leaflet-control-container {
