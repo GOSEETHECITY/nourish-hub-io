@@ -140,9 +140,9 @@ const ConsumerHome = () => {
 
   return (
     <ConsumerMobileLayout>
-      <div className="flex h-[100dvh] flex-col pb-[76px]">
+      <div className="flex h-[100dvh] flex-col pb-[76px] overflow-hidden">
         <ConsumerAppHeader />
-        <div className="mx-2 mb-2 flex-1 overflow-hidden rounded-xl">
+        <div className="flex-1 overflow-hidden">
           <ConsumerMapView
             center={center}
             markers={loading ? [] : markers}
