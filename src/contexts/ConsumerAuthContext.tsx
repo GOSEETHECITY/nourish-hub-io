@@ -108,24 +108,26 @@ export const ConsumerAuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
+    const applySession = (nextSession: Session | null) => {
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
+      setLoading(false);
+
+      if (nextSession?.user) {
+        void fetchConsumer(nextSession.user.id, nextSession.user);
+      } else {
+        setConsumer(null);
+      }
+    };
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          await fetchConsumer(session.user.id, session.user);
-        } else {
-          setConsumer(null);
-        }
-        setLoading(false);
+      (_event, nextSession) => {
+        applySession(nextSession);
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) fetchConsumer(session.user.id, session.user);
-      setLoading(false);
+    supabase.auth.getSession().then(({ data: { session: nextSession } }) => {
+      applySession(nextSession);
     });
 
     return () => subscription.unsubscribe();

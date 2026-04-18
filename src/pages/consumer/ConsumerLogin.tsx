@@ -1,16 +1,29 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import ConsumerMobileLayout from "@/components/consumer/ConsumerMobileLayout";
 import ConsumerDecorativeBackground from "@/components/consumer/ConsumerDecorativeBackground";
+import { useConsumerAuth } from "@/contexts/ConsumerAuthContext";
 
 const ConsumerLogin = () => {
-  const navigate = useNavigate();
+  const { session } = useConsumerAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!session) return;
+
+    const redirect = sessionStorage.getItem("redirect_after_login");
+    if (redirect) {
+      sessionStorage.removeItem("redirect_after_login");
+      window.location.href = redirect;
+      return;
+    }
+
+    window.location.href = "/app/home";
+  }, [session]);
 
   const handleLogin = async () => {
     setError("");
@@ -21,7 +34,7 @@ const ConsumerLogin = () => {
     if (Object.keys(errors).length > 0) return;
 
     setLoading(true);
-    const { data, error: authErr } = await supabase.auth.signInWithPassword({
+    const { error: authErr } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password,
     });
@@ -29,23 +42,6 @@ const ConsumerLogin = () => {
     if (authErr) {
       setLoading(false);
       setError(authErr.message);
-      return;
-    }
-
-    // Wait for the session to be fully persisted to storage before redirecting,
-    // otherwise the consumer auth guard may not see it yet and bounce back here.
-    for (let i = 0; i < 20; i++) {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) break;
-      await new Promise((r) => setTimeout(r, 100));
-    }
-
-    const redirect = sessionStorage.getItem("redirect_after_login");
-    if (redirect) {
-      sessionStorage.removeItem("redirect_after_login");
-      window.location.href = redirect;
-    } else {
-      window.location.href = "/app/home";
     }
   };
 
