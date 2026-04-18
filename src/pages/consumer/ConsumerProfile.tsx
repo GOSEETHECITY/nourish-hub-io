@@ -1,33 +1,73 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Pencil, ShoppingBag, MapPin, Award } from "lucide-react";
+import { Pencil, ShoppingBag, MapPin } from "lucide-react";
 import { useConsumerAuth } from "@/contexts/ConsumerAuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import ConsumerMobileLayout from "@/components/consumer/ConsumerMobileLayout";
 import ConsumerBottomNav from "@/components/consumer/ConsumerBottomNav";
 
 const ConsumerProfile = () => {
   const navigate = useNavigate();
   const { consumer } = useConsumerAuth();
+  const [badges, setBadges] = useState<Array<{ id: string; badge_icon: string | null }>>([]);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    // Hard 5s timeout — render whatever we have no matter what.
+    const timeout = setTimeout(() => {
+      if (!cancelled) setReady(true);
+    }, 5000);
+
+    (async () => {
+      try {
+        if (consumer?.id) {
+          const { data } = await supabase
+            .from("consumer_badges")
+            .select("id, badge_icon")
+            .eq("consumer_id", consumer.id);
+          if (!cancelled && data) setBadges(data);
+        }
+      } catch {
+        // Swallow — we still render the page.
+      } finally {
+        if (!cancelled) setReady(true);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timeout);
+    };
+  }, [consumer?.id]);
+
+  const displayName = consumer ? `${consumer.first_name ?? ""} ${consumer.last_name ?? ""}`.trim() || "Guest" : "Guest";
+  const initial = consumer?.first_name?.[0] || "G";
+  const moneySaved = consumer?.money_saved?.toFixed?.(2) ?? "0.00";
+  const poundsRescued = consumer?.pounds_rescued ?? 0;
 
   return (
     <ConsumerMobileLayout>
       <div className="px-4 pt-6 pb-24">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-xl font-bold text-[#1B2A4A]">Profile</h1>
-          <button onClick={() => navigate("/app/profile/edit")}><Pencil className="w-5 h-5 text-[#F97316]" /></button>
+          <button onClick={() => navigate("/app/profile/edit")} aria-label="Edit profile">
+            <Pencil className="w-5 h-5 text-[#F97316]" />
+          </button>
         </div>
         <div className="flex flex-col items-center gap-3 mb-6">
           <div className="w-20 h-20 rounded-full bg-[#F97316] flex items-center justify-center text-white text-2xl font-bold">
-            {consumer?.first_name?.[0] || "G"}
+            {initial}
           </div>
-          <p className="text-lg font-bold text-[#1B2A4A]">{consumer ? `${consumer.first_name} ${consumer.last_name}` : "Guest"}</p>
+          <p className="text-lg font-bold text-[#1B2A4A]">{displayName}</p>
         </div>
         <div className="grid grid-cols-2 gap-3 mb-6">
           <div className="bg-[#8DC63F]/10 rounded-2xl p-4 text-center">
-            <p className="text-2xl font-bold text-[#8DC63F]">${consumer?.money_saved?.toFixed(2) || "0.00"}</p>
+            <p className="text-2xl font-bold text-[#8DC63F]">${moneySaved}</p>
             <p className="text-xs text-gray-500 mt-1">Money Saved</p>
           </div>
           <div className="bg-[#F97316]/10 rounded-2xl p-4 text-center">
-            <p className="text-2xl font-bold text-[#F97316]">{consumer?.pounds_rescued || 0} lbs</p>
+            <p className="text-2xl font-bold text-[#F97316]">{poundsRescued} lbs</p>
             <p className="text-xs text-gray-500 mt-1">Food Rescued</p>
           </div>
         </div>
@@ -38,10 +78,16 @@ const ConsumerProfile = () => {
           <MapPin className="w-5 h-5 text-[#F97316]" /><span className="font-medium text-[#1B2A4A]">Check-ins</span>
         </button>
         <h3 className="text-lg font-bold text-[#1B2A4A] mt-6 mb-3">My badges</h3>
-        <div className="grid grid-cols-4 gap-3">
-          {["🌱","🍔","⭐","🎉"].map((b, i) => (
-            <div key={i} className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-2xl mx-auto">{b}</div>
-          ))}
+        <div className="grid grid-cols-4 gap-3 min-h-[4rem]">
+          {ready && badges.length === 0 ? (
+            <p className="col-span-4 text-sm text-gray-400 text-center py-4">No badges yet</p>
+          ) : (
+            badges.map((b) => (
+              <div key={b.id} className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-2xl mx-auto">
+                {b.badge_icon || "🏅"}
+              </div>
+            ))
+          )}
         </div>
       </div>
       <ConsumerBottomNav />
