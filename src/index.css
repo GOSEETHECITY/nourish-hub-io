@@ -125,3 +125,18 @@
 .map-marker-green {
   filter: hue-rotate(120deg) saturate(1.5) brightness(1.1);
 }
+
+.consumer-static-map,
+.consumer-static-map .leaflet-container,
+.consumer-static-map .leaflet-pane,
+.consumer-static-map .leaflet-tile,
+.consumer-static-map .leaflet-marker-pane,
+.consumer-static-map .leaflet-overlay-pane {
+  transform: none !important;
+  transition: none !important;
+  will-change: auto !important;
+}
+
+.consumer-static-map .leaflet-control-container {
+  display: none !important;
+}
