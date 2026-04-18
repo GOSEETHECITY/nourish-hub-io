@@ -4,10 +4,11 @@ import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useConsumerAuth } from "@/contexts/ConsumerAuthContext";
 import ConsumerMobileLayout from "@/components/consumer/ConsumerMobileLayout";
+import { toast } from "sonner";
 
 const ConsumerProfileEdit = () => {
   const navigate = useNavigate();
-  const { consumer, refreshConsumer } = useConsumerAuth();
+  const { consumer, user, refreshConsumer } = useConsumerAuth();
   const [form, setForm] = useState({
     first_name: consumer?.first_name || "",
     last_name: consumer?.last_name || "",
@@ -17,12 +18,48 @@ const ConsumerProfileEdit = () => {
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
-    if (!consumer) return;
+    if (!user) {
+      toast.error("You must be signed in to save your profile.");
+      return;
+    }
     setSaving(true);
-    await supabase.from("consumers").update(form).eq("id", consumer.id);
-    await refreshConsumer();
-    setSaving(false);
-    navigate("/app/profile");
+    try {
+      // Look up the real consumer row by user_id (consumer.id may be a fallback)
+      const { data: existing } = await supabase
+        .from("consumers")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      let error;
+      if (existing?.id) {
+        ({ error } = await supabase
+          .from("consumers")
+          .update(form)
+          .eq("id", existing.id));
+      } else {
+        // No row yet — create one tied to this auth user
+        ({ error } = await supabase
+          .from("consumers")
+          .insert({ ...form, user_id: user.id, email: user.email }));
+      }
+
+      if (error) {
+        console.error("Profile save error:", error);
+        toast.error(error.message || "Could not save profile.");
+        setSaving(false);
+        return;
+      }
+
+      await refreshConsumer();
+      toast.success("Profile updated");
+      navigate("/app/profile");
+    } catch (err: any) {
+      console.error(err);
+      toast.error("Something went wrong saving your profile.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (

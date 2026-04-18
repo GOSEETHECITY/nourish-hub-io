@@ -72,17 +72,23 @@ const CitySearchModal = ({ open, onClose }: CitySearchModalProps) => {
     onClose();
   };
 
-  // Allow custom city entry if typed as "City, ST"
+  // Allow custom city entry if typed as "City, ST" — must include comma + valid state
   const handleCustomEntry = () => {
+    if (!query.includes(",")) return;
     const parts = query.split(",").map((s) => s.trim());
     if (parts.length === 2 && parts[0] && parts[1]) {
-      const cityName = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
+      const cityName = parts[0]
+        .split(" ")
+        .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join(" ");
       const stateInput = parts[1].toUpperCase();
-      // Check if it's a valid 2-letter state abbreviation or full name
-      const stateAbbr = stateInput.length === 2 ? stateInput : US_STATES[parts[1].toLowerCase()];
+      const validAbbrs = new Set(Object.values(US_STATES));
+      const stateAbbr =
+        stateInput.length === 2 && validAbbrs.has(stateInput)
+          ? stateInput
+          : US_STATES[parts[1].toLowerCase()];
       if (stateAbbr) {
         handleSelect(cityName, stateAbbr);
-        return;
       }
     }
   };
