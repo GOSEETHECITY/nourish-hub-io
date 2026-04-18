@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useConsumerAuth } from "@/contexts/ConsumerAuthContext";
 
@@ -13,8 +14,14 @@ interface Props {
 export default function ConsumerAuthGuard({ children }: Props) {
   const { session, loading } = useConsumerAuth();
   const location = useLocation();
+  const [timedOut, setTimedOut] = useState(false);
 
-  if (loading) {
+  useEffect(() => {
+    const t = setTimeout(() => setTimedOut(true), 5000);
+    return () => clearTimeout(t);
+  }, []);
+
+  if (loading && !timedOut) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-white">
         <div className="text-center space-y-3">
