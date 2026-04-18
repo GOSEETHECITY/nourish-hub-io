@@ -55,7 +55,10 @@ function LeafletMap({ center, markers, onMarkerClick, modules }: MapViewProps & 
       touchZoom={false}
       boxZoom={false}
       keyboard={false}
+      tap={false}
+      bounceAtZoomLimits={false}
       attributionControl={false}
+      className="consumer-static-map"
     >
       <TileLayer
         url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
