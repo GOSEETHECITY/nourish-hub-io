@@ -13,7 +13,7 @@ const LOCKED_BADGES = Array.from({ length: 8 }, (_, index) => ({
 
 const ConsumerProfile = () => {
   const navigate = useNavigate();
-  const { consumer } = useConsumerAuth();
+  const { consumer, user } = useConsumerAuth();
   const [badges, setBadges] = useState<Array<{ id: string; badge_icon: string | null }>>([]);
 
   useEffect(() => {
@@ -38,8 +38,11 @@ const ConsumerProfile = () => {
     };
   }, [consumer?.id]);
 
-  const displayName = consumer ? `${consumer.first_name ?? ""} ${consumer.last_name ?? ""}`.trim() || "Guest" : "Guest";
-  const initial = consumer?.first_name?.[0] || "G";
+  const fallbackFirstName = consumer?.first_name || user?.user_metadata?.first_name || "";
+  const fallbackLastName = consumer?.last_name || user?.user_metadata?.last_name || "";
+  const fallbackEmail = consumer?.email || user?.email || "";
+  const displayName = `${fallbackFirstName} ${fallbackLastName}`.trim() || "Guest";
+  const initial = fallbackFirstName?.[0] || fallbackEmail?.[0]?.toUpperCase() || "G";
   const moneySaved = consumer?.money_saved?.toFixed?.(2) ?? "0.00";
   const poundsRescued = consumer?.pounds_rescued ?? 0;
   const badgeItems = badges.length > 0
@@ -60,6 +63,7 @@ const ConsumerProfile = () => {
             {initial}
           </div>
           <p className="text-lg font-bold text-[#1B2A4A]">{displayName}</p>
+          {fallbackEmail && <p className="text-sm text-gray-500">{fallbackEmail}</p>}
         </div>
         <div className="grid grid-cols-2 gap-3 mb-6">
           <div className="bg-[#8DC63F]/10 rounded-2xl p-4 text-center">
