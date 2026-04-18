@@ -1,29 +1,14 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import ConsumerMobileLayout from "@/components/consumer/ConsumerMobileLayout";
 import ConsumerDecorativeBackground from "@/components/consumer/ConsumerDecorativeBackground";
-import { useConsumerAuth } from "@/contexts/ConsumerAuthContext";
 
 const ConsumerLogin = () => {
-  const { session } = useConsumerAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (!session) return;
-
-    const redirect = sessionStorage.getItem("redirect_after_login");
-    if (redirect) {
-      sessionStorage.removeItem("redirect_after_login");
-      window.location.href = redirect;
-      return;
-    }
-
-    window.location.href = "/app/home";
-  }, [session]);
 
   const handleLogin = async () => {
     setError("");
@@ -34,7 +19,7 @@ const ConsumerLogin = () => {
     if (Object.keys(errors).length > 0) return;
 
     setLoading(true);
-    const { error: authErr } = await supabase.auth.signInWithPassword({
+    const { data, error: authErr } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password,
     });
@@ -42,7 +27,30 @@ const ConsumerLogin = () => {
     if (authErr) {
       setLoading(false);
       setError(authErr.message);
+      return;
     }
+
+    const redirect = sessionStorage.getItem("redirect_after_login") || "/app/home";
+    if (sessionStorage.getItem("redirect_after_login")) {
+      sessionStorage.removeItem("redirect_after_login");
+    }
+
+    if (data.session) {
+      window.location.href = redirect;
+      return;
+    }
+
+    for (let attempt = 0; attempt < 10; attempt++) {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (sessionData.session) {
+        window.location.href = redirect;
+        return;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 150));
+    }
+
+    setLoading(false);
+    setError("Login succeeded but your session did not finish loading. Please try again.");
   };
 
   return (
