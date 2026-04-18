@@ -78,8 +78,9 @@ export const ConsumerAuthProvider = ({ children }: { children: ReactNode }) => {
           phone: data.phone || fallbackFields?.phone,
         } as Consumer;
         setConsumer(nextConsumer);
-        if (nextConsumer.city) localStorage.setItem("consumer_city", nextConsumer.city);
-        if ((data as any).state) localStorage.setItem("consumer_state", (data as any).state);
+        // Do NOT sync city/state to localStorage here — the consumers table only
+        // stores city, so writing a stale state causes mismatches like "Orlando, MD".
+        // LocationContext owns the city/state pairing.
         return nextConsumer;
       }
       await new Promise((r) => setTimeout(r, 1000));
