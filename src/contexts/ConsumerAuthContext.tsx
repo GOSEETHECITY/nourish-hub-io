@@ -44,6 +44,31 @@ export const ConsumerAuthProvider = ({ children }: { children: ReactNode }) => {
   const [consumer, setConsumer] = useState<Consumer | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const buildFallbackConsumer = async (authUser: User): Promise<Consumer> => {
+    const userMeta = authUser.user_metadata ?? {};
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("first_name, last_name, email, phone")
+      .eq("id", authUser.id)
+      .maybeSingle();
+
+    const firstName = profile?.first_name || userMeta.first_name || "";
+    const lastName = profile?.last_name || userMeta.last_name || "";
+    const email = profile?.email || authUser.email || "";
+    const phone = profile?.phone || userMeta.phone || undefined;
+
+    return {
+      id: `fallback-${authUser.id}`,
+      user_id: authUser.id,
+      first_name: firstName,
+      last_name: lastName,
+      email,
+      phone,
+      money_saved: 0,
+      pounds_rescued: 0,
+    };
+  };
+
   const fetchConsumer = async (userId: string) => {
     for (let attempt = 0; attempt < 5; attempt++) {
       const { data } = await supabase
@@ -59,6 +84,15 @@ export const ConsumerAuthProvider = ({ children }: { children: ReactNode }) => {
       }
       await new Promise((r) => setTimeout(r, 1000));
     }
+
+    const authUser = session?.user ?? user;
+    if (authUser?.id === userId) {
+      const fallbackConsumer = await buildFallbackConsumer(authUser);
+      setConsumer(fallbackConsumer);
+      if (fallbackConsumer.city) localStorage.setItem("consumer_city", fallbackConsumer.city);
+      return fallbackConsumer;
+    }
+
     return null;
   };
 
