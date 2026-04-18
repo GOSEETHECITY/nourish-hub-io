@@ -17,7 +17,7 @@ export default function ConsumerAuthGuard({ children }: Props) {
   const [timedOut, setTimedOut] = useState(false);
 
   useEffect(() => {
-    const t = setTimeout(() => setTimedOut(true), 5000);
+    const t = setTimeout(() => setTimedOut(true), 2000);
     return () => clearTimeout(t);
   }, []);
 

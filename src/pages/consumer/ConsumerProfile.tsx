@@ -6,18 +6,18 @@ import { supabase } from "@/integrations/supabase/client";
 import ConsumerMobileLayout from "@/components/consumer/ConsumerMobileLayout";
 import ConsumerBottomNav from "@/components/consumer/ConsumerBottomNav";
 
+const LOCKED_BADGES = Array.from({ length: 8 }, (_, index) => ({
+  id: `locked-${index + 1}`,
+  icon: "🔒",
+}));
+
 const ConsumerProfile = () => {
   const navigate = useNavigate();
   const { consumer } = useConsumerAuth();
   const [badges, setBadges] = useState<Array<{ id: string; badge_icon: string | null }>>([]);
-  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    // Hard 5s timeout — render whatever we have no matter what.
-    const timeout = setTimeout(() => {
-      if (!cancelled) setReady(true);
-    }, 5000);
 
     (async () => {
       try {
@@ -29,15 +29,12 @@ const ConsumerProfile = () => {
           if (!cancelled && data) setBadges(data);
         }
       } catch {
-        // Swallow — we still render the page.
-      } finally {
-        if (!cancelled) setReady(true);
+        if (!cancelled) setBadges([]);
       }
     })();
 
     return () => {
       cancelled = true;
-      clearTimeout(timeout);
     };
   }, [consumer?.id]);
 
@@ -45,6 +42,9 @@ const ConsumerProfile = () => {
   const initial = consumer?.first_name?.[0] || "G";
   const moneySaved = consumer?.money_saved?.toFixed?.(2) ?? "0.00";
   const poundsRescued = consumer?.pounds_rescued ?? 0;
+  const badgeItems = badges.length > 0
+    ? badges.map((badge) => ({ id: badge.id, icon: badge.badge_icon || "🏅" }))
+    : LOCKED_BADGES;
 
   return (
     <ConsumerMobileLayout>
@@ -79,15 +79,11 @@ const ConsumerProfile = () => {
         </button>
         <h3 className="text-lg font-bold text-[#1B2A4A] mt-6 mb-3">My badges</h3>
         <div className="grid grid-cols-4 gap-3 min-h-[4rem]">
-          {ready && badges.length === 0 ? (
-            <p className="col-span-4 text-sm text-gray-400 text-center py-4">No badges yet</p>
-          ) : (
-            badges.map((b) => (
-              <div key={b.id} className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-2xl mx-auto">
-                {b.badge_icon || "🏅"}
-              </div>
-            ))
-          )}
+          {badgeItems.map((badge) => (
+            <div key={badge.id} className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-2xl mx-auto">
+              {badge.icon}
+            </div>
+          ))}
         </div>
       </div>
       <ConsumerBottomNav />
