@@ -49,9 +49,14 @@ const ConsumerHome = () => {
   const navigate = useNavigate();
   const { city, state } = useLocation();
   const cityKey = `${city}, ${state}`;
-  const [center, setCenter] = useState<[number, number]>(
-    CITY_CENTERS[cityKey] || [33.749, -84.388]
-  );
+  const [center, setCenter] = useState<[number, number]>(() => {
+    if (CITY_CENTERS[cityKey]) return CITY_CENTERS[cityKey];
+    const storedCity = typeof window !== "undefined" ? localStorage.getItem("consumer_city") : null;
+    const storedState = typeof window !== "undefined" ? localStorage.getItem("consumer_state") : null;
+    const storedKey = `${storedCity}, ${storedState}`;
+    if (storedCity && CITY_CENTERS[storedKey]) return CITY_CENTERS[storedKey];
+    return [33.749, -84.388];
+  });
   const [markers, setMarkers] = useState<MapLocation[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -137,7 +142,7 @@ const ConsumerHome = () => {
     <ConsumerMobileLayout>
       <ConsumerAppHeader />
 
-      <div className="rounded-xl overflow-hidden mx-2" style={{ height: "calc(100dvh - 180px)" }}>
+      <div className="rounded-xl overflow-hidden mx-2" style={{ height: "calc(100dvh - 130px)", maxHeight: "calc(100dvh - 130px)" }}>
         <ConsumerMapView
           center={center}
           markers={loading ? [] : markers}

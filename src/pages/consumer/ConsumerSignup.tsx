@@ -48,6 +48,7 @@ const ConsumerSignup = () => {
     }
 
     if (data.user) {
+      await new Promise((r) => setTimeout(r, 500));
       await supabase.from("consumers").insert({
         user_id: data.user.id,
         first_name: form.firstName,

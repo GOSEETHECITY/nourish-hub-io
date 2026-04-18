@@ -45,13 +45,21 @@ export const ConsumerAuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   const fetchConsumer = async (userId: string) => {
-    const { data } = await supabase
-      .from("consumers")
-      .select("*")
-      .eq("user_id", userId)
-      .maybeSingle();
-    if (data) setConsumer(data as Consumer);
-    return data;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const { data } = await supabase
+        .from("consumers")
+        .select("*")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (data) {
+        setConsumer(data as Consumer);
+        if (data.city) localStorage.setItem("consumer_city", data.city);
+        if ((data as any).state) localStorage.setItem("consumer_state", (data as any).state);
+        return data;
+      }
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+    return null;
   };
 
   const refreshConsumer = async () => {

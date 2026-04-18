@@ -35,9 +35,9 @@ const ConsumerLogin = () => {
     const redirect = sessionStorage.getItem("redirect_after_login");
     if (redirect) {
       sessionStorage.removeItem("redirect_after_login");
-      navigate(redirect);
+      window.location.href = redirect;
     } else {
-      navigate("/app/home");
+      window.location.href = "/app/home";
     }
   };
 
