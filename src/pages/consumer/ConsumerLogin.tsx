@@ -21,15 +21,23 @@ const ConsumerLogin = () => {
     if (Object.keys(errors).length > 0) return;
 
     setLoading(true);
-    const { error: authErr } = await supabase.auth.signInWithPassword({
+    const { data, error: authErr } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password,
     });
-    setLoading(false);
 
     if (authErr) {
+      setLoading(false);
       setError(authErr.message);
       return;
+    }
+
+    // Wait for the session to be fully persisted to storage before redirecting,
+    // otherwise the consumer auth guard may not see it yet and bounce back here.
+    for (let i = 0; i < 20; i++) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) break;
+      await new Promise((r) => setTimeout(r, 100));
     }
 
     const redirect = sessionStorage.getItem("redirect_after_login");
