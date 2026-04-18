@@ -122,6 +122,44 @@ export type Database = {
         }
         Relationships: []
       }
+      consumer_badges: {
+        Row: {
+          badge_description: string | null
+          badge_icon: string | null
+          badge_id: number
+          badge_name: string
+          consumer_id: string | null
+          earned_at: string | null
+          id: string
+        }
+        Insert: {
+          badge_description?: string | null
+          badge_icon?: string | null
+          badge_id: number
+          badge_name: string
+          consumer_id?: string | null
+          earned_at?: string | null
+          id?: string
+        }
+        Update: {
+          badge_description?: string | null
+          badge_icon?: string | null
+          badge_id?: number
+          badge_name?: string
+          consumer_id?: string | null
+          earned_at?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consumer_badges_consumer_id_fkey"
+            columns: ["consumer_id"]
+            isOneToOne: false
+            referencedRelation: "consumers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consumer_checkins: {
         Row: {
           checkin_type: string | null

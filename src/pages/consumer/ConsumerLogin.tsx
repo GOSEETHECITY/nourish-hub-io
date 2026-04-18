@@ -41,7 +41,7 @@ const ConsumerLogin = () => {
     };
 
     return (
-          <ConsumerMobileLayout className="flex flex-col items-center justify-center overflow-hidden">
+    <ConsumerMobileLayout className="flex flex-col items-center justify-center overflow-hidden">
                 <ConsumerDecorativeBackground />
                 <div className="relative z-10 flex flex-col items-center gap-5 px-8 w-full">
                         <h1 className="text-3xl font-extrabold">
