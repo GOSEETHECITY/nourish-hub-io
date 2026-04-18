@@ -140,10 +140,8 @@ export default function ConsumerMapView({ center, markers, onMarkerClick }: MapV
         const Marker = RL.Marker;
         const Popup = RL.Popup;
 
-        const useMap = RL.useMap;
-
         if (!cancelled) {
-          setModules({ MapContainer, TileLayer, Marker, Popup, orangeIcon, greenIcon, useMap, L });
+          setModules({ MapContainer, TileLayer, Marker, Popup, orangeIcon, greenIcon });
         }
       } catch (err) {
         console.error("Failed to load map:", err);
