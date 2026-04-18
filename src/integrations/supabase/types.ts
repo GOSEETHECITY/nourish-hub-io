@@ -1774,6 +1774,53 @@ export type Database = {
         }
         Relationships: []
       }
+      venue_partner_orders: {
+        Row: {
+          coupon_id: string | null
+          created_at: string | null
+          id: string | null
+          pickup_window_end: string | null
+          pickup_window_start: string | null
+          quantity: number | null
+          status: string | null
+          tax_amount: number | null
+          total_price: number | null
+          unit_price: number | null
+        }
+        Insert: {
+          coupon_id?: string | null
+          created_at?: string | null
+          id?: string | null
+          pickup_window_end?: string | null
+          pickup_window_start?: string | null
+          quantity?: number | null
+          status?: string | null
+          tax_amount?: number | null
+          total_price?: number | null
+          unit_price?: number | null
+        }
+        Update: {
+          coupon_id?: string | null
+          created_at?: string | null
+          id?: string | null
+          pickup_window_end?: string | null
+          pickup_window_start?: string | null
+          quantity?: number | null
+          status?: string | null
+          tax_amount?: number | null
+          total_price?: number | null
+          unit_price?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consumer_orders_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       get_nonprofit_join_code: {
