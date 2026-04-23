@@ -116,6 +116,11 @@
   }
 }
 
+/* Prevent Leaflet 1.9+ tile washout on light backgrounds */
+.leaflet-container img.leaflet-tile {
+  mix-blend-mode: normal;
+}
+
 /* Tint bundled Leaflet marker to orange for restaurant map pins */
 .map-marker-orange {
   filter: hue-rotate(30deg) saturate(2) brightness(1.1);
