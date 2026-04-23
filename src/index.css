@@ -147,3 +147,13 @@
 .consumer-static-map .leaflet-control-container {
   display: none;
 }
+
+.leaflet-bar a {
+  width: 30px !important;
+  height: 30px !important;
+}
+
+.leaflet-top.leaflet-left {
+  top: 10px !important;
+  left: 10px !important;
+}
