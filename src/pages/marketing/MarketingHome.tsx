@@ -18,9 +18,9 @@ import MarketingFooter from "@/components/marketing/MarketingFooter";
 import AppScreens from "@/components/marketing/AppScreens";
 
 const stats = [
-  { value: "2M+", label: "Pounds Diverted" },
-  { value: "150+", label: "Partner Venues" },
-  { value: "40+", label: "Nonprofit Partners" },
+  { value: "25K", label: "Pounds Diverted" },
+  { value: "40", label: "Partner Venues" },
+  { value: "25", label: "Nonprofit Partners" },
   { value: "12", label: "Cities Active" },
 ];
 
