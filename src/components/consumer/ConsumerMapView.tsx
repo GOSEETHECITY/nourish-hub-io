@@ -50,7 +50,7 @@ function LeafletMap({ center, markers, onMarkerClick, modules }: MapViewProps & 
         center={center}
         zoom={13}
         style={{ height: "100%", width: "100%" }}
-        zoomControl={false}
+        zoomControl={true}
         dragging={false}
         scrollWheelZoom={false}
         doubleClickZoom={false}
