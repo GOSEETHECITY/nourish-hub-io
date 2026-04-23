@@ -127,37 +127,18 @@
 }
 
 .consumer-static-map {
-  position: relative !important;
-  z-index: 0 !important;
+  position: relative;
   isolation: isolate;
 }
 
-.consumer-static-map .leaflet-container,
-.consumer-static-map .leaflet-pane,
-.consumer-static-map .leaflet-top,
-.consumer-static-map .leaflet-bottom,
-.consumer-static-map .leaflet-control-container,
-.consumer-static-map .leaflet-tile,
-.consumer-static-map .leaflet-marker-pane,
-.consumer-static-map .leaflet-overlay-pane,
-.consumer-static-map .leaflet-popup-pane,
-.consumer-static-map .leaflet-shadow-pane {
-  transform: none !important;
-  transition: none !important;
-  will-change: auto !important;
-  z-index: 0 !important;
-}
-
-.consumer-static-map .leaflet-map-pane,
-.consumer-static-map .leaflet-tile-pane,
-.consumer-static-map .leaflet-overlay-pane,
-.consumer-static-map .leaflet-shadow-pane,
-.consumer-static-map .leaflet-marker-pane,
-.consumer-static-map .leaflet-tooltip-pane,
-.consumer-static-map .leaflet-popup-pane {
-  z-index: 0 !important;
+.consumer-static-map .leaflet-container {
+  height: 100%;
+  width: 100%;
+  border-radius: inherit;
+  overflow: hidden;
+  background: hsl(var(--muted));
 }
 
 .consumer-static-map .leaflet-control-container {
-  display: none !important;
+  display: none;
 }
