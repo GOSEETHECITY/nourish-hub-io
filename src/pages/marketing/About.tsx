@@ -85,15 +85,15 @@ export default function About() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/10">
               <div className="py-7 px-8 text-center">
-                <div className="text-3xl font-bold text-white mb-1">2M+</div>
+                <div className="text-3xl font-bold text-white mb-1">25K</div>
                 <div className="text-sm text-white/50">Pounds Diverted</div>
               </div>
               <div className="py-7 px-8 text-center">
-                <div className="text-3xl font-bold text-white mb-1">150+</div>
+                <div className="text-3xl font-bold text-white mb-1">40</div>
                 <div className="text-sm text-white/50">Partner Venues</div>
               </div>
               <div className="py-7 px-8 text-center">
-                <div className="text-3xl font-bold text-white mb-1">40+</div>
+                <div className="text-3xl font-bold text-white mb-1">25</div>
                 <div className="text-sm text-white/50">Nonprofit Partners</div>
               </div>
               <div className="py-7 px-8 text-center">
