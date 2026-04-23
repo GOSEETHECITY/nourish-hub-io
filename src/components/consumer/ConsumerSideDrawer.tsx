@@ -1,10 +1,11 @@
 import { X, Home, UtensilsCrossed, CalendarDays, Heart, User, Bell, CreditCard, MessageSquare, UserPlus, ThumbsUp, LogOut } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useConsumerAuth } from "@/contexts/ConsumerAuthContext";
+import { toast } from "sonner";
 
 const items = [
   { label: "Home", icon: Home, path: "/app/home" },
-  { label: "Restaurant", icon: UtensilsCrossed, path: "/app/restaurants" },
+  { label: "Restaurant", icon: UtensilsCrossed, path: "/app/restaurants", active: false },
   { label: "Events", icon: CalendarDays, path: "/app/events" },
   { label: "Follows", icon: Heart, path: "/app/follows" },
   { label: "Profile", icon: User, path: "/app/profile" },
@@ -20,6 +21,16 @@ interface Props { open: boolean; onClose: () => void; }
 const ConsumerSideDrawer = ({ open, onClose }: Props) => {
   const navigate = useNavigate();
   const { consumer, signOut } = useConsumerAuth();
+
+  const handleItemClick = (item: typeof items[number]) => {
+    if (item.active === false) {
+      toast("Not available in your area yet. Stay tuned!", { duration: 3000 });
+      return;
+    }
+
+    navigate(item.path);
+    onClose();
+  };
 
   if (!open) return null;
 
@@ -40,7 +51,7 @@ const ConsumerSideDrawer = ({ open, onClose }: Props) => {
           {items.map((item) => (
             <button
               key={item.label}
-              onClick={() => { navigate(item.path); onClose(); }}
+              onClick={() => handleItemClick(item)}
               className="flex items-center gap-3 w-full px-4 py-3 hover:bg-white/10 transition-colors"
             >
               <item.icon className="w-5 h-5 text-[#F97316]" />
