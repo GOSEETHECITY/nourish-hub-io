@@ -2,6 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import ConsumerMobileLayout from "@/components/consumer/ConsumerMobileLayout";
 import ConsumerDecorativeBackground from "@/components/consumer/ConsumerDecorativeBackground";
+import PasswordInput from "@/components/ui/password-input";
 
 const ConsumerLogin = () => {
   const [email, setEmail] = useState("");
@@ -77,13 +78,12 @@ const ConsumerLogin = () => {
         </div>
 
         <div className="w-full">
-          <input
+          <PasswordInput
             value={password}
             onChange={(e) => {
               setPassword(e.target.value);
               setFieldErrors((p) => ({ ...p, password: undefined }));
             }}
-            type="password"
             placeholder="Password"
             className="w-full py-3 px-4 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#F97316] placeholder:text-gray-400"
           />

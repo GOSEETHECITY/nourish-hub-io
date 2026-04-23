@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useConsumerAuth } from "@/contexts/ConsumerAuthContext";
 import ConsumerMobileLayout from "@/components/consumer/ConsumerMobileLayout";
+import PasswordInput from "@/components/ui/password-input";
 
 const ConsumerSignup = () => {
   const navigate = useNavigate();
@@ -90,9 +91,8 @@ const ConsumerSignup = () => {
           onChange={(e) => update("email", e.target.value)}
           className="w-full py-3 px-4 rounded-xl border border-gray-300"
         />
-        <input
+        <PasswordInput
           placeholder="Password"
-          type="password"
           value={form.password}
           onChange={(e) => update("password", e.target.value)}
           className="w-full py-3 px-4 rounded-xl border border-gray-300"
