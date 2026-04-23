@@ -44,47 +44,50 @@ function LeafletMap({ center, markers, onMarkerClick, modules }: MapViewProps & 
   const { MapContainer, TileLayer, Marker, Popup, orangeIcon, greenIcon } = modules;
 
   return (
-    <MapContainer
-      center={center}
-      zoom={13}
-      style={{ height: "100%", width: "100%" }}
-      zoomControl={false}
-      dragging={false}
-      scrollWheelZoom={false}
-      doubleClickZoom={false}
-      touchZoom={false}
-      boxZoom={false}
-      keyboard={false}
-      tap={false}
-      bounceAtZoomLimits={false}
-      attributionControl={false}
-      className="consumer-static-map relative z-0"
-    >
-      <TileLayer
-        url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-        subdomains="abcd"
-        maxZoom={20}
-      />
-      {markers.map((m) => (
-        <Marker key={m.id} position={[m.lat, m.lng]} icon={m.type === "event" ? greenIcon : orangeIcon}>
-          <Popup autoPan={false}>
-            <div className="text-center">
-              <p className="font-semibold">{m.name}</p>
-              <p className="text-xs text-gray-500">{m.type === "event" ? "Event" : "Restaurant"}</p>
-              <button
-                onClick={() => onMarkerClick(m.id)}
-                className={`mt-1 px-3 py-1 text-white rounded-full text-xs font-semibold ${
-                  m.type === "event" ? "bg-[#8DC63F]" : "bg-[#F97316]"
-                }`}
-              >
-                View
-              </button>
-            </div>
-          </Popup>
-        </Marker>
-      ))}
-    </MapContainer>
+    <div className="consumer-static-map h-full w-full overflow-hidden rounded-[28px] bg-muted">
+      <MapContainer
+        key={`${center[0]}-${center[1]}`}
+        center={center}
+        zoom={13}
+        style={{ height: "100%", width: "100%" }}
+        zoomControl={false}
+        dragging={false}
+        scrollWheelZoom={false}
+        doubleClickZoom={false}
+        touchZoom={false}
+        boxZoom={false}
+        keyboard={false}
+        tap={false}
+        bounceAtZoomLimits={false}
+        attributionControl={false}
+        className="h-full w-full"
+      >
+        <TileLayer
+          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+          subdomains="abcd"
+          maxZoom={20}
+        />
+        {markers.map((m) => (
+          <Marker key={m.id} position={[m.lat, m.lng]} icon={m.type === "event" ? greenIcon : orangeIcon}>
+            <Popup autoPan={false}>
+              <div className="text-center">
+                <p className="font-semibold">{m.name}</p>
+                <p className="text-xs text-gray-500">{m.type === "event" ? "Event" : "Restaurant"}</p>
+                <button
+                  onClick={() => onMarkerClick(m.id)}
+                  className={`mt-1 px-3 py-1 text-white rounded-full text-xs font-semibold ${
+                    m.type === "event" ? "bg-[#8DC63F]" : "bg-[#F97316]"
+                  }`}
+                >
+                  View
+                </button>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
+    </div>
   );
 }
 
