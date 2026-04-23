@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Pencil, ShoppingBag, MapPin } from "lucide-react";
+import { ArrowLeft, Pencil, ShoppingBag, MapPin } from "lucide-react";
 import { useConsumerAuth } from "@/contexts/ConsumerAuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import ConsumerMobileLayout from "@/components/consumer/ConsumerMobileLayout";
@@ -53,7 +53,12 @@ const ConsumerProfile = () => {
     <ConsumerMobileLayout>
       <div className="px-4 pt-6 pb-24">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-xl font-bold text-[#1B2A4A]">Profile</h1>
+          <div className="flex items-center gap-3">
+            <button onClick={() => navigate(-1)} aria-label="Go back">
+              <ArrowLeft className="w-5 h-5 text-[#F97316]" />
+            </button>
+            <h1 className="text-xl font-bold text-[#1B2A4A]">Profile</h1>
+          </div>
           <button onClick={() => navigate("/app/profile/edit")} aria-label="Edit profile">
             <Pencil className="w-5 h-5 text-[#F97316]" />
           </button>
