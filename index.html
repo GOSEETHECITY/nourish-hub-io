@@ -3,6 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      // Redirect goseethecity.com root visitors to hariet.ai immediately,
+      // before any React/app code runs (no flash of content).
+      (function () {
+        try {
+          var host = window.location.hostname;
+          var path = window.location.pathname;
+          if (
+            (host === "goseethecity.com" || host === "www.goseethecity.com") &&
+            (path === "/" || path === "")
+          ) {
+            window.location.replace("https://hariet.ai");
+          }
+        } catch (e) {}
+      })();
+    </script>
     <title>HarietAI | Food Diversion Platform</title>
     <meta name="description" content="HarietAI - Surplus Food Diversion Platform">
     <meta name="author" content="HarietAI" />
