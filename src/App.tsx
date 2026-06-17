@@ -20,6 +20,7 @@ import Press from "./pages/marketing/Press";
 import Contact from "./pages/marketing/Contact";
 import Privacy from "./pages/marketing/Privacy";
 import Terms from "./pages/marketing/Terms";
+import FeedItOnward from "./pages/marketing/FeedItOnward";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Dashboard from "./pages/Index";
 import Organizations from "./pages/Organizations";
