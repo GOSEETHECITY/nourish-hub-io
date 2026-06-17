@@ -20,6 +20,7 @@ import Press from "./pages/marketing/Press";
 import Contact from "./pages/marketing/Contact";
 import Privacy from "./pages/marketing/Privacy";
 import Terms from "./pages/marketing/Terms";
+import FeedItOnward from "./pages/marketing/FeedItOnward";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Dashboard from "./pages/Index";
 import Organizations from "./pages/Organizations";
@@ -165,6 +166,7 @@ const App = () => (
             <Route path="/contact" element={<Contact />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
+            <Route path="/feed-it-onward" element={<FeedItOnward />} />
             <Route path="/get-started" element={<GetStarted />} />
             <Route path="/get-started/:eventSlug" element={<EventGetStarted />} />
             <Route path="/partners/business/signup" element={<BusinessSignup />} />
