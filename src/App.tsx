@@ -166,6 +166,7 @@ const App = () => (
             <Route path="/contact" element={<Contact />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
+            <Route path="/feed-it-onward" element={<FeedItOnward />} />
             <Route path="/get-started" element={<GetStarted />} />
             <Route path="/get-started/:eventSlug" element={<EventGetStarted />} />
             <Route path="/partners/business/signup" element={<BusinessSignup />} />
