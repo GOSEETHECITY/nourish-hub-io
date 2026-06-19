@@ -303,7 +303,7 @@ export default function FeedItOnward() {
               Get Started at Hariet.AI <ArrowRight className="w-4 h-4" />
             </a>
             <div className="text-sm text-white/70 mt-4">
-              <a href="mailto:goseethecity@gmail.com" className="hover:text-white transition">goseethecity@gmail.com</a> | 352-900-1505
+              <a href="mailto:Hello@hariet.ai" className="hover:text-white transition">Hello@hariet.ai</a> | 352-900-1505
             </div>
           </div>
         </div>
