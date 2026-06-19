@@ -366,7 +366,7 @@ export default function FeedItOnward() {
                 <div>
                   <a href="mailto:Hello@Hariet.AI" className="hover:text-[#6d412a] transition">Hello@Hariet.AI</a>
                 </div>
-                <div>352-900-1505</div>
+                <div>844-974-6277</div>
                 <div>
                   <a href="https://hariet.ai" target="_blank" rel="noopener noreferrer" className="hover:text-[#6d412a] transition">www.Hariet.AI</a>
                 </div>
