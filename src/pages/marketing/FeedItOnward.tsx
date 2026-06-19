@@ -11,8 +11,8 @@ const stats = [
 
 const problemStats = [
   { value: "133B lbs", label: "of food wasted in the U.S. each year" },
-  { value: "$3,000 / year", label: "lost per family of four  -  roughly 11% of their food budget" },
-  { value: "Landfill #1", label: "Food is America's single largest landfill contributor  -  and the most preventable" },
+  { value: "$3,000 / year", label: "lost per family of four   roughly 11% of their food budget" },
+  { value: "Landfill #1", label: "Food is America's single largest landfill contributor   and the most preventable" },
 ];
 
 const initiatives = [
@@ -22,7 +22,7 @@ const initiatives = [
   },
   {
     title: "Connect Partners",
-    body: "Building bridges between food businesses and the nonprofits already serving their neighborhoods  -  no new infrastructure required.",
+    body: "Building bridges between food businesses and the nonprofits already serving their neighborhoods   no new infrastructure required.",
   },
   {
     title: "Amplify Impact",
@@ -32,9 +32,9 @@ const initiatives = [
 
 const hariFeatures = [
   { t: "Donate on Your Terms", b: "No required frequency. No minimum amount. Donate when it works for your operation." },
-  { t: "We Handle Logistics", b: "Pickup coordination fully managed  -  no extra administrative burden on your team." },
+  { t: "We Handle Logistics", b: "Pickup coordination fully managed   no extra administrative burden on your team." },
   { t: "Tax Deduction Opportunities", b: "Maximize deductions on every donation your business makes, automatically documented." },
-  { t: "Impact Reports", b: "Track pounds donated and meals supported in real time  -  shareable directly to your social channels." },
+  { t: "Impact Reports", b: "Track pounds donated and meals supported in real time   shareable directly to your social channels." },
 ];
 
 const servesList = [
@@ -60,12 +60,12 @@ const harietPlatformFeatures = [
 
 export default function FeedItOnward() {
   useEffect(() => {
-    document.title = "Feed It Onward  -  Go See The City × Hariet.AI × U.S. EPA Freedom 250";
+    document.title = "Feed It Onward   Go See The City × Hariet.AI × U.S. EPA Freedom 250";
     const meta = document.querySelector('meta[name="description"]');
     if (meta)
       meta.setAttribute(
         "content",
-        "Go See The City and Hariet.AI are proud partners in the U.S. EPA's Freedom 250 Feed It Onward Campaign  -  redirecting surplus food from landfills to families, veterans, and neighbors."
+        "Go See The City and Hariet.AI are proud partners in the U.S. EPA's Freedom 250 Feed It Onward Campaign   redirecting surplus food from landfills to families, veterans, and neighbors."
       );
   }, []);
 
@@ -86,7 +86,7 @@ export default function FeedItOnward() {
             No Meal Left Behind. <span className="text-[#6d412a]">No Community Overlooked.</span>
           </h1>
           <p className="text-xl text-[#6d412a]/70 leading-relaxed max-w-2xl mx-auto mb-10">
-            Go See The City and Hariet.AI are proud partners in the U.S. EPA's Freedom 250 Feed It Onward Campaign  -  a national movement to redirect surplus food from landfills to the families, veterans, and neighbors who need it most.
+            Go See The City and Hariet.AI are proud partners in the U.S. EPA's Freedom 250 Feed It Onward Campaign   a national movement to redirect surplus food from landfills to the families, veterans, and neighbors who need it most.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
@@ -131,13 +131,13 @@ export default function FeedItOnward() {
             </h2>
             <div className="space-y-5 text-[#6d412a]/80 leading-relaxed">
               <p>
-                Harriet Tubman didn't just dream of freedom  -  she engineered it. Through the Underground Railroad, she built a network of safe houses, trusted partners, and seamless handoffs that guided hundreds of people to safety. She operated through ingenuity, courage, and the willingness of ordinary people  -  farmers, business owners, community members  -  to open their doors and share what they had.
+                Harriet Tubman didn't just dream of freedom   she engineered it. Through the Underground Railroad, she built a network of safe houses, trusted partners, and seamless handoffs that guided hundreds of people to safety. She operated through ingenuity, courage, and the willingness of ordinary people   farmers, business owners, community members   to open their doors and share what they had.
               </p>
               <p>
-                Hariet.AI carries that name  -  and that mission  -  into today's food system. The platform is a modern Underground Railroad for surplus food: a technology-powered network of restaurants, stadiums, hotels, healthcare operators, and nonprofits working together to ensure that what goes unsold doesn't go to waste.
+                Hariet.AI carries that name   and that mission   into today's food system. The platform is a modern Underground Railroad for surplus food: a technology-powered network of restaurants, stadiums, hotels, healthcare operators, and nonprofits working together to ensure that what goes unsold doesn't go to waste.
               </p>
               <p>
-                Go See The City extends that network one step further  -  creating same-day coupons that give customers a reason to walk through the door before closing time, turning surplus into sales and saving food before it ever needs to be donated.
+                Go See The City extends that network one step further   creating same-day coupons that give customers a reason to walk through the door before closing time, turning surplus into sales and saving food before it ever needs to be donated.
               </p>
             </div>
           </div>
@@ -145,10 +145,10 @@ export default function FeedItOnward() {
             <blockquote className="text-2xl font-semibold leading-snug italic">
               "I never ran my train off the track and I never lost a passenger."
             </blockquote>
-            <div className="text-sm text-white/60 mt-4 font-medium"> -  Harriet Tubman</div>
+            <div className="text-sm text-white/60 mt-4 font-medium">  Harriet Tubman</div>
             <div className="w-10 h-px bg-white/20 my-8" />
             <p className="text-white/80 text-sm leading-relaxed">
-              Hariet.AI honors her legacy by making sure no meal  -  and no community  -  is ever left behind.
+              Hariet.AI honors her legacy by making sure no meal   and no community   is ever left behind.
             </p>
           </div>
         </div>
@@ -164,7 +164,7 @@ export default function FeedItOnward() {
             America Wastes Too Much. Together, We Can Change That.
           </h2>
           <p className="text-lg text-[#6d412a]/70 max-w-2xl mx-auto mb-14 leading-relaxed">
-            More than one-third of all food in the United States goes uneaten  -  and most of it ends up in landfills. The solution isn't a new system. It's activating the one we already have.
+            More than one-third of all food in the United States goes uneaten   and most of it ends up in landfills. The solution isn't a new system. It's activating the one we already have.
           </p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
             {problemStats.map((s) => (
@@ -196,7 +196,7 @@ export default function FeedItOnward() {
               <h3 className="text-2xl font-bold text-black mb-2">Go See The City</h3>
               <p className="text-lg font-semibold text-black mb-4">Turn Closing Time Into Community Time</p>
               <p className="text-[#6d412a]/80 mb-6 leading-relaxed">
-                Go See The City drives foot traffic to local businesses by enabling them to create same-day coupons for surplus food  -  giving customers a reason to show up before closing and giving businesses a way to convert unsold inventory into revenue instead of waste.
+                Go See The City drives foot traffic to local businesses by enabling them to create same-day coupons for surplus food   giving customers a reason to show up before closing and giving businesses a way to convert unsold inventory into revenue instead of waste.
               </p>
               <ul className="space-y-3 mb-8">
                 {gstcFeatures.map((f) => (
@@ -222,7 +222,7 @@ export default function FeedItOnward() {
               <h3 className="text-2xl font-bold mb-2">Hariet.AI</h3>
               <p className="text-lg font-semibold mb-4">One Dashboard. Every Meal. Nothing Wasted.</p>
               <p className="text-white/80 mb-6 leading-relaxed">
-                Hariet.AI is the operating system for food businesses that want to eliminate waste entirely. Stadiums, restaurants, hotels, and healthcare operators use one unified dashboard to sell, donate, and track every meal that would otherwise be thrown away  -  connecting seamlessly with nonprofits in their own communities.
+                Hariet.AI is the operating system for food businesses that want to eliminate waste entirely. Stadiums, restaurants, hotels, and healthcare operators use one unified dashboard to sell, donate, and track every meal that would otherwise be thrown away   connecting seamlessly with nonprofits in their own communities.
               </p>
               <ul className="space-y-3 mb-8">
                 {harietPlatformFeatures.map((f) => (
@@ -257,10 +257,10 @@ export default function FeedItOnward() {
             </h2>
             <div className="space-y-4 text-[#6d412a]/80 leading-relaxed">
               <p>
-                Feed It Onward is the U.S. EPA's national storytelling and partnership initiative, launched as part of Freedom 250  -  America's 250th birthday celebration. It shines a light on the farms, businesses, nonprofits, and communities already doing the work of keeping food in use and out of landfills.
+                Feed It Onward is the U.S. EPA's national storytelling and partnership initiative, launched as part of Freedom 250   America's 250th birthday celebration. It shines a light on the farms, businesses, nonprofits, and communities already doing the work of keeping food in use and out of landfills.
               </p>
               <p>
-                This isn't about new mandates or big spending. It's about celebrating what's already working. Feed It Onward tells that story  -  and Go See The City and Hariet.AI are proud to be part of it.
+                This isn't about new mandates or big spending. It's about celebrating what's already working. Feed It Onward tells that story   and Go See The City and Hariet.AI are proud to be part of it.
               </p>
             </div>
           </div>
@@ -289,7 +289,7 @@ export default function FeedItOnward() {
               The Technology Behind the Mission
             </h2>
             <p className="text-white/80 leading-relaxed mb-4">
-              Hariet.AI handles the logistics so food businesses don't have to. From restaurants and hotels to food trucks, stadiums, grocery stores, farms, schools, and venues  -  if you have surplus food, Hariet.AI connects you with a nonprofit neighbor, tracks every pound, and generates the impact reports and tax documentation your business needs.
+              Hariet.AI handles the logistics so food businesses don't have to. From restaurants and hotels to food trucks, stadiums, grocery stores, farms, schools, and venues   if you have surplus food, Hariet.AI connects you with a nonprofit neighbor, tracks every pound, and generates the impact reports and tax documentation your business needs.
             </p>
             <p className="text-xs text-white/50 italic mb-6">
               Food donations are protected under the Bill Emerson Good Samaritan Food Donation Act.
@@ -360,7 +360,7 @@ export default function FeedItOnward() {
             <div className="rounded-3xl bg-white border border-[#ede5dc] p-10 flex flex-col">
               <h3 className="text-2xl font-bold text-black mb-4">Turn Surplus Into Impact</h3>
               <p className="text-[#6d412a]/80 leading-relaxed mb-6">
-                Whether you run a restaurant, stadium, hotel, grocery store, school, or healthcare facility  -  Hariet.AI connects you with nonprofits in your own community and handles everything else. No required minimums. No extra overhead. Just impact.
+                Whether you run a restaurant, stadium, hotel, grocery store, school, or healthcare facility   Hariet.AI connects you with nonprofits in your own community and handles everything else. No required minimums. No extra overhead. Just impact.
               </p>
               <div className="text-sm text-[#6d412a]/80 space-y-1 mb-8">
                 <div>
@@ -385,7 +385,7 @@ export default function FeedItOnward() {
             <div className="rounded-3xl bg-[#1c0e07] text-white p-10 flex flex-col">
               <h3 className="text-2xl font-bold mb-4">Shop Surplus. Save Money. Feed Your City.</h3>
               <p className="text-white/80 leading-relaxed mb-8">
-                Go See The City makes it easy to find same-day deals on surplus food from businesses in your neighborhood  -  saving you money while keeping good food out of the landfill. Every coupon redeemed is a meal saved and a local business supported.
+                Go See The City makes it easy to find same-day deals on surplus food from businesses in your neighborhood   saving you money while keeping good food out of the landfill. Every coupon redeemed is a meal saved and a local business supported.
               </p>
               <div className="mt-auto">
                 <a
