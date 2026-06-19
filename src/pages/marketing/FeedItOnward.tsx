@@ -364,7 +364,7 @@ export default function FeedItOnward() {
               </p>
               <div className="text-sm text-[#6d412a]/80 space-y-1 mb-8">
                 <div>
-                  <a href="mailto:goseethecity@gmail.com" className="hover:text-[#6d412a] transition">goseethecity@gmail.com</a>
+                  <a href="mailto:Hello@Hariet.AI" className="hover:text-[#6d412a] transition">Hello@Hariet.AI</a>
                 </div>
                 <div>352-900-1505</div>
                 <div>
