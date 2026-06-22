@@ -60,7 +60,7 @@ const harietPlatformFeatures = [
 
 export default function FeedItOnward() {
   useEffect(() => {
-    document.title = "Feed It Onward Go See The City × Hariet.AI × U.S. EPA Freedom 250";
+    document.title = "Feed It Onward Go See The City × U.S. EPA #FeedItOnward";
     const meta = document.querySelector('meta[name="description"]');
     if (meta)
       meta.setAttribute(
