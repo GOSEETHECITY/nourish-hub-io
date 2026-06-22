@@ -80,7 +80,7 @@ export default function FeedItOnward() {
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#6d412a]/10 text-[#6d412a] text-xs font-semibold tracking-wide uppercase mb-6">
-            Go See The City × Hariet.AI × U.S. EPA Freedom 250
+            Go See The City × U.S. EPA #FeedItOnward
           </div>
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-tight tracking-tight text-black mb-6 max-w-4xl mx-auto">
             No Meal Left Behind. <span className="text-[#6d412a]">No Community Overlooked.</span>
