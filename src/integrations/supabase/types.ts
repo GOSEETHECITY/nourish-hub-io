@@ -1927,6 +1927,10 @@ export type Database = {
       }
     }
     Functions: {
+      create_consumer_order: {
+        Args: { p_coupon_id: string; p_quantity: number }
+        Returns: string
+      }
       get_nonprofit_join_code: {
         Args: { _nonprofit_id: string }
         Returns: string
