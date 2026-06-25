@@ -35,7 +35,7 @@ export default function GovernmentNonprofits() {
         .select("*")
         .eq("approval_status", "approved")
         .order("organization_name");
-      return (data || []) as Nonprofit[];
+      return (data || []) as unknown as Nonprofit[];
     },
   });
 

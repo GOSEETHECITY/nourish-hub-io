@@ -57,7 +57,7 @@ export default function GovernmentDashboardHome() {
 
   const { data: nonprofits = [] } = useQuery({
     queryKey: ["gov-nonprofits"],
-    queryFn: async () => { const { data } = await supabase.from("nonprofits_public").select("*"); return (data || []) as unknown as Nonprofit[]; }, },
+    queryFn: async () => { const { data } = await supabase.from("nonprofits_public").select("*"); return (data || []) as unknown as Nonprofit[]; },
   });
 
   const orgMap = useMemo(() => Object.fromEntries(orgs.map((o) => [o.id, o])), [orgs]);
