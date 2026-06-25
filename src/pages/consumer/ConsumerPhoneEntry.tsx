@@ -2,14 +2,36 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import ConsumerMobileLayout from "@/components/consumer/ConsumerMobileLayout";
+import { supabase } from "@/integrations/supabase/client";
 
 const ConsumerPhoneEntry = () => {
   const navigate = useNavigate();
   const [phone, setPhone] = useState("");
+  const [error, setError] = useState("");
+  const [sending, setSending] = useState(false);
 
-  const handleNext = () => {
+  const handleNext = async () => {
+    setError("");
     if (phone.length < 10) return;
+    // Invite-code session value is required before phone verification can start.
+    if (!sessionStorage.getItem("invite_code")) {
+      navigate("/app/invite", { replace: true });
+      return;
+    }
+    setSending(true);
+    const e164 = `+1${phone}`;
+    const { error } = await supabase.auth.signInWithOtp({
+      phone: e164,
+      options: { channel: "sms" },
+    });
+    setSending(false);
+    if (error) {
+      setError(error.message || "Could not send code. Please try again.");
+      return;
+    }
     sessionStorage.setItem("signup_phone", phone);
+    sessionStorage.setItem("signup_phone_e164", e164);
+    sessionStorage.removeItem("phone_verified");
     navigate("/app/verification");
   };
 
@@ -32,12 +54,13 @@ const ConsumerPhoneEntry = () => {
             type="tel"
           />
         </div>
+        {error && <p className="text-sm text-red-500">{error}</p>}
         <button
           onClick={handleNext}
-          disabled={phone.length < 10}
+          disabled={phone.length < 10 || sending}
           className="w-full py-3 rounded-full bg-[#F97316] text-white font-bold text-lg shadow-lg hover:bg-[#EA6C10] disabled:opacity-50 transition-colors"
         >
-          Next
+          {sending ? "Sending code…" : "Next"}
         </button>
       </div>
     </ConsumerMobileLayout>

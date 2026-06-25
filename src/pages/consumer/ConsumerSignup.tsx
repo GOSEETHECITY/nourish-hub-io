@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useConsumerAuth } from "@/contexts/ConsumerAuthContext";
@@ -9,7 +9,22 @@ const ConsumerSignup = () => {
   const navigate = useNavigate();
   const { refreshConsumer } = useConsumerAuth();
   const phone = sessionStorage.getItem("signup_phone") || "";
+  const phoneE164 = sessionStorage.getItem("signup_phone_e164") || "";
+  const phoneVerified = sessionStorage.getItem("phone_verified") || "";
   const inviteCode = sessionStorage.getItem("invite_code") || "";
+
+  // Hard gate: signup is only reachable after a verified phone OTP and a
+  // captured invite code. The DB also enforces the invite-code requirement,
+  // but blocking client-side avoids a noisy round-trip.
+  useEffect(() => {
+    if (!inviteCode) {
+      navigate("/app/invite", { replace: true });
+      return;
+    }
+    if (!phoneVerified || phoneVerified !== phoneE164) {
+      navigate("/app/phone", { replace: true });
+    }
+  }, [inviteCode, phoneVerified, phoneE164, navigate]);
 
   const [form, setForm] = useState({
     firstName: "",
@@ -28,42 +43,51 @@ const ConsumerSignup = () => {
 
   const handleSubmit = async () => {
     setError("");
+    if (!inviteCode) {
+      setError("Invite code is required.");
+      return;
+    }
     setLoading(true);
-    const { data, error: authErr } = await supabase.auth.signUp({
+
+    // Phone OTP verification already created an authenticated session.
+    // Attach the email + password to that user so they can sign in later.
+    const { data: updated, error: updateErr } = await supabase.auth.updateUser({
       email: form.email.trim(),
       password: form.password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/app/home`,
-        data: {
-          first_name: form.firstName,
-          last_name: form.lastName,
-          phone: form.phone,
-        },
+      data: {
+        first_name: form.firstName,
+        last_name: form.lastName,
+        phone: form.phone,
       },
     });
 
-    if (authErr) {
-      setError(authErr.message);
+    if (updateErr || !updated.user) {
+      setError(updateErr?.message || "Could not complete signup.");
       setLoading(false);
       return;
     }
 
-    if (data.user) {
-      await new Promise((r) => setTimeout(r, 500));
-      await supabase.from("consumers").insert({
-        user_id: data.user.id,
-        first_name: form.firstName,
-        last_name: form.lastName,
-        email: form.email.trim(),
-        phone: form.phone,
-        zip_code: form.zip,
-        city: form.city,
-        date_of_birth: form.dob || null,
-        invite_code_used: inviteCode,
-      });
-      await refreshConsumer();
+    const { error: insertErr } = await supabase.from("consumers").insert({
+      user_id: updated.user.id,
+      first_name: form.firstName,
+      last_name: form.lastName,
+      email: form.email.trim(),
+      phone: form.phone,
+      zip_code: form.zip,
+      city: form.city,
+      date_of_birth: form.dob || null,
+      invite_code_used: inviteCode,
+    });
+
+    if (insertErr) {
+      setError(insertErr.message);
+      setLoading(false);
+      return;
     }
 
+    await refreshConsumer();
+    sessionStorage.removeItem("phone_verified");
+    sessionStorage.removeItem("signup_phone_e164");
     setLoading(false);
     navigate("/app/home");
   };
