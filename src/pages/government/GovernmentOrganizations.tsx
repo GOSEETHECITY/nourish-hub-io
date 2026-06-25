@@ -34,7 +34,7 @@ export default function GovernmentOrganizations() {
     queryKey: ["gov-orgs"],
     queryFn: async () => {
       const { data } = await supabase
-        .from("organizations")
+        .from("organizations_public")
         .select("*")
         .eq("approval_status", "approved")
         .order("name");
