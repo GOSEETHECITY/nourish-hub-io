@@ -47,12 +47,13 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
-    // Validate invitation code exists and is active
+    // Validate invitation code exists, is active, and is a Government code
     const { data: codeData, error: codeError } = await adminClient
       .from("invitation_codes")
-      .select("id, status, expiration_date")
+      .select("id, status, expiration_date, role_type, times_used, max_uses")
       .eq("code", invitationCode.trim())
       .eq("status", "active")
+      .eq("role_type", "Government")
       .maybeSingle();
 
     if (codeError || !codeData) {
@@ -66,6 +67,18 @@ Deno.serve(async (req) => {
     if (codeData.expiration_date && new Date(codeData.expiration_date) < new Date()) {
       return new Response(
         JSON.stringify({ error: "Invitation code has expired" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Enforce max_uses
+    if (
+      typeof codeData.max_uses === "number" &&
+      typeof codeData.times_used === "number" &&
+      codeData.times_used >= codeData.max_uses
+    ) {
+      return new Response(
+        JSON.stringify({ error: "Invitation code has reached its usage limit" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
