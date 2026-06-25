@@ -1378,6 +1378,30 @@ export type Database = {
           },
         ]
       }
+      rate_limit_attempts: {
+        Row: {
+          bucket: string
+          created_at: string
+          id: string
+          key: string
+          success: boolean
+        }
+        Insert: {
+          bucket: string
+          created_at?: string
+          id?: string
+          key: string
+          success?: boolean
+        }
+        Update: {
+          bucket?: string
+          created_at?: string
+          id?: string
+          key?: string
+          success?: boolean
+        }
+        Relationships: []
+      }
       regions: {
         Row: {
           cities: Json | null
@@ -1750,11 +1774,9 @@ export type Database = {
           operating_hours: string | null
           organization_name: string | null
           population_served: string | null
-          primary_contact: string | null
           refrigeration: boolean | null
           social_handles: Json | null
           state: string | null
-          user_id: string | null
           website: string | null
           zip: string | null
         }
@@ -1777,11 +1799,9 @@ export type Database = {
           operating_hours?: string | null
           organization_name?: string | null
           population_served?: string | null
-          primary_contact?: string | null
           refrigeration?: boolean | null
           social_handles?: Json | null
           state?: string | null
-          user_id?: string | null
           website?: string | null
           zip?: string | null
         }
@@ -1804,11 +1824,9 @@ export type Database = {
           operating_hours?: string | null
           organization_name?: string | null
           population_served?: string | null
-          primary_contact?: string | null
           refrigeration?: boolean | null
           social_handles?: Json | null
           state?: string | null
-          user_id?: string | null
           website?: string | null
           zip?: string | null
         }
