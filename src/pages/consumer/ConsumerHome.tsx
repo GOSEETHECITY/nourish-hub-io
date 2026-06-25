@@ -77,14 +77,14 @@ const ConsumerHome = () => {
     const load = async () => {
       try {
         // Fetch restaurant locations in selected city
-        const { data: locs } = await supabase
-          .from("locations")
+        const { data: locsRaw } = await (supabase as any)
+          .from("locations_public")
           .select("id, name, latitude, longitude, city, state")
-          .eq("approval_status", "approved")
           .eq("marketplace_enabled", true)
           .eq("city", city)
           .eq("state", state);
-        const locMarkers: MapLocation[] = (locs || [])
+        const locs = (locsRaw || []) as Array<{ id: string; name: string; latitude: number | null; longitude: number | null; city: string | null; state: string | null }>;
+        const locMarkers: MapLocation[] = locs
           .filter((l) => l.latitude && l.longitude)
           .map((l) => ({
             id: l.id,
