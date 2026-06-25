@@ -78,9 +78,8 @@ const ConsumerHome = () => {
       try {
         // Fetch restaurant locations in selected city
         const { data: locs } = await supabase
-          .from("locations")
+          .from("locations_public" as any)
           .select("id, name, latitude, longitude, city, state")
-          .eq("approval_status", "approved")
           .eq("marketplace_enabled", true)
           .eq("city", city)
           .eq("state", state);
