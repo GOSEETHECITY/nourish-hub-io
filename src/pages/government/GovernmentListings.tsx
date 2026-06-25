@@ -21,7 +21,7 @@ export default function GovernmentListings() {
 
   const { data: locs = [] } = useQuery({
     queryKey: ["gov-locs"],
-    queryFn: async () => { const { data } = await supabase.from("locations").select("id, organization_id, city, state, county"); return data || []; },
+    queryFn: async () => { const { data } = await supabase.from("locations_government").select("id, organization_id, city, state, county"); return data || []; },
   });
 
   const regionLocIds = useMemo(() => {
@@ -41,7 +41,7 @@ export default function GovernmentListings() {
 
   const { data: orgs = [] } = useQuery({
     queryKey: ["gov-orgs"],
-    queryFn: async () => { const { data } = await supabase.from("organizations").select("id, name"); return data || []; },
+    queryFn: async () => { const { data } = await supabase.from("organizations_public").select("id, name"); return data || []; },
   });
 
   const orgMap = useMemo(() => Object.fromEntries(orgs.map((o: any) => [o.id, o.name])), [orgs]);

@@ -25,7 +25,7 @@ export default function GovernmentDashboardHome() {
 
   const { data: locs = [] } = useQuery({
     queryKey: ["gov-locs"],
-    queryFn: async () => { const { data } = await supabase.from("locations").select("id, organization_id, city, state, county"); return data || []; },
+    queryFn: async () => { const { data } = await supabase.from("locations_government").select("id, organization_id, city, state, county"); return data || []; },
   });
 
   const regionFilteredLocs = useMemo(() => {
@@ -52,12 +52,12 @@ export default function GovernmentDashboardHome() {
 
   const { data: orgs = [] } = useQuery({
     queryKey: ["gov-orgs"],
-    queryFn: async () => { const { data } = await supabase.from("organizations").select("*"); return (data || []) as Organization[]; },
+    queryFn: async () => { const { data } = await supabase.from("organizations_public").select("*"); return (data || []) as Organization[]; },
   });
 
   const { data: nonprofits = [] } = useQuery({
     queryKey: ["gov-nonprofits"],
-    queryFn: async () => { const { data } = await supabase.from("nonprofits").select("*"); return (data || []) as Nonprofit[]; },
+    queryFn: async () => { const { data } = await supabase.from("nonprofits_public").select("*"); return (data || []) as Nonprofit[]; },
   });
 
   const orgMap = useMemo(() => Object.fromEntries(orgs.map((o) => [o.id, o])), [orgs]);

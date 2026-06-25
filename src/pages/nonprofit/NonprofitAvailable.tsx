@@ -28,7 +28,7 @@ export default function NonprofitAvailable() {
     queryKey: ["np-orgs", orgIds],
     queryFn: async () => {
       if (!orgIds.length) return [];
-      const { data } = await supabase.from("organizations").select("id, name").in("id", orgIds);
+      const { data } = await supabase.from("organizations_public").select("id, name").in("id", orgIds);
       return data || [];
     },
     enabled: orgIds.length > 0,

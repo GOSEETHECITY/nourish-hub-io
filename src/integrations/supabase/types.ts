@@ -1743,7 +1743,6 @@ export type Database = {
           cold_storage: boolean | null
           county: string | null
           created_at: string | null
-          ein: string | null
           estimated_weekly_served: number | null
           food_types_accepted: Database["public"]["Enums"]["food_type"][] | null
           id: string | null
@@ -1752,11 +1751,7 @@ export type Database = {
           organization_name: string | null
           population_served: string | null
           primary_contact: string | null
-          primary_contact_email: string | null
-          primary_contact_phone: string | null
-          proof_of_insurance_url: string | null
           refrigeration: boolean | null
-          signed_agreement_url: string | null
           social_handles: Json | null
           state: string | null
           user_id: string | null
@@ -1773,7 +1768,6 @@ export type Database = {
           cold_storage?: boolean | null
           county?: string | null
           created_at?: string | null
-          ein?: string | null
           estimated_weekly_served?: number | null
           food_types_accepted?:
             | Database["public"]["Enums"]["food_type"][]
@@ -1784,11 +1778,7 @@ export type Database = {
           organization_name?: string | null
           population_served?: string | null
           primary_contact?: string | null
-          primary_contact_email?: string | null
-          primary_contact_phone?: string | null
-          proof_of_insurance_url?: string | null
           refrigeration?: boolean | null
-          signed_agreement_url?: string | null
           social_handles?: Json | null
           state?: string | null
           user_id?: string | null
@@ -1805,7 +1795,6 @@ export type Database = {
           cold_storage?: boolean | null
           county?: string | null
           created_at?: string | null
-          ein?: string | null
           estimated_weekly_served?: number | null
           food_types_accepted?:
             | Database["public"]["Enums"]["food_type"][]
@@ -1816,11 +1805,7 @@ export type Database = {
           organization_name?: string | null
           population_served?: string | null
           primary_contact?: string | null
-          primary_contact_email?: string | null
-          primary_contact_phone?: string | null
-          proof_of_insurance_url?: string | null
           refrigeration?: boolean | null
-          signed_agreement_url?: string | null
           social_handles?: Json | null
           state?: string | null
           user_id?: string | null
@@ -1833,16 +1818,12 @@ export type Database = {
         Row: {
           address: string | null
           approval_status: Database["public"]["Enums"]["approval_status"] | null
-          billing_contact: string | null
           city: string | null
           county: string | null
           created_at: string | null
           government_regions: Json | null
           id: string | null
           name: string | null
-          primary_contact_email: string | null
-          primary_contact_name: string | null
-          primary_contact_phone: string | null
           state: string | null
           type: Database["public"]["Enums"]["organization_type"] | null
           zip: string | null
@@ -1852,16 +1833,12 @@ export type Database = {
           approval_status?:
             | Database["public"]["Enums"]["approval_status"]
             | null
-          billing_contact?: string | null
           city?: string | null
           county?: string | null
           created_at?: string | null
           government_regions?: Json | null
           id?: string | null
           name?: string | null
-          primary_contact_email?: string | null
-          primary_contact_name?: string | null
-          primary_contact_phone?: string | null
           state?: string | null
           type?: Database["public"]["Enums"]["organization_type"] | null
           zip?: string | null
@@ -1871,16 +1848,12 @@ export type Database = {
           approval_status?:
             | Database["public"]["Enums"]["approval_status"]
             | null
-          billing_contact?: string | null
           city?: string | null
           county?: string | null
           created_at?: string | null
           government_regions?: Json | null
           id?: string | null
           name?: string | null
-          primary_contact_email?: string | null
-          primary_contact_name?: string | null
-          primary_contact_phone?: string | null
           state?: string | null
           type?: Database["public"]["Enums"]["organization_type"] | null
           zip?: string | null
