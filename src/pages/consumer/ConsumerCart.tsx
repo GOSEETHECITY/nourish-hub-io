@@ -20,16 +20,17 @@ const ConsumerCart = () => {
   const handleBuy = async () => {
     if (!consumer || items.length === 0) return;
     setOrdering(true);
+    // Prices are recomputed server-side from the coupon row via a SECURITY DEFINER
+    // RPC. The client cannot manipulate unit_price, tax, or total.
     for (const item of items) {
-      await supabase.from("consumer_orders").insert({
-        consumer_id: consumer.id,
-        coupon_id: item.coupon_id,
-        quantity: item.quantity,
-        unit_price: item.price,
-        tax_amount: +(item.price * item.quantity * TAX_RATE).toFixed(2),
-        total_price: +(item.price * item.quantity * (1 + TAX_RATE)).toFixed(2),
-        status: "pending",
+      const { error } = await supabase.rpc("create_consumer_order", {
+        p_coupon_id: item.coupon_id,
+        p_quantity: item.quantity,
       });
+      if (error) {
+        setOrdering(false);
+        return;
+      }
     }
     clearCart();
     setOrdering(false);
