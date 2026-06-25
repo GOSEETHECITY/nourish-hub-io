@@ -12,17 +12,18 @@ const ConsumerRestaurantDetail = () => {
 
   useEffect(() => {
     const load = async () => {
-      const { data: loc } = await supabase
-        .from("locations_public" as any)
+      const { data: locData } = await (supabase as any)
+        .from("locations_public")
         .select("id, name, address, city, state, zip, latitude, longitude, hours_of_operation, location_type, marketplace_enabled, pickup_address, pickup_instructions, organization_id")
         .eq("id", id!)
         .maybeSingle();
+      const loc: any = locData;
       let merged: any = loc;
-      if (loc && (loc as any).organization_id) {
-        const { data: org } = await supabase
-          .from("organizations_public" as any)
+      if (loc && loc.organization_id) {
+        const { data: org } = await (supabase as any)
+          .from("organizations_public")
           .select("name, address, city, state")
-          .eq("id", (loc as any).organization_id)
+          .eq("id", loc.organization_id)
           .maybeSingle();
         merged = { ...loc, organizations: org };
       }

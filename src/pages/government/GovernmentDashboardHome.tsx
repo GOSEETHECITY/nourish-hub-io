@@ -52,7 +52,7 @@ export default function GovernmentDashboardHome() {
 
   const { data: orgs = [] } = useQuery({
     queryKey: ["gov-orgs"],
-    queryFn: async () => { const { data } = await supabase.from("organizations_public").select("*"); return (data || []) as Organization[]; },
+    queryFn: async () => { const { data } = await supabase.from("organizations_public").select("*"); return (data || []) as unknown as Organization[]; },
   });
 
   const { data: nonprofits = [] } = useQuery({

@@ -38,7 +38,7 @@ export default function GovernmentOrganizations() {
         .select("*")
         .eq("approval_status", "approved")
         .order("name");
-      return (data || []) as Organization[];
+      return (data || []) as unknown as Organization[];
     },
   });
 
