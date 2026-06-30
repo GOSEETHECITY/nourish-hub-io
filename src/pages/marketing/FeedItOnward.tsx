@@ -170,7 +170,7 @@ export default function FeedItOnward() {
             {problemStats.map((s) => (
               <div
                 key={s.label}
-                className="bg-white rounded-2xl border border-[#000000/10] p-8 hover:border-black/40 hover:shadow-md transition"
+                className="bg-white rounded-2xl border border-black/10 p-8 hover:border-black/40 hover:shadow-md transition"
               >
                 <div className="text-3xl font-bold text-[#135489] mb-3">{s.value}</div>
                 <div className="text-sm text-[#135489]/80 leading-relaxed">{s.label}</div>
@@ -191,7 +191,7 @@ export default function FeedItOnward() {
           </div>
           <div className="grid md:grid-cols-2 gap-8">
             {/* GSTC */}
-            <div className="rounded-3xl bg-[#FFFFFF] border border-[#000000/10] p-8">
+            <div className="rounded-3xl bg-[#FFFFFF] border border-black/10 p-8">
               <div className="text-xs font-semibold tracking-wide uppercase text-[#135489] mb-3">The Commerce Layer</div>
               <h3 className="text-2xl font-bold text-black mb-2">Go See The City</h3>
               <p className="text-lg font-semibold text-black mb-4">Turn Closing Time Into Community Time</p>
@@ -268,7 +268,7 @@ export default function FeedItOnward() {
             {initiatives.map((t) => (
               <div
                 key={t.title}
-                className="bg-white rounded-2xl border border-[#000000/10] p-6 hover:border-black/40 hover:shadow-md transition"
+                className="bg-white rounded-2xl border border-black/10 p-6 hover:border-black/40 hover:shadow-md transition"
               >
                 <h3 className="font-bold text-black mb-2">{t.title}</h3>
                 <p className="text-sm text-[#135489]/70 leading-relaxed">{t.body}</p>
@@ -312,7 +312,7 @@ export default function FeedItOnward() {
             {hariFeatures.map((f) => (
               <div
                 key={f.t}
-                className="bg-white p-6 rounded-2xl border border-[#000000/10] hover:border-black/40 hover:shadow-md transition"
+                className="bg-white p-6 rounded-2xl border border-black/10 hover:border-black/40 hover:shadow-md transition"
               >
                 <div className="font-bold text-black mb-2">{f.t}</div>
                 <div className="text-sm text-[#135489]/70 leading-relaxed">{f.b}</div>
@@ -335,7 +335,7 @@ export default function FeedItOnward() {
             {servesList.map((label) => (
               <span
                 key={label}
-                className="px-4 py-2 rounded-full bg-[#FFFFFF] border border-[#000000/10] text-[#135489] text-sm font-semibold"
+                className="px-4 py-2 rounded-full bg-[#FFFFFF] border border-black/10 text-[#135489] text-sm font-semibold"
               >
                 {label}
               </span>
@@ -357,7 +357,7 @@ export default function FeedItOnward() {
             <h2 className="text-4xl font-bold text-black">Ready to Feed More and Waste Less?</h2>
           </div>
           <div className="grid md:grid-cols-2 gap-8">
-            <div className="rounded-3xl bg-white border border-[#000000/10] p-10 flex flex-col">
+            <div className="rounded-3xl bg-white border border-black/10 p-10 flex flex-col">
               <h3 className="text-2xl font-bold text-black mb-4">Turn Surplus Into Impact</h3>
               <p className="text-[#135489]/80 leading-relaxed mb-6">
                 Whether you run a restaurant, stadium, hotel, grocery store, school, or healthcare facility Hariet.AI connects you with nonprofits in your own community and handles everything else. No required minimums. No extra overhead. Just impact.
