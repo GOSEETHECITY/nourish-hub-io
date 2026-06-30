@@ -76,22 +76,22 @@ export default function FeedItOnward() {
       {/* HERO */}
       <section className="relative overflow-hidden bg-white">
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-[#6d412a]/5 rounded-full blur-3xl" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-[#135489]/5 rounded-full blur-3xl" />
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#6d412a]/10 text-[#6d412a] text-xs font-semibold tracking-wide uppercase mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#135489]/10 text-[#135489] text-xs font-semibold tracking-wide uppercase mb-6">
             Go See The City × U.S. EPA #FeedItOnward
           </div>
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-tight tracking-tight text-black mb-6 max-w-4xl mx-auto">
-            No Meal Left Behind. <span className="text-[#6d412a]">No Community Overlooked.</span>
+            No Meal Left Behind. <span className="text-[#135489]">No Community Overlooked.</span>
           </h1>
-          <p className="text-xl text-[#6d412a]/70 leading-relaxed max-w-2xl mx-auto mb-10">
+          <p className="text-xl text-[#135489]/70 leading-relaxed max-w-2xl mx-auto mb-10">
             Go See The City and Hariet.AI are proud partners in the U.S. EPA's Freedom 250 Feed It Onward Campaign a national movement to redirect surplus food from landfills to the families, veterans, and neighbors who need it most.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
               href="https://hariet.ai/get-started"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-[#6d412a] text-white font-bold hover:bg-[#5a3422] transition shadow-sm"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-[#135489] text-white font-bold hover:bg-[#0e3f6a] transition shadow-sm"
             >
               Join the Movement <ArrowRight className="w-4 h-4" />
             </a>
@@ -123,13 +123,13 @@ export default function FeedItOnward() {
       <section id="story" className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-2 gap-12 items-start">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#6d412a]/10 text-[#6d412a] text-xs font-semibold tracking-wide uppercase mb-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#135489]/10 text-[#135489] text-xs font-semibold tracking-wide uppercase mb-6">
               The Story Behind the Name
             </div>
             <h2 className="text-4xl font-bold text-black mb-6 leading-tight">
               She Never Lost a Passenger. We Won't Lose a Meal.
             </h2>
-            <div className="space-y-5 text-[#6d412a]/80 leading-relaxed">
+            <div className="space-y-5 text-[#135489]/80 leading-relaxed">
               <p>
                 Harriet Tubman didn't just dream of freedom she engineered it. Through the Underground Railroad, she built a network of safe houses, trusted partners, and seamless handoffs that guided hundreds of people to safety. She operated through ingenuity, courage, and the willingness of ordinary people farmers, business owners, community members to open their doors and share what they had.
               </p>
@@ -141,7 +141,7 @@ export default function FeedItOnward() {
               </p>
             </div>
           </div>
-          <div className="rounded-3xl bg-[#1c0e07] text-white p-10 border-l-4 border-[#6d412a]">
+          <div className="rounded-3xl bg-[#135489] text-white p-10 border-l-4 border-[#135489]">
             <blockquote className="text-2xl font-semibold leading-snug italic">
               "I never ran my train off the track and I never lost a passenger."
             </blockquote>
@@ -155,25 +155,25 @@ export default function FeedItOnward() {
       </section>
 
       {/* PROBLEM */}
-      <section className="py-24 bg-[#fdf8f4]">
+      <section className="py-24 bg-[#FFFFFF]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#6d412a]/10 text-[#6d412a] text-xs font-semibold tracking-wide uppercase mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#135489]/10 text-[#135489] text-xs font-semibold tracking-wide uppercase mb-6">
             Why This Matters
           </div>
           <h2 className="text-4xl font-bold text-black mb-4 max-w-3xl mx-auto">
             America Wastes Too Much. Together, We Can Change That.
           </h2>
-          <p className="text-lg text-[#6d412a]/70 max-w-2xl mx-auto mb-14 leading-relaxed">
+          <p className="text-lg text-[#135489]/70 max-w-2xl mx-auto mb-14 leading-relaxed">
             More than one-third of all food in the United States goes uneaten and most of it ends up in landfills. The solution isn't a new system. It's activating the one we already have.
           </p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
             {problemStats.map((s) => (
               <div
                 key={s.label}
-                className="bg-white rounded-2xl border border-[#ede5dc] p-8 hover:border-black/40 hover:shadow-md transition"
+                className="bg-white rounded-2xl border border-[#000000/10] p-8 hover:border-black/40 hover:shadow-md transition"
               >
-                <div className="text-3xl font-bold text-[#6d412a] mb-3">{s.value}</div>
-                <div className="text-sm text-[#6d412a]/80 leading-relaxed">{s.label}</div>
+                <div className="text-3xl font-bold text-[#135489] mb-3">{s.value}</div>
+                <div className="text-sm text-[#135489]/80 leading-relaxed">{s.label}</div>
               </div>
             ))}
           </div>
@@ -184,24 +184,24 @@ export default function FeedItOnward() {
       <section id="platforms" className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#6d412a]/10 text-[#6d412a] text-xs font-semibold tracking-wide uppercase mb-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#135489]/10 text-[#135489] text-xs font-semibold tracking-wide uppercase mb-6">
               Our Ecosystem
             </div>
             <h2 className="text-4xl font-bold text-black mb-4">Two Platforms. One Mission. Zero Waste.</h2>
           </div>
           <div className="grid md:grid-cols-2 gap-8">
             {/* GSTC */}
-            <div className="rounded-3xl bg-[#fdf8f4] border border-[#ede5dc] p-8">
-              <div className="text-xs font-semibold tracking-wide uppercase text-[#6d412a] mb-3">The Commerce Layer</div>
+            <div className="rounded-3xl bg-[#FFFFFF] border border-[#000000/10] p-8">
+              <div className="text-xs font-semibold tracking-wide uppercase text-[#135489] mb-3">The Commerce Layer</div>
               <h3 className="text-2xl font-bold text-black mb-2">Go See The City</h3>
               <p className="text-lg font-semibold text-black mb-4">Turn Closing Time Into Community Time</p>
-              <p className="text-[#6d412a]/80 mb-6 leading-relaxed">
+              <p className="text-[#135489]/80 mb-6 leading-relaxed">
                 Go See The City drives foot traffic to local businesses by enabling them to create same-day coupons for surplus food giving customers a reason to show up before closing and giving businesses a way to convert unsold inventory into revenue instead of waste.
               </p>
               <ul className="space-y-3 mb-8">
                 {gstcFeatures.map((f) => (
                   <li key={f} className="flex items-start gap-3 text-sm text-black">
-                    <Check className="w-4 h-4 text-[#6d412a] mt-0.5 flex-shrink-0" strokeWidth={3} />
+                    <Check className="w-4 h-4 text-[#135489] mt-0.5 flex-shrink-0" strokeWidth={3} />
                     <span>{f}</span>
                   </li>
                 ))}
@@ -210,14 +210,14 @@ export default function FeedItOnward() {
                 href="https://goseethecity.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#6d412a] text-white font-semibold hover:bg-[#5a3422] transition"
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-[#135489] text-white font-semibold hover:bg-[#0e3f6a] transition"
               >
                 Visit goseethecity.com <ArrowRight className="w-4 h-4" />
               </a>
             </div>
 
             {/* Hariet */}
-            <div className="rounded-3xl bg-[#1c0e07] text-white p-8">
+            <div className="rounded-3xl bg-[#135489] text-white p-8">
               <div className="text-xs font-semibold tracking-wide uppercase text-white/60 mb-3">The Operating System</div>
               <h3 className="text-2xl font-bold mb-2">Hariet.AI</h3>
               <p className="text-lg font-semibold mb-4">One Dashboard. Every Meal. Nothing Wasted.</p>
@@ -246,16 +246,16 @@ export default function FeedItOnward() {
       </section>
 
       {/* WHAT IS FEED IT ONWARD */}
-      <section className="py-24 bg-[#fdf8f4]">
+      <section className="py-24 bg-[#FFFFFF]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mb-14">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#6d412a]/10 text-[#6d412a] text-xs font-semibold tracking-wide uppercase mb-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#135489]/10 text-[#135489] text-xs font-semibold tracking-wide uppercase mb-6">
               EPA's Freedom 250 Initiative
             </div>
             <h2 className="text-4xl font-bold text-black mb-6 leading-tight">
               A National Movement Built on American Ingenuity
             </h2>
-            <div className="space-y-4 text-[#6d412a]/80 leading-relaxed">
+            <div className="space-y-4 text-[#135489]/80 leading-relaxed">
               <p>
                 Feed It Onward is the U.S. EPA's national storytelling and partnership initiative, launched as part of Freedom 250 America's 250th birthday celebration. It shines a light on the farms, businesses, nonprofits, and communities already doing the work of keeping food in use and out of landfills.
               </p>
@@ -268,10 +268,10 @@ export default function FeedItOnward() {
             {initiatives.map((t) => (
               <div
                 key={t.title}
-                className="bg-white rounded-2xl border border-[#ede5dc] p-6 hover:border-black/40 hover:shadow-md transition"
+                className="bg-white rounded-2xl border border-[#000000/10] p-6 hover:border-black/40 hover:shadow-md transition"
               >
                 <h3 className="font-bold text-black mb-2">{t.title}</h3>
-                <p className="text-sm text-[#6d412a]/70 leading-relaxed">{t.body}</p>
+                <p className="text-sm text-[#135489]/70 leading-relaxed">{t.body}</p>
               </div>
             ))}
           </div>
@@ -280,7 +280,7 @@ export default function FeedItOnward() {
 
       {/* HOW HARIET POWERS */}
       <section id="how" className="grid md:grid-cols-2">
-        <div className="bg-[#1c0e07] text-white p-12 lg:p-16 flex items-center">
+        <div className="bg-[#135489] text-white p-12 lg:p-16 flex items-center">
           <div className="max-w-lg">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white text-xs font-semibold tracking-wide uppercase mb-6">
               Powered by Hariet.AI
@@ -307,15 +307,15 @@ export default function FeedItOnward() {
             </div>
           </div>
         </div>
-        <div className="bg-[#fdf8f4] p-12 lg:p-16 flex items-center">
+        <div className="bg-[#FFFFFF] p-12 lg:p-16 flex items-center">
           <div className="grid sm:grid-cols-2 gap-5 w-full">
             {hariFeatures.map((f) => (
               <div
                 key={f.t}
-                className="bg-white p-6 rounded-2xl border border-[#ede5dc] hover:border-black/40 hover:shadow-md transition"
+                className="bg-white p-6 rounded-2xl border border-[#000000/10] hover:border-black/40 hover:shadow-md transition"
               >
                 <div className="font-bold text-black mb-2">{f.t}</div>
-                <div className="text-sm text-[#6d412a]/70 leading-relaxed">{f.b}</div>
+                <div className="text-sm text-[#135489]/70 leading-relaxed">{f.b}</div>
               </div>
             ))}
           </div>
@@ -325,7 +325,7 @@ export default function FeedItOnward() {
       {/* WHO HARIET SERVES */}
       <section className="py-24 bg-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#6d412a]/10 text-[#6d412a] text-xs font-semibold tracking-wide uppercase mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#135489]/10 text-[#135489] text-xs font-semibold tracking-wide uppercase mb-6">
             Built for Every Food Business
           </div>
           <h2 className="text-4xl font-bold text-black mb-10">
@@ -335,40 +335,40 @@ export default function FeedItOnward() {
             {servesList.map((label) => (
               <span
                 key={label}
-                className="px-4 py-2 rounded-full bg-[#fdf8f4] border border-[#ede5dc] text-[#6d412a] text-sm font-semibold"
+                className="px-4 py-2 rounded-full bg-[#FFFFFF] border border-[#000000/10] text-[#135489] text-sm font-semibold"
               >
                 {label}
               </span>
             ))}
           </div>
-          <p className="text-sm text-[#6d412a]/60 mt-8">
+          <p className="text-sm text-[#135489]/60 mt-8">
             If you serve food, Hariet.AI has a place for you in the network.
           </p>
         </div>
       </section>
 
       {/* GET INVOLVED */}
-      <section id="get-involved" className="py-24 bg-[#fdf8f4]">
+      <section id="get-involved" className="py-24 bg-[#FFFFFF]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#6d412a]/10 text-[#6d412a] text-xs font-semibold tracking-wide uppercase mb-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#135489]/10 text-[#135489] text-xs font-semibold tracking-wide uppercase mb-6">
               Take Action
             </div>
             <h2 className="text-4xl font-bold text-black">Ready to Feed More and Waste Less?</h2>
           </div>
           <div className="grid md:grid-cols-2 gap-8">
-            <div className="rounded-3xl bg-white border border-[#ede5dc] p-10 flex flex-col">
+            <div className="rounded-3xl bg-white border border-[#000000/10] p-10 flex flex-col">
               <h3 className="text-2xl font-bold text-black mb-4">Turn Surplus Into Impact</h3>
-              <p className="text-[#6d412a]/80 leading-relaxed mb-6">
+              <p className="text-[#135489]/80 leading-relaxed mb-6">
                 Whether you run a restaurant, stadium, hotel, grocery store, school, or healthcare facility Hariet.AI connects you with nonprofits in your own community and handles everything else. No required minimums. No extra overhead. Just impact.
               </p>
-              <div className="text-sm text-[#6d412a]/80 space-y-1 mb-8">
+              <div className="text-sm text-[#135489]/80 space-y-1 mb-8">
                 <div>
-                  <a href="mailto:Hello@Hariet.AI" className="hover:text-[#6d412a] transition">Hello@Hariet.AI</a>
+                  <a href="mailto:Hello@Hariet.AI" className="hover:text-[#135489] transition">Hello@Hariet.AI</a>
                 </div>
                 <div>844-974-6277</div>
                 <div>
-                  <a href="https://hariet.ai" target="_blank" rel="noopener noreferrer" className="hover:text-[#6d412a] transition">www.Hariet.AI</a>
+                  <a href="https://hariet.ai" target="_blank" rel="noopener noreferrer" className="hover:text-[#135489] transition">www.Hariet.AI</a>
                 </div>
               </div>
               <div className="mt-auto">
@@ -376,13 +376,13 @@ export default function FeedItOnward() {
                   href="https://hariet.ai/get-started"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-[#6d412a] text-white font-bold hover:bg-[#5a3422] transition shadow-sm"
+                  className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-[#135489] text-white font-bold hover:bg-[#0e3f6a] transition shadow-sm"
                 >
                   Get Started at Hariet.AI <ArrowRight className="w-4 h-4" />
                 </a>
               </div>
             </div>
-            <div className="rounded-3xl bg-[#1c0e07] text-white p-10 flex flex-col">
+            <div className="rounded-3xl bg-[#135489] text-white p-10 flex flex-col">
               <h3 className="text-2xl font-bold mb-4">Shop Surplus. Save Money. Feed Your City.</h3>
               <p className="text-white/80 leading-relaxed mb-8">
                 Go See The City makes it easy to find same-day deals on surplus food from businesses in your neighborhood saving you money while keeping good food out of the landfill. Every coupon redeemed is a meal saved and a local business supported.
