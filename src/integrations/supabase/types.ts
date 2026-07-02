@@ -1927,6 +1927,12 @@ export type Database = {
       }
     }
     Functions: {
+      consume_government_invitation_code: {
+        Args: { p_code: string }
+        Returns: {
+          id: string
+        }[]
+      }
       create_consumer_order: {
         Args: { p_coupon_id: string; p_quantity: number }
         Returns: string

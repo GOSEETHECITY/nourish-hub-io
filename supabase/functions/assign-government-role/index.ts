@@ -47,42 +47,6 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
-    // Validate invitation code exists, is active, and is a Government code
-    const { data: codeData, error: codeError } = await adminClient
-      .from("invitation_codes")
-      .select("id, status, expiration_date, role_type, times_used, max_uses")
-      .eq("code", invitationCode.trim())
-      .eq("status", "active")
-      .eq("role_type", "Government")
-      .maybeSingle();
-
-    if (codeError || !codeData) {
-      return new Response(
-        JSON.stringify({ error: "Invalid or expired invitation code" }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Check expiration
-    if (codeData.expiration_date && new Date(codeData.expiration_date) < new Date()) {
-      return new Response(
-        JSON.stringify({ error: "Invitation code has expired" }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Enforce max_uses
-    if (
-      typeof codeData.max_uses === "number" &&
-      typeof codeData.times_used === "number" &&
-      codeData.times_used >= codeData.max_uses
-    ) {
-      return new Response(
-        JSON.stringify({ error: "Invitation code has reached its usage limit" }),
-        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
     // Check user doesn't already have this role
     const { data: existingRole } = await adminClient
       .from("user_roles")
@@ -111,6 +75,19 @@ Deno.serve(async (req) => {
       );
     }
 
+    // ATOMIC: consume one use of the invitation code. Returns a row only if
+    // the code exists, is active, is a Government code, has not expired, and
+    // has remaining uses. This closes the TOCTOU race on max_uses.
+    const { data: consumed, error: consumeError } = await adminClient
+      .rpc("consume_government_invitation_code", { p_code: invitationCode.trim() });
+
+    if (consumeError || !consumed || (Array.isArray(consumed) && consumed.length === 0)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid, expired, or exhausted invitation code" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Assign role
     const { error: insertError } = await adminClient
       .from("user_roles")
@@ -118,17 +95,6 @@ Deno.serve(async (req) => {
 
     if (insertError) throw insertError;
 
-    // Increment times_used on the invitation code
-    const { data: currentCode } = await adminClient
-      .from("invitation_codes")
-      .select("times_used")
-      .eq("id", codeData.id)
-      .single();
-
-    await adminClient
-      .from("invitation_codes")
-      .update({ times_used: (currentCode?.times_used ?? 0) + 1 })
-      .eq("id", codeData.id);
 
     return new Response(
       JSON.stringify({ success: true }),
