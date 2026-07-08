@@ -56,18 +56,19 @@ const ConsumerHome = () => {
   const [markers, setMarkers] = useState<MapLocation[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Update map center whenever the user changes their selected city
+  // Update map center whenever the user changes their selected city.
+  // Never fall back to Atlanta — wait for LocationContext to become ready.
   useEffect(() => {
+    if (!ready) return;
     const known = CITY_CENTERS[cityKey];
     if (known) {
       setCenter(known);
       return;
     }
-    // Unknown city — geocode it via Nominatim
     geocode(`${city}, ${state}, USA`).then((coords) => {
       if (coords) setCenter([coords.lat, coords.lng]);
     });
-  }, [city, state, cityKey]);
+  }, [city, state, cityKey, ready]);
 
   useEffect(() => {
     const load = async () => {
@@ -136,17 +137,21 @@ const ConsumerHome = () => {
 
   return (
     <ConsumerMobileLayout>
-      <div className="flex h-[100dvh] flex-col pb-[76px] overflow-hidden">
+      <div className="flex flex-col overflow-hidden" style={{ height: "calc(100dvh - 130px)", maxHeight: "calc(100dvh - 130px)" }}>
         <ConsumerAppHeader />
         <div className="flex-1 overflow-hidden">
-          <ConsumerMapView
-            center={center}
-            markers={loading ? [] : markers}
-            onMarkerClick={(id) => {
-              const m = markers.find((mk) => mk.id === id);
-              navigate(m?.type === "event" ? `/app/event/${id}` : `/app/restaurant/${id}`);
-            }}
-          />
+          {center ? (
+            <ConsumerMapView
+              center={center}
+              markers={loading ? [] : markers}
+              onMarkerClick={(id) => {
+                const m = markers.find((mk) => mk.id === id);
+                navigate(m?.type === "event" ? `/app/event/${id}` : `/app/restaurant/${id}`);
+              }}
+            />
+          ) : (
+            <div className="h-full w-full bg-gray-50" aria-hidden />
+          )}
         </div>
         <ConsumerBottomNav />
       </div>
