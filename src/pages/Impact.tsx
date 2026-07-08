@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Leaf, Trophy, Droplets, TreeDeciduous, Car, Trash2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CO2_LBS_PER_LB_FOOD } from "@/lib/co2";
 import type { FoodListing, ImpactReport, Organization, Nonprofit } from "@/types/database";
 
 export default function Impact() {
@@ -58,7 +59,7 @@ export default function Impact() {
   const totalPounds = filteredListings.reduce((s, l) => s + (l.pounds || 0), 0);
   const totalMeals = reports.reduce((s, r) => s + (r.meals_served || 0), 0);
   const totalValue = filteredListings.reduce((s, l) => s + (l.estimated_donation_value || 0), 0);
-  const co2 = totalPounds * 3.8;
+  const co2 = totalPounds * CO2_LBS_PER_LB_FOOD;
   const water = totalPounds * 108;
   const landfill = totalPounds;
   const trees = co2 / 48;

@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Package, Leaf, DollarSign, BarChart3, MapPin, Users, CheckCircle2 } from "lucide-react";
+import { Package, Leaf, DollarSign, BarChart3, MapPin } from "lucide-react";
 import OnboardingChecklist from "@/components/venue/OnboardingChecklist";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Progress } from "@/components/ui/progress";
+import { CO2_LBS_PER_LB_FOOD } from "@/lib/co2";
 import type { FoodListing, Location } from "@/types/database";
 
 export default function VenueDashboardHome() {
@@ -46,16 +46,11 @@ export default function VenueDashboardHome() {
   const totalPounds = donations.reduce((s, l) => s + (l.pounds || 0), 0);
   const totalValue = donations.reduce((s, l) => s + (l.estimated_donation_value || 0), 0);
   const activeDonations = donations.filter((l) => ["posted", "claimed", "picked_up"].includes(l.status)).length;
-  const co2 = totalPounds * 3.8;
+  const co2 = totalPounds * CO2_LBS_PER_LB_FOOD;
   const locMap = Object.fromEntries(locations.map((l) => [l.id, l.name]));
   const formatStatus = (s: string) => s.split("_").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
 
-  const cityProgress = cityThreshold
-    ? Math.min(100, Math.round((cityThreshold.current_consumer_count / cityThreshold.threshold) * 100))
-    : 0;
-  const consumersNeeded = cityThreshold
-    ? Math.max(0, cityThreshold.threshold - cityThreshold.current_consumer_count)
-    : 0;
+  const marketplaceUnlocked = Boolean(cityThreshold?.marketplace_unlocked);
 
   return (
     <div className="space-y-6">
@@ -85,29 +80,22 @@ export default function VenueDashboardHome() {
         </div>
       </div>
 
-      {/* City Progress Card */}
+      {/* Marketplace status */}
       {venueCity && (
-        <div className="bg-card rounded-xl border p-5">
-          <div className="flex items-center gap-2 mb-3">
+        <div className="bg-card rounded-xl border p-5 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
             <MapPin className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-bold text-foreground">City Progress — {venueCity}</h2>
+            <h2 className="text-lg font-bold text-foreground">Marketplace — {venueCity}</h2>
           </div>
-          {cityThreshold ? (
-            <div className="space-y-3">
-              <div className="flex justify-between text-sm text-muted-foreground">
-                <span className="flex items-center gap-1"><Users className="w-4 h-4" />{cityThreshold.current_consumer_count} consumers</span>
-                <span>Threshold: {cityThreshold.threshold}</span>
-              </div>
-              <Progress value={cityProgress} className="h-3" />
-              {cityThreshold.marketplace_unlocked ? (
-                <p className="text-sm text-success flex items-center gap-1 font-medium"><CheckCircle2 className="w-4 h-4" />Your marketplace is live in {venueCity}!</p>
-              ) : (
-                <p className="text-sm text-muted-foreground">{consumersNeeded} more consumers needed in {venueCity} to unlock your marketplace.</p>
-              )}
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">No consumer activity tracked yet for {venueCity}.</p>
-          )}
+          <span
+            className={`px-3 py-1 rounded-full text-xs font-semibold ${
+              marketplaceUnlocked
+                ? "bg-success/15 text-success"
+                : "bg-muted text-muted-foreground"
+            }`}
+          >
+            {marketplaceUnlocked ? "Marketplace Unlocked" : "Coming Soon"}
+          </span>
         </div>
       )}
 

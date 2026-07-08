@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Leaf, Trophy, Droplets, TreeDeciduous, Trash2 } from "lucide-react";
+import { CO2_LBS_PER_LB_FOOD } from "@/lib/co2";
 import type { FoodListing, ImpactReport } from "@/types/database";
 
 export default function VenueImpact() {
@@ -34,7 +35,7 @@ export default function VenueImpact() {
   const totalPounds = listings.reduce((s, l) => s + (l.pounds || 0), 0);
   const totalValue = listings.reduce((s, l) => s + (l.estimated_donation_value || 0), 0);
   const totalMeals = reports.reduce((s, r) => s + (r.meals_served || 0), 0);
-  const co2 = totalPounds * 3.8;
+  const co2 = totalPounds * CO2_LBS_PER_LB_FOOD;
   const water = totalPounds * 108;
   const trees = co2 / 48;
 

@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
 import { LOCATION_TYPES } from "@/lib/constants";
+import { CO2_LBS_PER_LB_FOOD } from "@/lib/co2";
 import { Switch } from "@/components/ui/switch";
 import type { Location, FoodListing, SustainabilityBaseline, ImpactReport, Coupon, Profile } from "@/types/database";
 import AddLocationUserDialog from "@/components/invitations/AddLocationUserDialog";
@@ -105,7 +106,7 @@ export default function LocationDetail() {
   const totalPounds = listings.reduce((s, l) => s + (l.pounds || 0), 0);
   const totalMeals = reports.reduce((s, r) => s + (r.meals_served || 0), 0);
   const totalValue = listings.reduce((s, l) => s + (l.estimated_donation_value || 0), 0);
-  const co2Prevented = totalPounds * 3.8;
+  const co2Prevented = totalPounds * CO2_LBS_PER_LB_FOOD;
   const totalRevenue = coupons.reduce((s, c) => s + c.price * c.quantity_sold, 0);
 
   return (

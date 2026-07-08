@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Leaf, Trophy, Building2, Heart, Droplets, TreeDeciduous, Trash2, BarChart3 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { filterByRegion, type GovernmentRegions } from "@/lib/regionFilter";
+import { CO2_LBS_PER_LB_FOOD } from "@/lib/co2";
 import type { FoodListing, ImpactReport, Organization, Nonprofit } from "@/types/database";
 
 export default function GovernmentDashboardHome() {
@@ -84,7 +85,7 @@ export default function GovernmentDashboardHome() {
   const totalPounds = completedListings.reduce((s, l) => s + (l.pounds || 0), 0);
   const totalMeals = reports.reduce((s, r) => s + (r.meals_served || 0), 0);
   const totalValue = completedListings.reduce((s, l) => s + (l.estimated_donation_value || 0), 0);
-  const co2 = totalPounds * 3.8;
+  const co2 = totalPounds * CO2_LBS_PER_LB_FOOD;
 
   const regionLabel = regions
     ? regions.is_state_wide ? `Statewide: ${regions.state || "All"}`
