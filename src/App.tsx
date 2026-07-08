@@ -112,6 +112,9 @@ import EventPreview from "./pages/consumer/EventPreview";
 import ErrorBoundary from "./components/ErrorBoundary";
 import NotFound from "./pages/NotFound";
 import { LocationProvider } from "./contexts/LocationContext";
+import DistrictLayout from "./components/district/DistrictLayout";
+import DistrictHome from "./pages/district/DistrictHome";
+import DistrictPlaceholder from "./pages/district/DistrictPlaceholder";
 
 const queryClient = new QueryClient();
 
@@ -295,6 +298,19 @@ const App = () => (
 
             {/* Public gated event preview */}
             <Route path="/event-preview/:id" element={<EventPreview />} />
+
+            {/* District dashboard (public demo, no auth) */}
+            <Route element={<DistrictLayout />}>
+              <Route path="/district" element={<DistrictHome />} />
+              <Route path="/district/schools" element={<DistrictPlaceholder title="Schools" />} />
+              <Route path="/district/donations" element={<DistrictPlaceholder title="Donations" />} />
+              <Route path="/district/pickups" element={<DistrictPlaceholder title="Pickups" />} />
+              <Route path="/district/compost" element={<DistrictPlaceholder title="Compost" />} />
+              <Route path="/district/reports" element={<DistrictPlaceholder title="Reports" />} />
+              <Route path="/district/assemblies" element={<DistrictPlaceholder title="Assemblies" />} />
+              <Route path="/district/support-log" element={<DistrictPlaceholder title="Support Log" />} />
+              <Route path="/district/settings" element={<DistrictPlaceholder title="Settings" />} />
+            </Route>
 
             <Route path="*" element={<NotFound />} />
           </Routes>
