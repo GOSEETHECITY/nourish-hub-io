@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Leaf, Trophy, Building2, Heart, Droplets, TreeDeciduous, Trash2, BarChart3 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { filterByRegion, type GovernmentRegions } from "@/lib/regionFilter";
+import { CO2_LBS_PER_LB_FOOD } from "@/lib/co2";
 import type { FoodListing, ImpactReport, Organization, Nonprofit } from "@/types/database";
 
 export default function GovernmentDashboardHome() {

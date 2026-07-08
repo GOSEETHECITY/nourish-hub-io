@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Leaf, Trophy, Droplets, TreeDeciduous, Car, Trash2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CO2_LBS_PER_LB_FOOD } from "@/lib/co2";
 import type { FoodListing, ImpactReport, Organization, Nonprofit } from "@/types/database";
 
 export default function Impact() {
