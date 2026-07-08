@@ -34,7 +34,7 @@ export default function VenueImpact() {
   const totalPounds = listings.reduce((s, l) => s + (l.pounds || 0), 0);
   const totalValue = listings.reduce((s, l) => s + (l.estimated_donation_value || 0), 0);
   const totalMeals = reports.reduce((s, r) => s + (r.meals_served || 0), 0);
-  const co2 = totalPounds * 3.8;
+  const co2 = totalPounds * CO2_LBS_PER_LB_FOOD;
   const water = totalPounds * 108;
   const trees = co2 / 48;
 
