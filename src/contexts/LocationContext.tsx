@@ -1,10 +1,12 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { useConsumerAuth } from "@/contexts/ConsumerAuthContext";
 
 interface LocationContextType {
   city: string;
   state: string;
   setLocation: (city: string, state: string) => void;
   locationLabel: string;
+  ready: boolean;
 }
 
 const DEFAULT_CITY = "Orlando";
@@ -25,6 +27,28 @@ const US_STATES: Record<string, string> = {
   "south carolina": "SC", "south dakota": "SD", tennessee: "TN", texas: "TX", utah: "UT",
   vermont: "VT", virginia: "VA", washington: "WA", "west virginia": "WV", wisconsin: "WI",
   wyoming: "WY", "district of columbia": "DC",
+};
+
+// City -> state lookup. Consumers table only stores city, so we resolve state
+// from this map. Keep in sync with the known cities on the platform.
+const CITY_TO_STATE: Record<string, string> = {
+  atlanta: "GA",
+  orlando: "FL",
+  miami: "FL",
+  jacksonville: "FL",
+  "st. petersburg": "FL",
+  "saint petersburg": "FL",
+  hernando: "FL",
+  dunedin: "FL",
+  rogers: "AR",
+  lowell: "AR",
+  ashland: "OH",
+  hampton: "GA",
+  seattle: "WA",
+  "st. louis": "MO",
+  "saint louis": "MO",
+  minneapolis: "MN",
+  albuquerque: "NM",
 };
 
 const toTitleCase = (value: string) =>
@@ -57,21 +81,32 @@ const LocationContext = createContext<LocationContextType>({
   state: DEFAULT_STATE,
   setLocation: () => {},
   locationLabel: `${DEFAULT_CITY}, ${DEFAULT_STATE}`,
+  ready: false,
 });
 
 export const useLocation = () => useContext(LocationContext);
 
 export const LocationProvider = ({ children }: { children: ReactNode }) => {
+  const { consumer, loading: consumerLoading } = useConsumerAuth();
+
   const [city, setCity] = useState(() => {
     try { return localStorage.getItem(CITY_STORAGE_KEY) || DEFAULT_CITY; } catch { return DEFAULT_CITY; }
   });
   const [state, setState] = useState(() => {
     try { return localStorage.getItem(STATE_STORAGE_KEY) || DEFAULT_STATE; } catch { return DEFAULT_STATE; }
   });
+  const [ready, setReady] = useState(() => {
+    try {
+      return Boolean(localStorage.getItem(CITY_STORAGE_KEY) && localStorage.getItem(STATE_STORAGE_KEY));
+    } catch {
+      return false;
+    }
+  });
 
   const setLocation = (newCity: string, newState: string) => {
     setCity(newCity);
     setState(newState);
+    setReady(true);
     try {
       localStorage.setItem(CITY_STORAGE_KEY, newCity);
       localStorage.setItem(STATE_STORAGE_KEY, newState);
@@ -79,16 +114,50 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
     } catch {}
   };
 
+  // Source of truth from the consumer profile (city only). Resolve state from
+  // the city lookup so we never persist a mismatched city/state pair.
+  useEffect(() => {
+    if (consumerLoading) return;
+    if (!consumer?.city) return;
+
+    let source: string | null = null;
+    try { source = localStorage.getItem(LOCATION_SOURCE_KEY); } catch {}
+    if (source === "manual") {
+      setReady(true);
+      return;
+    }
+
+    const resolvedState = CITY_TO_STATE[consumer.city.toLowerCase().trim()];
+    if (!resolvedState) {
+      // Unknown city — don't guess. Just adopt city, leave state as-is only
+      // when it already pairs with this city; otherwise skip to avoid the
+      // "Orlando, MD" class of bug.
+      return;
+    }
+
+    const nextCity = toTitleCase(consumer.city);
+    setCity(nextCity);
+    setState(resolvedState);
+    setReady(true);
+    try {
+      localStorage.setItem(CITY_STORAGE_KEY, nextCity);
+      localStorage.setItem(STATE_STORAGE_KEY, resolvedState);
+      localStorage.setItem(LOCATION_SOURCE_KEY, "consumer_profile");
+    } catch {}
+  }, [consumer?.city, consumerLoading]);
+
   useEffect(() => {
     if (typeof window === "undefined" || !("geolocation" in navigator)) return;
 
     let cancelled = false;
     let hasStoredLocation = false;
     let manualOverride = false;
+    let source: string | null = null;
 
     try {
       hasStoredLocation = Boolean(localStorage.getItem(CITY_STORAGE_KEY) && localStorage.getItem(STATE_STORAGE_KEY));
-      manualOverride = localStorage.getItem(LOCATION_SOURCE_KEY) === "manual";
+      source = localStorage.getItem(LOCATION_SOURCE_KEY);
+      manualOverride = source === "manual" || source === "consumer_profile";
     } catch {}
 
     if (manualOverride) return;
@@ -101,6 +170,7 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
 
         setCity(nextLocation.city);
         setState(nextLocation.state);
+        setReady(true);
 
         try {
           localStorage.setItem(CITY_STORAGE_KEY, nextLocation.city);
@@ -120,7 +190,7 @@ export const LocationProvider = ({ children }: { children: ReactNode }) => {
   const locationLabel = `${city}, ${state}`;
 
   return (
-    <LocationContext.Provider value={{ city, state, setLocation, locationLabel }}>
+    <LocationContext.Provider value={{ city, state, setLocation, locationLabel, ready }}>
       {children}
     </LocationContext.Provider>
   );

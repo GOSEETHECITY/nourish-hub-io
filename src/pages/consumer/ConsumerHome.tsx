@@ -47,15 +47,11 @@ const CITY_CENTERS: Record<string, [number, number]> = {
 
 const ConsumerHome = () => {
   const navigate = useNavigate();
-  const { city, state } = useLocation();
+  const { city, state, ready } = useLocation();
   const cityKey = `${city}, ${state}`;
-  const [center, setCenter] = useState<[number, number]>(() => {
-    if (CITY_CENTERS[cityKey]) return CITY_CENTERS[cityKey];
-    const storedCity = typeof window !== "undefined" ? localStorage.getItem("consumer_city") : null;
-    const storedState = typeof window !== "undefined" ? localStorage.getItem("consumer_state") : null;
-    const storedKey = `${storedCity}, ${storedState}`;
-    if (storedCity && CITY_CENTERS[storedKey]) return CITY_CENTERS[storedKey];
-    return [33.749, -84.388];
+  const [center, setCenter] = useState<[number, number] | null>(() => {
+    if (ready && CITY_CENTERS[cityKey]) return CITY_CENTERS[cityKey];
+    return null;
   });
   const [markers, setMarkers] = useState<MapLocation[]>([]);
   const [loading, setLoading] = useState(true);
