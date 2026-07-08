@@ -50,7 +50,7 @@ export default function DistrictLayout() {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all ${
                   isActive
-                    ? "bg-district-accent text-primary-foreground"
+                    ? "text-primary-foreground [background:hsl(var(--district-accent))]"
                     : "text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/5"
                 }`
               }
@@ -69,7 +69,7 @@ export default function DistrictLayout() {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all ${
                   isActive
-                    ? "bg-district-accent text-primary-foreground"
+                    ? "text-primary-foreground [background:hsl(var(--district-accent))]"
                     : "text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/5"
                 }`
               }
