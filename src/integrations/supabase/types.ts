@@ -44,6 +44,48 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_runs: {
+        Row: {
+          agent_name: string
+          breakdown: Json | null
+          created_at: string
+          duplicates_skipped: number
+          error_log: string | null
+          errors: number
+          events_found: number
+          events_inserted: number
+          finished_at: string | null
+          id: string
+          started_at: string
+        }
+        Insert: {
+          agent_name: string
+          breakdown?: Json | null
+          created_at?: string
+          duplicates_skipped?: number
+          error_log?: string | null
+          errors?: number
+          events_found?: number
+          events_inserted?: number
+          finished_at?: string | null
+          id?: string
+          started_at?: string
+        }
+        Update: {
+          agent_name?: string
+          breakdown?: Json | null
+          created_at?: string
+          duplicates_skipped?: number
+          error_log?: string | null
+          errors?: number
+          events_found?: number
+          events_inserted?: number
+          finished_at?: string | null
+          id?: string
+          started_at?: string
+        }
+        Relationships: []
+      }
       billing: {
         Row: {
           assigned_price: number | null
