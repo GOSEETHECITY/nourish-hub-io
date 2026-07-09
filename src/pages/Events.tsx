@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import StatusChip, { toStateAbbr } from "@/components/admin/StatusChip";
 import ActionsMenu from "@/components/admin/ActionsMenu";
@@ -35,6 +37,12 @@ export default function Events() {
   const [flyerUploading, setFlyerUploading] = useState(false);
   const [aiGenerating, setAiGenerating] = useState(false);
   const [search, setSearch] = useState("");
+  const [activeTab, setActiveTab] = useState<"all" | "pending">("all");
+  const [pCity, setPCity] = useState("");
+  const [pCategory, setPCategory] = useState("all");
+  const [pFrom, setPFrom] = useState("");
+  const [pTo, setPTo] = useState("");
+  const [approvingAll, setApprovingAll] = useState(false);
 
   const { data: events = [], isLoading } = useQuery({
     queryKey: ["events"],
