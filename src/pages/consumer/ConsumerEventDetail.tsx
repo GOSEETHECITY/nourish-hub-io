@@ -185,9 +185,21 @@ const ConsumerEventDetail = () => {
         {/* Title */}
         <h1 className="text-xl font-bold text-[#1B2A4A]">{event.title}</h1>
 
+        {/* Business + category */}
+        <div className="flex items-center gap-2 mt-1 flex-wrap">
+          {event.business_name && (
+            <span className="text-sm font-medium text-gray-700">{event.business_name}</span>
+          )}
+          {event.category && (
+            <span className="text-xs bg-[#F97316]/10 text-[#F97316] font-semibold px-2 py-0.5 rounded-full">
+              {event.category}
+            </span>
+          )}
+        </div>
+
         {/* Description */}
         {event.description && (
-          <p className="text-sm text-gray-600 mt-2">{event.description}</p>
+          <p className="text-sm text-gray-600 mt-3">{event.description}</p>
         )}
 
         {/* Info rows */}
