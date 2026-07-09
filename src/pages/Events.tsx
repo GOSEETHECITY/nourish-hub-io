@@ -45,6 +45,18 @@ export default function Events() {
     },
   });
 
+  const { data: checkinCounts = {} } = useQuery({
+    queryKey: ["event_checkin_counts"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("event_checkins").select("event_id");
+      if (error) return {};
+      return (data || []).reduce<Record<string, number>>((acc, r: any) => {
+        acc[r.event_id] = (acc[r.event_id] || 0) + 1;
+        return acc;
+      }, {});
+    },
+  });
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
