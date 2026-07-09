@@ -179,6 +179,40 @@ export default function Events() {
     },
   });
 
+  const approveEvents = async (ids: string[]) => {
+    if (!ids.length) return 0;
+    const { data, error } = await supabase.functions.invoke("approve-event", { body: { event_ids: ids } });
+    if (error) throw new Error(error.message);
+    queryClient.invalidateQueries({ queryKey: ["events"] });
+    return data?.approved ?? ids.length;
+  };
+
+  const approveOne = useMutation({
+    mutationFn: (id: string) => approveEvents([id]),
+    onSuccess: () => toast.success("Event approved and published"),
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const rejectOne = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("events").update({ status: "rejected" }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+      toast.success("Event rejected");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+      const { error } = await supabase.from("events").update({ status: newStatus }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: (_, { newStatus }) => {
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+      toast.success(newStatus === "published" ? "Event published" : "Event unpublished");
+    },
+  });
+
   const closeDialog = () => { setDialogOpen(false); setEditingEvent(null); setForm(emptyForm); };
 
   const openEdit = (ev: HarietEvent) => {
