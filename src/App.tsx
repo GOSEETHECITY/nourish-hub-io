@@ -89,6 +89,7 @@ import ConsumerSignup from "./pages/consumer/ConsumerSignup";
 import ConsumerLocationPermission from "./pages/consumer/ConsumerLocationPermission";
 import ConsumerHome from "./pages/consumer/ConsumerHome";
 import ConsumerRestaurants from "./pages/consumer/ConsumerRestaurants";
+import ConsumerMarketplaceComingSoon from "./pages/consumer/ConsumerMarketplaceComingSoon";
 import ConsumerRestaurantDetail from "./pages/consumer/ConsumerRestaurantDetail";
 import ConsumerCouponDetail from "./pages/consumer/ConsumerCouponDetail";
 import ConsumerEvents from "./pages/consumer/ConsumerEvents";
@@ -281,6 +282,7 @@ const App = () => (
             <Route path="/app/location-permission" element={<ConsumerWrapper><ConsumerLocationPermission /></ConsumerWrapper>} />
             <Route path="/app/home" element={<ProtectedConsumerWrapper><ConsumerHome /></ProtectedConsumerWrapper>} />
             <Route path="/app/restaurants" element={<ProtectedConsumerWrapper><ConsumerRestaurants /></ProtectedConsumerWrapper>} />
+            <Route path="/app/marketplace-coming-soon" element={<ProtectedConsumerWrapper><ConsumerMarketplaceComingSoon /></ProtectedConsumerWrapper>} />
             <Route path="/app/restaurant/:id" element={<ProtectedConsumerWrapper><ConsumerRestaurantDetail /></ProtectedConsumerWrapper>} />
             <Route path="/app/coupon/:id" element={<ProtectedConsumerWrapper><ConsumerCouponDetail /></ProtectedConsumerWrapper>} />
             <Route path="/app/events" element={<ProtectedConsumerWrapper><ConsumerEvents /></ProtectedConsumerWrapper>} />
