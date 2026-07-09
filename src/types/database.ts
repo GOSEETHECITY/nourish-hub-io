@@ -14,7 +14,7 @@ export type ListingStatus =
 
 export type CouponStatus = "active" | "sold_out" | "expired" | "taken_down";
 
-export type EventStatus = "draft" | "published" | "archived";
+export type EventStatus = "draft" | "published" | "archived" | "pending" | "rejected";
 
 export type InvitationCodeStatus = "active" | "inactive";
 
