@@ -502,6 +502,8 @@ export type Database = {
           address: string | null
           ai_generated_description: boolean
           attendee_count: number
+          business_name: string | null
+          category: string | null
           city: string | null
           county: string
           created_at: string
@@ -514,6 +516,8 @@ export type Database = {
           id: string
           image_url: string | null
           import_batch_id: string | null
+          latitude: number | null
+          longitude: number | null
           offer_badge: string | null
           share_count: number
           share_url: string | null
@@ -527,6 +531,8 @@ export type Database = {
           address?: string | null
           ai_generated_description?: boolean
           attendee_count?: number
+          business_name?: string | null
+          category?: string | null
           city?: string | null
           county?: string
           created_at?: string
@@ -539,6 +545,8 @@ export type Database = {
           id?: string
           image_url?: string | null
           import_batch_id?: string | null
+          latitude?: number | null
+          longitude?: number | null
           offer_badge?: string | null
           share_count?: number
           share_url?: string | null
@@ -552,6 +560,8 @@ export type Database = {
           address?: string | null
           ai_generated_description?: boolean
           attendee_count?: number
+          business_name?: string | null
+          category?: string | null
           city?: string | null
           county?: string
           created_at?: string
@@ -564,6 +574,8 @@ export type Database = {
           id?: string
           image_url?: string | null
           import_batch_id?: string | null
+          latitude?: number | null
+          longitude?: number | null
           offer_badge?: string | null
           share_count?: number
           share_url?: string | null

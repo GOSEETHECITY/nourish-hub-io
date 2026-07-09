@@ -13,11 +13,15 @@ import { toast } from "sonner";
 import StatusChip, { toStateAbbr } from "@/components/admin/StatusChip";
 import ActionsMenu from "@/components/admin/ActionsMenu";
 import type { HarietEvent, EventStatus } from "@/types/database";
+import { geocodeAddress } from "@/lib/geo";
+
+const EVENT_CATEGORIES = ["Grand Opening", "Festival", "Pop-Up", "Community", "Food & Drink", "Sports", "Other"];
 
 const emptyForm = {
   title: "", description: "", event_date: "", start_time: "", end_time: "",
   address: "", city: "", state: "", county: "", external_link: "", status: "draft" as EventStatus,
   image_url: "", offer_badge: "", flyer_url: "",
+  business_name: "", category: "",
 };
 
 export default function Events() {
@@ -38,6 +42,18 @@ export default function Events() {
       const { data, error } = await supabase.from("events").select("*").order("created_at", { ascending: false });
       if (error) throw error;
       return data as HarietEvent[];
+    },
+  });
+
+  const { data: checkinCounts = {} } = useQuery({
+    queryKey: ["event_checkin_counts"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("event_checkins").select("event_id");
+      if (error) return {};
+      return (data || []).reduce<Record<string, number>>((acc, r: any) => {
+        acc[r.event_id] = (acc[r.event_id] || 0) + 1;
+        return acc;
+      }, {});
     },
   });
 
@@ -91,6 +107,14 @@ export default function Events() {
 
   const saveEvent = useMutation({
     mutationFn: async () => {
+      // Geocode address once at save so consumer app never geocodes at read time.
+      let lat: number | null = null;
+      let lng: number | null = null;
+      const addr = [form.address, form.city, form.state].filter(Boolean).join(", ");
+      if (addr) {
+        const coords = await geocodeAddress(addr);
+        if (coords) { lat = coords.lat; lng = coords.lng; }
+      }
       const payload: any = {
         title: form.title, description: form.description || null,
         event_date: form.event_date || null, start_time: form.start_time || null,
@@ -101,6 +125,10 @@ export default function Events() {
         image_url: form.image_url || null,
         offer_badge: form.offer_badge || null,
         flyer_url: form.flyer_url || null,
+        business_name: form.business_name || null,
+        category: form.category || null,
+        latitude: lat,
+        longitude: lng,
       };
       if (editingEvent) {
         payload.share_url = `/event-preview/${editingEvent.id}`;
@@ -153,6 +181,7 @@ export default function Events() {
       city: ev.city || "", state: ev.state || "", county: ev.county || "",
       external_link: ev.external_link || "", status: ev.status, image_url: ev.image_url || "",
       offer_badge: ev.offer_badge || "", flyer_url: ev.flyer_url || "",
+      business_name: ev.business_name || "", category: ev.category || "",
     });
     setDialogOpen(true);
   };
@@ -215,14 +244,15 @@ export default function Events() {
               <SortHead field="event_date">Date</SortHead>
               <TableHead>Status</TableHead>
               <SortHead field="share_count">Shares</SortHead>
+              <TableHead>Check-ins</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow><TableCell colSpan={8} className="text-center py-12 text-muted-foreground">Loading...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} className="text-center py-12 text-muted-foreground">Loading...</TableCell></TableRow>
             ) : sorted.length === 0 ? (
-              <TableRow><TableCell colSpan={8} className="text-center py-12 text-muted-foreground">No events found</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} className="text-center py-12 text-muted-foreground">No events found</TableCell></TableRow>
             ) : sorted.map((ev) => (
               <TableRow key={ev.id}>
                 <TableCell className="font-medium">{ev.title}</TableCell>
@@ -232,6 +262,7 @@ export default function Events() {
                 <TableCell>{ev.event_date ? new Date(ev.event_date + "T00:00:00").toLocaleDateString() : "—"}</TableCell>
                 <TableCell><StatusChip status={ev.status} /></TableCell>
                 <TableCell>{ev.share_count || 0}</TableCell>
+                <TableCell className="font-medium">{checkinCounts[ev.id] || 0}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1">
                     {ev.status === "draft" && (
@@ -260,6 +291,17 @@ export default function Events() {
           <DialogHeader><DialogTitle>{editingEvent ? "Edit Event" : "Create Event"}</DialogTitle></DialogHeader>
           <div className="space-y-4 pt-4">
             <div><Label>Title *</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
+            <div><Label>Business Name</Label><Input value={form.business_name} onChange={(e) => setForm({ ...form, business_name: e.target.value })} placeholder="e.g. Taco Loco" /></div>
+            <div>
+              <Label>Category</Label>
+              <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
+                <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+                <SelectContent>
+                  {EVENT_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div><Label>Street Address</Label><Input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="123 Main St" /></div>
             <div className="grid grid-cols-2 gap-4">
               <div><Label>City *</Label><Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} /></div>
               <div><Label>State *</Label><Input value={form.state} onChange={(e) => setForm({ ...form, state: e.target.value })} /></div>

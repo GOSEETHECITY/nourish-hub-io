@@ -73,14 +73,14 @@ const ConsumerHome = () => {
   useEffect(() => {
     const load = async () => {
       try {
-        // Fetch restaurant locations in selected city
+        // Restaurant locations in selected city
         const { data: locsRaw } = await (supabase as any)
           .from("locations_public")
           .select("id, name, latitude, longitude, city, state")
           .eq("marketplace_enabled", true)
           .eq("city", city)
           .eq("state", state);
-        const locs = (locsRaw || []) as Array<{ id: string; name: string; latitude: number | null; longitude: number | null; city: string | null; state: string | null }>;
+        const locs = (locsRaw || []) as Array<{ id: string; name: string; latitude: number | null; longitude: number | null }>;
         const locMarkers: MapLocation[] = locs
           .filter((l) => l.latitude && l.longitude)
           .map((l) => ({
@@ -91,38 +91,25 @@ const ConsumerHome = () => {
             type: "restaurant" as const,
           }));
 
-        // Fetch published events in selected city, then geocode their addresses
+        // Events: use stored coordinates only — no client-side geocoding.
         const today = new Date().toISOString().split("T")[0];
         const { data: events } = await supabase
           .from("events")
-          .select("id, title, address, city, state")
+          .select("id, title, latitude, longitude")
           .eq("status", "published")
           .gte("event_date", today)
           .eq("city", city)
           .eq("state", state);
 
-        const eventMarkers: MapLocation[] = [];
-        for (const ev of events || []) {
-          let coords: { lat: number; lng: number } | null = null;
-          if (ev.address) {
-            coords = await geocode(ev.address);
-            await new Promise((r) => setTimeout(r, 1100));
-          }
-          if (!coords && ev.city) {
-            const fallback = [ev.city, ev.state].filter(Boolean).join(", ");
-            coords = await geocode(fallback);
-            await new Promise((r) => setTimeout(r, 1100));
-          }
-          if (coords) {
-            eventMarkers.push({
-              id: ev.id,
-              name: ev.title,
-              lat: coords.lat,
-              lng: coords.lng,
-              type: "event" as const,
-            });
-          }
-        }
+        const eventMarkers: MapLocation[] = (events || [])
+          .filter((ev: any) => ev.latitude != null && ev.longitude != null)
+          .map((ev: any) => ({
+            id: ev.id,
+            name: ev.title,
+            lat: ev.latitude,
+            lng: ev.longitude,
+            type: "event" as const,
+          }));
 
         setMarkers([...locMarkers, ...eventMarkers]);
       } catch (err) {

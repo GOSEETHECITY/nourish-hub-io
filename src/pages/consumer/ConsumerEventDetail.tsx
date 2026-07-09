@@ -19,24 +19,9 @@ import {
   buildCalendarUrl,
 } from "@/lib/formatters";
 import ConsumerMobileLayout from "@/components/consumer/ConsumerMobileLayout";
+import { haversineMeters } from "@/lib/geo";
 
 const CHECKIN_RADIUS_METERS = 805; // ~0.5 miles
-
-function haversineMeters(
-  lat1: number,
-  lon1: number,
-  lat2: number,
-  lon2: number
-): number {
-  const R = 6371000;
-  const toRad = (d: number) => (d * Math.PI) / 180;
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
 
 const ConsumerEventDetail = () => {
   const { id } = useParams();
@@ -88,64 +73,41 @@ const ConsumerEventDetail = () => {
       async (position) => {
         const { latitude, longitude } = position.coords;
 
-        // Geocode event address to get coordinates
-        const addr = [event.address, event.city, event.state]
-          .filter(Boolean)
-          .join(", ");
-        try {
-          const geoRes = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addr)}&limit=1`
+        // Use stored coordinates only — never geocode at read time.
+        if (event.latitude == null || event.longitude == null) {
+          setCheckinMsg("This event has no location set yet. Please try again later.");
+          setCheckingIn(false);
+          return;
+        }
+
+        const distance = haversineMeters(latitude, longitude, event.latitude, event.longitude);
+
+        if (distance > CHECKIN_RADIUS_METERS) {
+          const miles = (distance / 1609.34).toFixed(1);
+          setCheckinMsg(
+            `You're about ${miles} miles away. You need to be within 0.5 miles of the event to check in.`
           );
-          const geoData = await geoRes.json();
+          setCheckingIn(false);
+          return;
+        }
 
-          if (!geoData || geoData.length === 0) {
-            setCheckinMsg(
-              "Could not verify event location. Please try again later."
-            );
-            setCheckingIn(false);
-            return;
-          }
+        const { error } = await supabase.from("event_checkins").insert({
+          event_id: event.id,
+          user_id: user.id,
+          latitude,
+          longitude,
+        });
 
-          const eventLat = parseFloat(geoData[0].lat);
-          const eventLon = parseFloat(geoData[0].lon);
-          const distance = haversineMeters(
-            latitude,
-            longitude,
-            eventLat,
-            eventLon
-          );
-
-          if (distance > CHECKIN_RADIUS_METERS) {
-            const miles = (distance / 1609.34).toFixed(1);
-            setCheckinMsg(
-              `You're about ${miles} miles away. You need to be within 0.5 miles of the event to check in.`
-            );
-            setCheckingIn(false);
-            return;
-          }
-
-          // Save check-in
-          const { error } = await supabase.from("event_checkins").insert({
-            event_id: event.id,
-            user_id: user.id,
-            latitude,
-            longitude,
-          });
-
-          if (error) {
-            if (error.code === "23505") {
-              setCheckinMsg("You've already checked in to this event!");
-            } else {
-              setCheckinMsg("Check-in failed. Please try again.");
-            }
+        if (error) {
+          if (error.code === "23505") {
+            setCheckinMsg("You've already checked in to this event!");
           } else {
-            setCheckinMsg("You're checked in! Enjoy the event.");
-            setAlreadyCheckedIn(true);
-            // Increment attendee count
-            supabase.rpc("increment_attendee_count", { eid: event.id });
+            setCheckinMsg("Check-in failed. Please try again.");
           }
-        } catch {
-          setCheckinMsg("Network error. Please try again.");
+        } else {
+          setCheckinMsg("You're checked in! Enjoy the event.");
+          setAlreadyCheckedIn(true);
+          supabase.rpc("increment_attendee_count", { eid: event.id });
         }
         setCheckingIn(false);
       },
@@ -223,9 +185,21 @@ const ConsumerEventDetail = () => {
         {/* Title */}
         <h1 className="text-xl font-bold text-[#1B2A4A]">{event.title}</h1>
 
+        {/* Business + category */}
+        <div className="flex items-center gap-2 mt-1 flex-wrap">
+          {event.business_name && (
+            <span className="text-sm font-medium text-gray-700">{event.business_name}</span>
+          )}
+          {event.category && (
+            <span className="text-xs bg-[#F97316]/10 text-[#F97316] font-semibold px-2 py-0.5 rounded-full">
+              {event.category}
+            </span>
+          )}
+        </div>
+
         {/* Description */}
         {event.description && (
-          <p className="text-sm text-gray-600 mt-2">{event.description}</p>
+          <p className="text-sm text-gray-600 mt-3">{event.description}</p>
         )}
 
         {/* Info rows */}
