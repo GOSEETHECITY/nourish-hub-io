@@ -13,11 +13,15 @@ import { toast } from "sonner";
 import StatusChip, { toStateAbbr } from "@/components/admin/StatusChip";
 import ActionsMenu from "@/components/admin/ActionsMenu";
 import type { HarietEvent, EventStatus } from "@/types/database";
+import { geocodeAddress } from "@/lib/geo";
+
+const EVENT_CATEGORIES = ["Grand Opening", "Festival", "Pop-Up", "Community", "Food & Drink", "Sports", "Other"];
 
 const emptyForm = {
   title: "", description: "", event_date: "", start_time: "", end_time: "",
   address: "", city: "", state: "", county: "", external_link: "", status: "draft" as EventStatus,
   image_url: "", offer_badge: "", flyer_url: "",
+  business_name: "", category: "",
 };
 
 export default function Events() {
