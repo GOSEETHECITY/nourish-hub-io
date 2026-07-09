@@ -157,6 +157,7 @@ export default function Events() {
       city: ev.city || "", state: ev.state || "", county: ev.county || "",
       external_link: ev.external_link || "", status: ev.status, image_url: ev.image_url || "",
       offer_badge: ev.offer_badge || "", flyer_url: ev.flyer_url || "",
+      business_name: ev.business_name || "", category: ev.category || "",
     });
     setDialogOpen(true);
   };
