@@ -73,64 +73,41 @@ const ConsumerEventDetail = () => {
       async (position) => {
         const { latitude, longitude } = position.coords;
 
-        // Geocode event address to get coordinates
-        const addr = [event.address, event.city, event.state]
-          .filter(Boolean)
-          .join(", ");
-        try {
-          const geoRes = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addr)}&limit=1`
+        // Use stored coordinates only — never geocode at read time.
+        if (event.latitude == null || event.longitude == null) {
+          setCheckinMsg("This event has no location set yet. Please try again later.");
+          setCheckingIn(false);
+          return;
+        }
+
+        const distance = haversineMeters(latitude, longitude, event.latitude, event.longitude);
+
+        if (distance > CHECKIN_RADIUS_METERS) {
+          const miles = (distance / 1609.34).toFixed(1);
+          setCheckinMsg(
+            `You're about ${miles} miles away. You need to be within 0.5 miles of the event to check in.`
           );
-          const geoData = await geoRes.json();
+          setCheckingIn(false);
+          return;
+        }
 
-          if (!geoData || geoData.length === 0) {
-            setCheckinMsg(
-              "Could not verify event location. Please try again later."
-            );
-            setCheckingIn(false);
-            return;
-          }
+        const { error } = await supabase.from("event_checkins").insert({
+          event_id: event.id,
+          user_id: user.id,
+          latitude,
+          longitude,
+        });
 
-          const eventLat = parseFloat(geoData[0].lat);
-          const eventLon = parseFloat(geoData[0].lon);
-          const distance = haversineMeters(
-            latitude,
-            longitude,
-            eventLat,
-            eventLon
-          );
-
-          if (distance > CHECKIN_RADIUS_METERS) {
-            const miles = (distance / 1609.34).toFixed(1);
-            setCheckinMsg(
-              `You're about ${miles} miles away. You need to be within 0.5 miles of the event to check in.`
-            );
-            setCheckingIn(false);
-            return;
-          }
-
-          // Save check-in
-          const { error } = await supabase.from("event_checkins").insert({
-            event_id: event.id,
-            user_id: user.id,
-            latitude,
-            longitude,
-          });
-
-          if (error) {
-            if (error.code === "23505") {
-              setCheckinMsg("You've already checked in to this event!");
-            } else {
-              setCheckinMsg("Check-in failed. Please try again.");
-            }
+        if (error) {
+          if (error.code === "23505") {
+            setCheckinMsg("You've already checked in to this event!");
           } else {
-            setCheckinMsg("You're checked in! Enjoy the event.");
-            setAlreadyCheckedIn(true);
-            // Increment attendee count
-            supabase.rpc("increment_attendee_count", { eid: event.id });
+            setCheckinMsg("Check-in failed. Please try again.");
           }
-        } catch {
-          setCheckinMsg("Network error. Please try again.");
+        } else {
+          setCheckinMsg("You're checked in! Enjoy the event.");
+          setAlreadyCheckedIn(true);
+          supabase.rpc("increment_attendee_count", { eid: event.id });
         }
         setCheckingIn(false);
       },
