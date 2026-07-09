@@ -21,6 +21,8 @@ import Contact from "./pages/marketing/Contact";
 import Privacy from "./pages/marketing/Privacy";
 import Terms from "./pages/marketing/Terms";
 import FeedItOnward from "./pages/marketing/FeedItOnward";
+import News from "./pages/marketing/News";
+import NewsArticle from "./pages/marketing/NewsArticle";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Dashboard from "./pages/Index";
 import Organizations from "./pages/Organizations";
@@ -171,6 +173,8 @@ const App = () => (
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/feed-it-onward" element={<FeedItOnward />} />
+            <Route path="/news" element={<News />} />
+            <Route path="/news/:slug" element={<NewsArticle />} />
             <Route path="/get-started" element={<GetStarted />} />
             <Route path="/get-started/:eventSlug" element={<EventGetStarted />} />
             <Route path="/partners/business/signup" element={<BusinessSignup />} />
