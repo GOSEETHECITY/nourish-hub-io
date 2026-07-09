@@ -245,6 +245,29 @@ export default function Events() {
     });
   }, [events, search, sortField, sortAsc]);
 
+  const pendingList = useMemo(() => {
+    return events.filter((ev) => {
+      if (ev.status !== "pending") return false;
+      if (pCity.trim() && !(ev.city || "").toLowerCase().includes(pCity.trim().toLowerCase())) return false;
+      if (pCategory !== "all" && (ev.category || "") !== pCategory) return false;
+      if (pFrom && (!ev.event_date || ev.event_date < pFrom)) return false;
+      if (pTo && (!ev.event_date || ev.event_date > pTo)) return false;
+      return true;
+    });
+  }, [events, pCity, pCategory, pFrom, pTo]);
+
+  const handleApproveAll = async () => {
+    if (!pendingList.length) return;
+    setApprovingAll(true);
+    try {
+      const n = await approveEvents(pendingList.map((e) => e.id));
+      toast.success(`Approved ${n} event${n === 1 ? "" : "s"}`);
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+    setApprovingAll(false);
+  };
+
   const toggleSort = (field: string) => { if (sortField === field) setSortAsc(!sortAsc); else { setSortField(field); setSortAsc(true); } };
   const SortHead = ({ field, children }: { field: string; children: React.ReactNode }) => (
     <TableHead className="cursor-pointer select-none" onClick={() => toggleSort(field)}>
