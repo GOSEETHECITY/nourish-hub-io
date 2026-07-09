@@ -86,6 +86,54 @@ export type Database = {
         }
         Relationships: []
       }
+      articles: {
+        Row: {
+          author: string
+          body: string
+          category: Database["public"]["Enums"]["article_category"]
+          cover_image_url: string | null
+          created_at: string
+          excerpt: string
+          id: string
+          is_featured: boolean
+          published_date: string
+          slug: string
+          status: Database["public"]["Enums"]["article_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          author?: string
+          body?: string
+          category: Database["public"]["Enums"]["article_category"]
+          cover_image_url?: string | null
+          created_at?: string
+          excerpt?: string
+          id?: string
+          is_featured?: boolean
+          published_date?: string
+          slug: string
+          status?: Database["public"]["Enums"]["article_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          author?: string
+          body?: string
+          category?: Database["public"]["Enums"]["article_category"]
+          cover_image_url?: string | null
+          created_at?: string
+          excerpt?: string
+          id?: string
+          is_featured?: boolean
+          published_date?: string
+          slug?: string
+          status?: Database["public"]["Enums"]["article_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       billing: {
         Row: {
           assigned_price: number | null
@@ -2031,6 +2079,13 @@ export type Database = {
         | "nonprofit_partner"
         | "government_partner"
       approval_status: "pending" | "approved" | "rejected" | "deactivated"
+      article_category:
+        | "press_release"
+        | "product_update"
+        | "partnership"
+        | "company_news"
+        | "milestone"
+      article_status: "draft" | "published"
       billing_cycle: "free" | "monthly" | "annual"
       coupon_status: "active" | "sold_out" | "expired" | "taken_down"
       event_status: "draft" | "published" | "archived" | "pending" | "rejected"
@@ -2223,6 +2278,14 @@ export const Constants = {
         "government_partner",
       ],
       approval_status: ["pending", "approved", "rejected", "deactivated"],
+      article_category: [
+        "press_release",
+        "product_update",
+        "partnership",
+        "company_news",
+        "milestone",
+      ],
+      article_status: ["draft", "published"],
       billing_cycle: ["free", "monthly", "annual"],
       coupon_status: ["active", "sold_out", "expired", "taken_down"],
       event_status: ["draft", "published", "archived", "pending", "rejected"],
