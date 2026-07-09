@@ -204,14 +204,6 @@ export default function Events() {
     },
     onError: (e: any) => toast.error(e.message),
   });
-      const { error } = await supabase.from("events").update({ status: newStatus }).eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: (_, { newStatus }) => {
-      queryClient.invalidateQueries({ queryKey: ["events"] });
-      toast.success(newStatus === "published" ? "Event published" : "Event unpublished");
-    },
-  });
 
   const closeDialog = () => { setDialogOpen(false); setEditingEvent(null); setForm(emptyForm); };
 
