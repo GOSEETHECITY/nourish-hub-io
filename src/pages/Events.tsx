@@ -95,6 +95,14 @@ export default function Events() {
 
   const saveEvent = useMutation({
     mutationFn: async () => {
+      // Geocode address once at save so consumer app never geocodes at read time.
+      let lat: number | null = null;
+      let lng: number | null = null;
+      const addr = [form.address, form.city, form.state].filter(Boolean).join(", ");
+      if (addr) {
+        const coords = await geocodeAddress(addr);
+        if (coords) { lat = coords.lat; lng = coords.lng; }
+      }
       const payload: any = {
         title: form.title, description: form.description || null,
         event_date: form.event_date || null, start_time: form.start_time || null,
@@ -105,6 +113,10 @@ export default function Events() {
         image_url: form.image_url || null,
         offer_badge: form.offer_badge || null,
         flyer_url: form.flyer_url || null,
+        business_name: form.business_name || null,
+        category: form.category || null,
+        latitude: lat,
+        longitude: lng,
       };
       if (editingEvent) {
         payload.share_url = `/event-preview/${editingEvent.id}`;
