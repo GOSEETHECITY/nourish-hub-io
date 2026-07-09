@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import StatusChip, { toStateAbbr } from "@/components/admin/StatusChip";
 import ActionsMenu from "@/components/admin/ActionsMenu";
@@ -35,6 +37,12 @@ export default function Events() {
   const [flyerUploading, setFlyerUploading] = useState(false);
   const [aiGenerating, setAiGenerating] = useState(false);
   const [search, setSearch] = useState("");
+  const [activeTab, setActiveTab] = useState<"all" | "pending">("all");
+  const [pCity, setPCity] = useState("");
+  const [pCategory, setPCategory] = useState("all");
+  const [pFrom, setPFrom] = useState("");
+  const [pTo, setPTo] = useState("");
+  const [approvingAll, setApprovingAll] = useState(false);
 
   const { data: events = [], isLoading } = useQuery({
     queryKey: ["events"],
@@ -171,6 +179,32 @@ export default function Events() {
     },
   });
 
+  const approveEvents = async (ids: string[]) => {
+    if (!ids.length) return 0;
+    const { data, error } = await supabase.functions.invoke("approve-event", { body: { event_ids: ids } });
+    if (error) throw new Error(error.message);
+    queryClient.invalidateQueries({ queryKey: ["events"] });
+    return data?.approved ?? ids.length;
+  };
+
+  const approveOne = useMutation({
+    mutationFn: (id: string) => approveEvents([id]),
+    onSuccess: () => toast.success("Event approved and published"),
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const rejectOne = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("events").update({ status: "rejected" }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+      toast.success("Event rejected");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
   const closeDialog = () => { setDialogOpen(false); setEditingEvent(null); setForm(emptyForm); };
 
   const openEdit = (ev: HarietEvent) => {
@@ -211,6 +245,29 @@ export default function Events() {
     });
   }, [events, search, sortField, sortAsc]);
 
+  const pendingList = useMemo(() => {
+    return events.filter((ev) => {
+      if (ev.status !== "pending") return false;
+      if (pCity.trim() && !(ev.city || "").toLowerCase().includes(pCity.trim().toLowerCase())) return false;
+      if (pCategory !== "all" && (ev.category || "") !== pCategory) return false;
+      if (pFrom && (!ev.event_date || ev.event_date < pFrom)) return false;
+      if (pTo && (!ev.event_date || ev.event_date > pTo)) return false;
+      return true;
+    });
+  }, [events, pCity, pCategory, pFrom, pTo]);
+
+  const handleApproveAll = async () => {
+    if (!pendingList.length) return;
+    setApprovingAll(true);
+    try {
+      const n = await approveEvents(pendingList.map((e) => e.id));
+      toast.success(`Approved ${n} event${n === 1 ? "" : "s"}`);
+    } catch (e: any) {
+      toast.error(e.message);
+    }
+    setApprovingAll(false);
+  };
+
   const toggleSort = (field: string) => { if (sortField === field) setSortAsc(!sortAsc); else { setSortField(field); setSortAsc(true); } };
   const SortHead = ({ field, children }: { field: string; children: React.ReactNode }) => (
     <TableHead className="cursor-pointer select-none" onClick={() => toggleSort(field)}>
@@ -228,62 +285,160 @@ export default function Events() {
         <Button onClick={() => { setEditingEvent(null); setForm(emptyForm); setDialogOpen(true); }}><Plus className="w-4 h-4 mr-2" />Add Event</Button>
       </div>
 
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input className="pl-9" placeholder="Search events..." value={search} onChange={(e) => setSearch(e.target.value)} />
-      </div>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "all" | "pending")}>
+        <TabsList>
+          <TabsTrigger value="all">All Events</TabsTrigger>
+          <TabsTrigger value="pending">
+            Pending Approval
+            {events.filter((e) => e.status === "pending").length > 0 && (
+              <Badge variant="secondary" className="ml-2">{events.filter((e) => e.status === "pending").length}</Badge>
+            )}
+          </TabsTrigger>
+        </TabsList>
 
-      <div className="bg-card rounded-xl border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <SortHead field="title">Event Title</SortHead>
-              <SortHead field="city">City</SortHead>
-              <TableHead>State</TableHead>
-              <SortHead field="county">County</SortHead>
-              <SortHead field="event_date">Date</SortHead>
-              <TableHead>Status</TableHead>
-              <SortHead field="share_count">Shares</SortHead>
-              <TableHead>Check-ins</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow><TableCell colSpan={9} className="text-center py-12 text-muted-foreground">Loading...</TableCell></TableRow>
-            ) : sorted.length === 0 ? (
-              <TableRow><TableCell colSpan={9} className="text-center py-12 text-muted-foreground">No events found</TableCell></TableRow>
-            ) : sorted.map((ev) => (
-              <TableRow key={ev.id}>
-                <TableCell className="font-medium">{ev.title}</TableCell>
-                <TableCell>{ev.city || "—"}</TableCell>
-                <TableCell>{toStateAbbr(ev.state)}</TableCell>
-                <TableCell>{ev.county || "—"}</TableCell>
-                <TableCell>{ev.event_date ? new Date(ev.event_date + "T00:00:00").toLocaleDateString() : "—"}</TableCell>
-                <TableCell><StatusChip status={ev.status} /></TableCell>
-                <TableCell>{ev.share_count || 0}</TableCell>
-                <TableCell className="font-medium">{checkinCounts[ev.id] || 0}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1">
-                    {ev.status === "draft" && (
-                      <Button size="sm" variant="outline" onClick={() => togglePublish.mutate({ id: ev.id, newStatus: "published" })}>Publish</Button>
-                    )}
-                    {ev.status === "published" && (
-                      <Button size="sm" variant="outline" onClick={() => togglePublish.mutate({ id: ev.id, newStatus: "draft" })}>Unpublish</Button>
-                    )}
-                    <ActionsMenu
-                      entityName={ev.title}
-                      onView={() => openEdit(ev)}
-                      onEdit={() => openEdit(ev)}
-                      onDelete={() => deleteEvent.mutate(ev.id)}
-                    />
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+        <TabsContent value="all" className="space-y-4 mt-4">
+          <div className="relative max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input className="pl-9" placeholder="Search events..." value={search} onChange={(e) => setSearch(e.target.value)} />
+          </div>
+          <div className="bg-card rounded-xl border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <SortHead field="title">Event Title</SortHead>
+                  <SortHead field="city">City</SortHead>
+                  <TableHead>State</TableHead>
+                  <SortHead field="county">County</SortHead>
+                  <SortHead field="event_date">Date</SortHead>
+                  <TableHead>Status</TableHead>
+                  <SortHead field="share_count">Shares</SortHead>
+                  <TableHead>Check-ins</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow><TableCell colSpan={9} className="text-center py-12 text-muted-foreground">Loading...</TableCell></TableRow>
+                ) : sorted.length === 0 ? (
+                  <TableRow><TableCell colSpan={9} className="text-center py-12 text-muted-foreground">No events found</TableCell></TableRow>
+                ) : sorted.map((ev) => (
+                  <TableRow key={ev.id}>
+                    <TableCell className="font-medium">{ev.title}</TableCell>
+                    <TableCell>{ev.city || "—"}</TableCell>
+                    <TableCell>{toStateAbbr(ev.state)}</TableCell>
+                    <TableCell>{ev.county || "—"}</TableCell>
+                    <TableCell>{ev.event_date ? new Date(ev.event_date + "T00:00:00").toLocaleDateString() : "—"}</TableCell>
+                    <TableCell><StatusChip status={ev.status} /></TableCell>
+                    <TableCell>{ev.share_count || 0}</TableCell>
+                    <TableCell className="font-medium">{checkinCounts[ev.id] || 0}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        {ev.status === "draft" && (
+                          <Button size="sm" variant="outline" onClick={() => togglePublish.mutate({ id: ev.id, newStatus: "published" })}>Publish</Button>
+                        )}
+                        {ev.status === "published" && (
+                          <Button size="sm" variant="outline" onClick={() => togglePublish.mutate({ id: ev.id, newStatus: "draft" })}>Unpublish</Button>
+                        )}
+                        <ActionsMenu
+                          entityName={ev.title}
+                          onView={() => openEdit(ev)}
+                          onEdit={() => openEdit(ev)}
+                          onDelete={() => deleteEvent.mutate(ev.id)}
+                        />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="pending" className="space-y-4 mt-4">
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="min-w-[160px]">
+              <Label className="text-xs">City</Label>
+              <Input placeholder="Filter by city" value={pCity} onChange={(e) => setPCity(e.target.value)} />
+            </div>
+            <div className="min-w-[160px]">
+              <Label className="text-xs">Category</Label>
+              <Select value={pCategory} onValueChange={setPCategory}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All categories</SelectItem>
+                  {EVENT_CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs">From</Label>
+              <Input type="date" value={pFrom} onChange={(e) => setPFrom(e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-xs">To</Label>
+              <Input type="date" value={pTo} onChange={(e) => setPTo(e.target.value)} />
+            </div>
+            <div className="ml-auto">
+              <Button onClick={handleApproveAll} disabled={approvingAll || !pendingList.length}>
+                {approvingAll ? "Approving..." : `Approve All (${pendingList.length})`}
+              </Button>
+            </div>
+          </div>
+
+          <div className="bg-card rounded-xl border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Event</TableHead>
+                  <TableHead>Business</TableHead>
+                  <TableHead>City / State</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Source</TableHead>
+                  <TableHead>Media</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow><TableCell colSpan={8} className="text-center py-12 text-muted-foreground">Loading...</TableCell></TableRow>
+                ) : pendingList.length === 0 ? (
+                  <TableRow><TableCell colSpan={8} className="text-center py-12 text-muted-foreground">No pending events</TableCell></TableRow>
+                ) : pendingList.map((ev) => {
+                  const hasMedia = !!(ev.image_url || ev.flyer_url);
+                  return (
+                    <TableRow key={ev.id}>
+                      <TableCell className="font-medium">{ev.title}</TableCell>
+                      <TableCell>{ev.business_name || "—"}</TableCell>
+                      <TableCell>{[ev.city, toStateAbbr(ev.state)].filter(Boolean).join(", ") || "—"}</TableCell>
+                      <TableCell>{ev.event_date ? new Date(ev.event_date + "T00:00:00").toLocaleDateString() : "—"}</TableCell>
+                      <TableCell>{ev.category || "—"}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{(ev as any).source_type || (ev.created_from_import ? "import" : "manual")}</TableCell>
+                      <TableCell>
+                        {hasMedia
+                          ? <Badge variant="secondary">Photo</Badge>
+                          : <Badge variant="outline">Needs AI flyer</Badge>}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1">
+                          <Button size="sm" onClick={() => approveOne.mutate(ev.id)} disabled={approveOne.isPending}>Approve</Button>
+                          <Button size="sm" variant="outline" onClick={() => rejectOne.mutate(ev.id)} disabled={rejectOne.isPending}>Reject</Button>
+                          <ActionsMenu
+                            entityName={ev.title}
+                            onView={() => openEdit(ev)}
+                            onEdit={() => openEdit(ev)}
+                            onDelete={() => deleteEvent.mutate(ev.id)}
+                          />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        </TabsContent>
+      </Tabs>
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) closeDialog(); else setDialogOpen(true); }}>
@@ -356,7 +511,9 @@ export default function Events() {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="pending">Pending Approval</SelectItem>
                   <SelectItem value="published">Published</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
                 </SelectContent>
               </Select>
             </div>

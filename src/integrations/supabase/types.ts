@@ -1991,7 +1991,7 @@ export type Database = {
       approval_status: "pending" | "approved" | "rejected" | "deactivated"
       billing_cycle: "free" | "monthly" | "annual"
       coupon_status: "active" | "sold_out" | "expired" | "taken_down"
-      event_status: "draft" | "published" | "archived"
+      event_status: "draft" | "published" | "archived" | "pending" | "rejected"
       food_type:
         | "prepared_meals"
         | "produce"
@@ -2183,7 +2183,7 @@ export const Constants = {
       approval_status: ["pending", "approved", "rejected", "deactivated"],
       billing_cycle: ["free", "monthly", "annual"],
       coupon_status: ["active", "sold_out", "expired", "taken_down"],
-      event_status: ["draft", "published", "archived"],
+      event_status: ["draft", "published", "archived", "pending", "rejected"],
       food_type: [
         "prepared_meals",
         "produce",
