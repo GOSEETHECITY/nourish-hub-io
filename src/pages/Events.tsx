@@ -244,14 +244,15 @@ export default function Events() {
               <SortHead field="event_date">Date</SortHead>
               <TableHead>Status</TableHead>
               <SortHead field="share_count">Shares</SortHead>
+              <TableHead>Check-ins</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow><TableCell colSpan={8} className="text-center py-12 text-muted-foreground">Loading...</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} className="text-center py-12 text-muted-foreground">Loading...</TableCell></TableRow>
             ) : sorted.length === 0 ? (
-              <TableRow><TableCell colSpan={8} className="text-center py-12 text-muted-foreground">No events found</TableCell></TableRow>
+              <TableRow><TableCell colSpan={9} className="text-center py-12 text-muted-foreground">No events found</TableCell></TableRow>
             ) : sorted.map((ev) => (
               <TableRow key={ev.id}>
                 <TableCell className="font-medium">{ev.title}</TableCell>
@@ -261,6 +262,7 @@ export default function Events() {
                 <TableCell>{ev.event_date ? new Date(ev.event_date + "T00:00:00").toLocaleDateString() : "—"}</TableCell>
                 <TableCell><StatusChip status={ev.status} /></TableCell>
                 <TableCell>{ev.share_count || 0}</TableCell>
+                <TableCell className="font-medium">{checkinCounts[ev.id] || 0}</TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1">
                     {ev.status === "draft" && (
