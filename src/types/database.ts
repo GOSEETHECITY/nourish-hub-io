@@ -242,6 +242,10 @@ export interface HarietEvent {
   created_from_import: boolean;
   source_type: string | null;
   import_batch_id: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  business_name: string | null;
+  category: string | null;
   created_at: string;
 }
 
