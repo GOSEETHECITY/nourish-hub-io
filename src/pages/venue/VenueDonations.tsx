@@ -11,9 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
-import { Trash2 } from "lucide-react";
+import { Trash2, FileText } from "lucide-react";
 import { toast } from "sonner";
 import type { FoodListing, Location, FoodType } from "@/types/database";
+import { openReceiptPdf } from "@/lib/taxReceipts";
 
 const FOOD_TYPES: { value: FoodType; label: string }[] = [
   { value: "prepared_meals", label: "Prepared Meals" },
@@ -70,6 +71,24 @@ export default function VenueDonations() {
     },
     enabled: !!profile?.organization_id,
   });
+
+  const listingIds = listings.map((l) => l.id);
+  const { data: receipts = [] } = useQuery({
+    queryKey: ["venue-tax-receipts", profile?.organization_id, listingIds],
+    queryFn: async () => {
+      if (!listingIds.length) return [];
+      const { data } = await supabase
+        .from("tax_receipts")
+        .select("food_listing_id, pdf_path, receipt_type, submitted_at")
+        .in("food_listing_id", listingIds)
+        .order("submitted_at", { ascending: false });
+      return data || [];
+    },
+    enabled: !!profile?.organization_id && listingIds.length > 0,
+  });
+  const receiptMap: Record<string, { pdf_path: string }> = {};
+  for (const r of receipts) if (!receiptMap[r.food_listing_id]) receiptMap[r.food_listing_id] = r;
+
 
   const createDonation = useMutation({
     mutationFn: async () => {
@@ -176,11 +195,12 @@ export default function VenueDonations() {
               <TableHead>Value</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Date</TableHead>
+              <TableHead>Receipt</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-12 text-muted-foreground">No donations posted yet — click "Post Donation" to get started.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground">No donations posted yet — click "Post Donation" to get started.</TableCell></TableRow>
             ) : filtered.map((d) => (
               <TableRow key={d.id}>
                 <TableCell className="font-medium">{locMap[d.location_id] || "—"}</TableCell>
@@ -189,6 +209,15 @@ export default function VenueDonations() {
                 <TableCell>{d.estimated_donation_value ? `$${d.estimated_donation_value}` : "—"}</TableCell>
                 <TableCell><span className={`px-2.5 py-0.5 text-xs font-semibold rounded capitalize ${d.status === "posted" ? "bg-chart-1/15 text-chart-1" : d.status === "completed" ? "bg-success/15 text-success" : "bg-chart-4/15 text-chart-4"}`}>{formatStatus(d.status)}</span></TableCell>
                 <TableCell>{new Date(d.created_at).toLocaleDateString()}</TableCell>
+                <TableCell>
+                  {receiptMap[d.id] ? (
+                    <Button variant="ghost" size="sm" onClick={() => openReceiptPdf(receiptMap[d.id].pdf_path)}>
+                      <FileText className="w-3.5 h-3.5 mr-1" /> Download
+                    </Button>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  )}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
