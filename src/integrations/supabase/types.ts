@@ -212,6 +212,39 @@ export type Database = {
         }
         Relationships: []
       }
+      compliance_states: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          id: string
+          law_name: string
+          state_code: string
+          state_name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          law_name: string
+          state_code: string
+          state_name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          law_name?: string
+          state_code?: string
+          state_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       consumer_badges: {
         Row: {
           badge_description: string | null
@@ -344,46 +377,73 @@ export type Database = {
       }
       consumer_orders: {
         Row: {
+          application_fee_cents: number
           consumer_id: string | null
           coupon_id: string | null
           created_at: string | null
+          food_listing_id: string | null
           id: string
+          is_free: boolean
+          organization_id: string | null
           payment_method_last4: string | null
+          picked_up_at: string | null
           pickup_window_end: string | null
           pickup_window_start: string | null
           quantity: number | null
+          refund_reason: string | null
+          refunded_at: string | null
           status: string | null
+          stripe_payment_intent_id: string | null
           tax_amount: number | null
           total_price: number | null
           unit_price: number | null
+          venue_payout_cents: number
         }
         Insert: {
+          application_fee_cents?: number
           consumer_id?: string | null
           coupon_id?: string | null
           created_at?: string | null
+          food_listing_id?: string | null
           id?: string
+          is_free?: boolean
+          organization_id?: string | null
           payment_method_last4?: string | null
+          picked_up_at?: string | null
           pickup_window_end?: string | null
           pickup_window_start?: string | null
           quantity?: number | null
+          refund_reason?: string | null
+          refunded_at?: string | null
           status?: string | null
+          stripe_payment_intent_id?: string | null
           tax_amount?: number | null
           total_price?: number | null
           unit_price?: number | null
+          venue_payout_cents?: number
         }
         Update: {
+          application_fee_cents?: number
           consumer_id?: string | null
           coupon_id?: string | null
           created_at?: string | null
+          food_listing_id?: string | null
           id?: string
+          is_free?: boolean
+          organization_id?: string | null
           payment_method_last4?: string | null
+          picked_up_at?: string | null
           pickup_window_end?: string | null
           pickup_window_start?: string | null
           quantity?: number | null
+          refund_reason?: string | null
+          refunded_at?: string | null
           status?: string | null
+          stripe_payment_intent_id?: string | null
           tax_amount?: number | null
           total_price?: number | null
           unit_price?: number | null
+          venue_payout_cents?: number
         }
         Relationships: [
           {
@@ -398,6 +458,27 @@ export type Database = {
             columns: ["coupon_id"]
             isOneToOne: false
             referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consumer_orders_food_listing_id_fkey"
+            columns: ["food_listing_id"]
+            isOneToOne: false
+            referencedRelation: "food_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consumer_orders_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consumer_orders_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations_public"
             referencedColumns: ["id"]
           },
         ]
@@ -718,14 +799,82 @@ export type Database = {
         }
         Relationships: []
       }
+      flash_reservations: {
+        Row: {
+          amount_paid_cents: number
+          application_fee_cents: number
+          consumer_id: string
+          created_at: string
+          expires_at: string
+          food_listing_id: string
+          id: string
+          picked_up_at: string | null
+          released_at: string | null
+          reserved_at: string
+          status: string
+          stripe_payment_intent_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_paid_cents?: number
+          application_fee_cents?: number
+          consumer_id: string
+          created_at?: string
+          expires_at: string
+          food_listing_id: string
+          id?: string
+          picked_up_at?: string | null
+          released_at?: string | null
+          reserved_at?: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_paid_cents?: number
+          application_fee_cents?: number
+          consumer_id?: string
+          created_at?: string
+          expires_at?: string
+          food_listing_id?: string
+          id?: string
+          picked_up_at?: string | null
+          released_at?: string | null
+          reserved_at?: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flash_reservations_consumer_id_fkey"
+            columns: ["consumer_id"]
+            isOneToOne: false
+            referencedRelation: "consumers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flash_reservations_food_listing_id_fkey"
+            columns: ["food_listing_id"]
+            isOneToOne: false
+            referencedRelation: "food_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       food_listings: {
         Row: {
           created_at: string
           estimated_donation_value: number | null
+          flash_price_cents: number | null
           food_type: Database["public"]["Enums"]["food_type"] | null
           id: string
+          is_flash: boolean
+          is_free_to_public: boolean
+          latitude: number | null
           listing_type: Database["public"]["Enums"]["listing_type"]
           location_id: string
+          longitude: number | null
           nonprofit_claimed_id: string | null
           notes: string | null
           organization_id: string
@@ -740,10 +889,15 @@ export type Database = {
         Insert: {
           created_at?: string
           estimated_donation_value?: number | null
+          flash_price_cents?: number | null
           food_type?: Database["public"]["Enums"]["food_type"] | null
           id?: string
+          is_flash?: boolean
+          is_free_to_public?: boolean
+          latitude?: number | null
           listing_type: Database["public"]["Enums"]["listing_type"]
           location_id: string
+          longitude?: number | null
           nonprofit_claimed_id?: string | null
           notes?: string | null
           organization_id: string
@@ -758,10 +912,15 @@ export type Database = {
         Update: {
           created_at?: string
           estimated_donation_value?: number | null
+          flash_price_cents?: number | null
           food_type?: Database["public"]["Enums"]["food_type"] | null
           id?: string
+          is_flash?: boolean
+          is_free_to_public?: boolean
+          latitude?: number | null
           listing_type?: Database["public"]["Enums"]["listing_type"]
           location_id?: string
+          longitude?: number | null
           nonprofit_claimed_id?: string | null
           notes?: string | null
           organization_id?: string
@@ -880,6 +1039,30 @@ export type Database = {
           },
         ]
       }
+      impact_stats: {
+        Row: {
+          city_breakdown: Json
+          id: number
+          platform_totals: Json
+          refreshed_at: string
+          testimonials: Json
+        }
+        Insert: {
+          city_breakdown?: Json
+          id?: number
+          platform_totals?: Json
+          refreshed_at?: string
+          testimonials?: Json
+        }
+        Update: {
+          city_breakdown?: Json
+          id?: number
+          platform_totals?: Json
+          refreshed_at?: string
+          testimonials?: Json
+        }
+        Relationships: []
+      }
       impact_surveys: {
         Row: {
           condition_comment: string | null
@@ -895,6 +1078,7 @@ export type Database = {
           photo_urls: string[] | null
           submitted_at: string | null
           testimonial: string | null
+          testimonial_public: boolean
           token: string
           updated_at: string
           venue_organization_id: string
@@ -913,6 +1097,7 @@ export type Database = {
           photo_urls?: string[] | null
           submitted_at?: string | null
           testimonial?: string | null
+          testimonial_public?: boolean
           token?: string
           updated_at?: string
           venue_organization_id: string
@@ -931,6 +1116,7 @@ export type Database = {
           photo_urls?: string[] | null
           submitted_at?: string | null
           testimonial?: string | null
+          testimonial_public?: boolean
           token?: string
           updated_at?: string
           venue_organization_id?: string
@@ -1479,10 +1665,16 @@ export type Database = {
           join_code: string | null
           logo_url: string | null
           name: string
+          parent_organization_id: string | null
+          platform_fee_percentage: number
           primary_contact_email: string | null
           primary_contact_name: string | null
           primary_contact_phone: string | null
           state: string | null
+          stripe_account_id: string | null
+          stripe_charges_enabled: boolean
+          stripe_details_submitted: boolean
+          stripe_payouts_enabled: boolean
           type: Database["public"]["Enums"]["organization_type"]
           zip: string | null
         }
@@ -1500,10 +1692,16 @@ export type Database = {
           join_code?: string | null
           logo_url?: string | null
           name: string
+          parent_organization_id?: string | null
+          platform_fee_percentage?: number
           primary_contact_email?: string | null
           primary_contact_name?: string | null
           primary_contact_phone?: string | null
           state?: string | null
+          stripe_account_id?: string | null
+          stripe_charges_enabled?: boolean
+          stripe_details_submitted?: boolean
+          stripe_payouts_enabled?: boolean
           type: Database["public"]["Enums"]["organization_type"]
           zip?: string | null
         }
@@ -1521,14 +1719,35 @@ export type Database = {
           join_code?: string | null
           logo_url?: string | null
           name?: string
+          parent_organization_id?: string | null
+          platform_fee_percentage?: number
           primary_contact_email?: string | null
           primary_contact_name?: string | null
           primary_contact_phone?: string | null
           state?: string | null
+          stripe_account_id?: string | null
+          stripe_charges_enabled?: boolean
+          stripe_details_submitted?: boolean
+          stripe_payouts_enabled?: boolean
           type?: Database["public"]["Enums"]["organization_type"]
           zip?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "organizations_parent_organization_id_fkey"
+            columns: ["parent_organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organizations_parent_organization_id_fkey"
+            columns: ["parent_organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       partner_leads: {
         Row: {
@@ -2336,6 +2555,11 @@ export type Database = {
         }
         Returns: undefined
       }
+      release_flash_reservation: {
+        Args: { p_reason?: string; p_reservation_id: string }
+        Returns: undefined
+      }
+      reserve_flash_listing: { Args: { p_listing_id: string }; Returns: string }
       submit_impact_survey: {
         Args: {
           p_condition_comment: string
@@ -2428,6 +2652,7 @@ export type Database = {
         | "farm_grocery_group"
         | "government_entity"
         | "nonprofit_organization"
+        | "franchise"
       override_billing_cycle: "monthly" | "annual"
       override_status: "active" | "expired" | "scheduled"
       payment_status: "paid" | "unpaid" | "free"
@@ -2630,6 +2855,7 @@ export const Constants = {
         "farm_grocery_group",
         "government_entity",
         "nonprofit_organization",
+        "franchise",
       ],
       override_billing_cycle: ["monthly", "annual"],
       override_status: ["active", "expired", "scheduled"],
