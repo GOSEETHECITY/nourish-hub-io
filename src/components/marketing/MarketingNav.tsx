@@ -20,8 +20,8 @@ const navItems: NavItem[] = [
     ],
   },
   { label: "About", href: "/about" },
-  { label: "Press", href: "/press" },
   { label: "Contact", href: "/contact" },
+
   { label: "#FeedItOnward", href: "/feed-it-onward" },
   { label: "News", href: "/news" },
 ];
