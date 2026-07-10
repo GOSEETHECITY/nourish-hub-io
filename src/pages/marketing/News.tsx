@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { ArrowRight, ArrowUpRight, Search, Newspaper } from "lucide-react";
 import MarketingNav from "@/components/marketing/MarketingNav";
 import MarketingFooter from "@/components/marketing/MarketingFooter";
@@ -47,12 +47,28 @@ function formatDate(iso: string) {
 
 const PAGE_SIZE = 6;
 
+const CATEGORY_PARAM_TO_TAB: Record<string, Tab> = {
+  press: "press",
+  updates: "product_update",
+  partnerships: "partnership",
+  "company-news": "company_news",
+  milestones: "milestone",
+};
+
 export default function News() {
+  const [searchParams] = useSearchParams();
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>("all");
   const [query, setQuery] = useState("");
   const [visible, setVisible] = useState(PAGE_SIZE);
+
+  useEffect(() => {
+    const category = searchParams.get("category");
+    if (category && category in CATEGORY_PARAM_TO_TAB) {
+      setTab(CATEGORY_PARAM_TO_TAB[category]);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     document.title = "News | Hariet.AI";
