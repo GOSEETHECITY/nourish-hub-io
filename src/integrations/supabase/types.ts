@@ -1726,6 +1726,81 @@ export type Database = {
           },
         ]
       }
+      tax_receipts: {
+        Row: {
+          created_at: string
+          food_listing_id: string
+          id: string
+          nonprofit_id: string
+          pdf_path: string
+          receipt_type: string
+          submitted_at: string
+          submitted_by: string | null
+          updated_at: string
+          venue_organization_id: string
+        }
+        Insert: {
+          created_at?: string
+          food_listing_id: string
+          id?: string
+          nonprofit_id: string
+          pdf_path: string
+          receipt_type: string
+          submitted_at?: string
+          submitted_by?: string | null
+          updated_at?: string
+          venue_organization_id: string
+        }
+        Update: {
+          created_at?: string
+          food_listing_id?: string
+          id?: string
+          nonprofit_id?: string
+          pdf_path?: string
+          receipt_type?: string
+          submitted_at?: string
+          submitted_by?: string | null
+          updated_at?: string
+          venue_organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tax_receipts_food_listing_id_fkey"
+            columns: ["food_listing_id"]
+            isOneToOne: false
+            referencedRelation: "food_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_receipts_nonprofit_id_fkey"
+            columns: ["nonprofit_id"]
+            isOneToOne: false
+            referencedRelation: "nonprofits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_receipts_nonprofit_id_fkey"
+            columns: ["nonprofit_id"]
+            isOneToOne: false
+            referencedRelation: "nonprofits_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_receipts_venue_organization_id_fkey"
+            columns: ["venue_organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tax_receipts_venue_organization_id_fkey"
+            columns: ["venue_organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
