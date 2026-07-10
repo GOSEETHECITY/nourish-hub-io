@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.process-grand-openings]
 verify_jwt = false
+
+[functions.enforce-receipt-deadline]
+verify_jwt = false
