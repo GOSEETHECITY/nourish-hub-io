@@ -42,6 +42,7 @@ export default function VenueDashboard() {
     { icon: Package, label: "Donations", path: "/venue/donations" },
     ...(hasMarketplace ? [{ icon: Store, label: "Marketplace", path: "/venue/marketplace" }] : []),
     { icon: BarChart3, label: "Impact", path: "/venue/impact" },
+    { icon: Receipt, label: "Tax & Receipts", path: "/venue/tax-receipts" },
     { icon: Leaf, label: "Sustainability Baseline", path: "/venue/baseline" },
     { icon: MapPin, label: "Locations", path: "/venue/locations" },
   ];
