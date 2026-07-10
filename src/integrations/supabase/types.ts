@@ -880,6 +880,99 @@ export type Database = {
           },
         ]
       }
+      impact_surveys: {
+        Row: {
+          condition_comment: string | null
+          created_at: string
+          date_received: string | null
+          demographics: string[] | null
+          food_condition_good: boolean | null
+          food_listing_id: string
+          food_received: boolean | null
+          id: string
+          nonprofit_id: string
+          people_fed: number | null
+          photo_urls: string[] | null
+          submitted_at: string | null
+          testimonial: string | null
+          token: string
+          updated_at: string
+          venue_organization_id: string
+        }
+        Insert: {
+          condition_comment?: string | null
+          created_at?: string
+          date_received?: string | null
+          demographics?: string[] | null
+          food_condition_good?: boolean | null
+          food_listing_id: string
+          food_received?: boolean | null
+          id?: string
+          nonprofit_id: string
+          people_fed?: number | null
+          photo_urls?: string[] | null
+          submitted_at?: string | null
+          testimonial?: string | null
+          token?: string
+          updated_at?: string
+          venue_organization_id: string
+        }
+        Update: {
+          condition_comment?: string | null
+          created_at?: string
+          date_received?: string | null
+          demographics?: string[] | null
+          food_condition_good?: boolean | null
+          food_listing_id?: string
+          food_received?: boolean | null
+          id?: string
+          nonprofit_id?: string
+          people_fed?: number | null
+          photo_urls?: string[] | null
+          submitted_at?: string | null
+          testimonial?: string | null
+          token?: string
+          updated_at?: string
+          venue_organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "impact_surveys_food_listing_id_fkey"
+            columns: ["food_listing_id"]
+            isOneToOne: true
+            referencedRelation: "food_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "impact_surveys_nonprofit_id_fkey"
+            columns: ["nonprofit_id"]
+            isOneToOne: false
+            referencedRelation: "nonprofits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "impact_surveys_nonprofit_id_fkey"
+            columns: ["nonprofit_id"]
+            isOneToOne: false
+            referencedRelation: "nonprofits_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "impact_surveys_venue_organization_id_fkey"
+            columns: ["venue_organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "impact_surveys_venue_organization_id_fkey"
+            columns: ["venue_organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       import_logs: {
         Row: {
           batch_id: string
@@ -2206,6 +2299,18 @@ export type Database = {
         Args: { p_coupon_id: string; p_quantity: number }
         Returns: string
       }
+      get_impact_survey_by_token: {
+        Args: { p_token: string }
+        Returns: {
+          donation_date: string
+          food_type: string
+          id: string
+          nonprofit_name: string
+          pounds: number
+          submitted_at: string
+          venue_name: string
+        }[]
+      }
       get_nonprofit_join_code: {
         Args: { _nonprofit_id: string }
         Returns: string
@@ -2230,6 +2335,20 @@ export type Database = {
           p_type: string
         }
         Returns: undefined
+      }
+      submit_impact_survey: {
+        Args: {
+          p_condition_comment: string
+          p_date_received: string
+          p_demographics: string[]
+          p_food_condition_good: boolean
+          p_food_received: boolean
+          p_people_fed: number
+          p_photo_urls: string[]
+          p_testimonial: string
+          p_token: string
+        }
+        Returns: string
       }
       update_own_profile: {
         Args: { p_first_name?: string; p_last_name?: string; p_phone?: string }

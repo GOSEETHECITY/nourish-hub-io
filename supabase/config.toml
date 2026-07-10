@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.enforce-receipt-deadline]
 verify_jwt = false
+
+[functions.upload-survey-photo]
+verify_jwt = false
