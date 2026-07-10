@@ -64,6 +64,11 @@ import VenueSettings from "./pages/venue/VenueSettings";
 import VenueSupport from "./pages/venue/VenueSupport";
 import VenueOnboarding from "./pages/venue/VenueOnboarding";
 import VenueTaxReceipts from "./pages/venue/VenueTaxReceipts";
+import VenueCompliance from "./pages/venue/VenueCompliance";
+import VenueOrders from "./pages/venue/VenueOrders";
+import FranchiseDashboard from "./pages/franchise/FranchiseDashboard";
+import PublicImpact from "./pages/marketing/PublicImpact";
+import ConsumerFlashDetail from "./pages/consumer/ConsumerFlashDetail";
 // Nonprofit
 import NonprofitDashboard from "./pages/nonprofit/NonprofitDashboard";
 import NonprofitDashboardHome from "./pages/nonprofit/NonprofitDashboardHome";
@@ -146,7 +151,7 @@ const ProtectedConsumerWrapper = ({ children }: { children: React.ReactNode }) =
 // When a visitor lands on the root of thegoapp.co, send them into the consumer
 // app at /app. On hariet.ai (or any other host, including the Lovable preview
 // and localhost) the marketing home renders normally. Also handles www. prefix.
-const APP_HOSTS = new Set(["thegoapp.co", "www.thegoapp.co"]);
+const APP_HOSTS = new Set(["thegoapp.co", "www.thegoapp.co", "goseethecity.com", "www.goseethecity.com"]);
 
 const RootDomainRouter = () => {
   const { pathname } = useLocation();
