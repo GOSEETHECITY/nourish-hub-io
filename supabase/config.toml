@@ -23,3 +23,12 @@ verify_jwt = false
 
 [functions.upload-survey-photo]
 verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.refresh-impact-snapshot]
+verify_jwt = false
+
+[functions.release-expired-flash-reservations]
+verify_jwt = false
