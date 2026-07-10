@@ -195,11 +195,12 @@ export default function VenueDonations() {
               <TableHead>Value</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Date</TableHead>
+              <TableHead>Receipt</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-12 text-muted-foreground">No donations posted yet — click "Post Donation" to get started.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground">No donations posted yet — click "Post Donation" to get started.</TableCell></TableRow>
             ) : filtered.map((d) => (
               <TableRow key={d.id}>
                 <TableCell className="font-medium">{locMap[d.location_id] || "—"}</TableCell>
@@ -208,6 +209,15 @@ export default function VenueDonations() {
                 <TableCell>{d.estimated_donation_value ? `$${d.estimated_donation_value}` : "—"}</TableCell>
                 <TableCell><span className={`px-2.5 py-0.5 text-xs font-semibold rounded capitalize ${d.status === "posted" ? "bg-chart-1/15 text-chart-1" : d.status === "completed" ? "bg-success/15 text-success" : "bg-chart-4/15 text-chart-4"}`}>{formatStatus(d.status)}</span></TableCell>
                 <TableCell>{new Date(d.created_at).toLocaleDateString()}</TableCell>
+                <TableCell>
+                  {receiptMap[d.id] ? (
+                    <Button variant="ghost" size="sm" onClick={() => openReceiptPdf(receiptMap[d.id].pdf_path)}>
+                      <FileText className="w-3.5 h-3.5 mr-1" /> Download
+                    </Button>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  )}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
