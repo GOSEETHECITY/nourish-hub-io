@@ -20,7 +20,17 @@ const navItems: NavItem[] = [
     ],
   },
   { label: "About", href: "/about" },
-  { label: "News", href: "/news" },
+  {
+    label: "News",
+    dropdown: [
+      { label: "All", href: "/news" },
+      { label: "Press Releases", href: "/news?category=press" },
+      { label: "Updates", href: "/news?category=updates" },
+      { label: "Partnerships", href: "/news?category=partnerships" },
+      { label: "Company News", href: "/news?category=company-news" },
+      { label: "Milestones", href: "/news?category=milestones" },
+    ],
+  },
   { label: "Contact", href: "/contact" },
   { label: "#FeedItOnward", href: "/feed-it-onward" },
 ];
