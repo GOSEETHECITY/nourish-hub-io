@@ -166,7 +166,7 @@ export default function PartnerDashboardLayout({
           )}
 
           <div className="flex items-center gap-4 ml-auto">
-            <NotificationBell />
+            <PartnerNotificationBell />
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-accent text-accent-foreground flex items-center justify-center text-sm font-bold">{initials}</div>
               <div className="hidden md:block">
