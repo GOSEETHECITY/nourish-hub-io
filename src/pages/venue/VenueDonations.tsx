@@ -76,23 +76,48 @@ export default function VenueDonations() {
       const locId = selectedLocationId || locations[0]?.id;
       if (!locId || !profile?.organization_id) throw new Error("No location selected");
       const loc = locations.find((l) => l.id === locId);
-      const { error } = await supabase.from("food_listings").insert({
+
+      // If itemized, validate at least one non-empty line with a value.
+      let validItems: LineItem[] = [];
+      if (itemized) {
+        validItems = lineItems.filter((li) => li.description.trim() && Number(li.quantity) > 0 && Number(li.unit_value) >= 0);
+        if (validItems.length === 0) throw new Error("Add at least one itemized line with a description and quantity");
+      }
+
+      const initialValue = itemized
+        ? validItems.reduce((s, li) => s + Number(li.quantity) * Number(li.unit_value), 0)
+        : (form.estimated_donation_value ? Number(form.estimated_donation_value) : null);
+
+      const { data: inserted, error } = await supabase.from("food_listings").insert({
         location_id: locId, organization_id: profile.organization_id,
         listing_type: "donation" as const, food_type: form.food_type,
         pounds: form.pounds ? Number(form.pounds) : null,
-        estimated_donation_value: form.estimated_donation_value ? Number(form.estimated_donation_value) : null,
+        estimated_donation_value: initialValue,
         pickup_address: form.pickup_address || loc?.pickup_address || null,
         pickup_window_start: form.pickup_window_start || null,
         pickup_window_end: form.pickup_window_end || null,
         notes: form.notes || null,
-      });
+      }).select("id").single();
       if (error) throw error;
+
+      if (itemized && validItems.length && inserted?.id) {
+        const rows = validItems.map((li) => ({
+          food_listing_id: inserted.id,
+          description: li.description.trim(),
+          quantity: Number(li.quantity),
+          unit_value: Number(li.unit_value),
+        }));
+        const { error: liErr } = await supabase.from("donation_line_items").insert(rows);
+        if (liErr) throw liErr;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["venue-listings"] });
       toast.success("Donation posted!");
       setDialogOpen(false);
       setForm(emptyDonation);
+      setItemized(false);
+      setLineItems([emptyLine()]);
     },
     onError: (e) => toast.error(e.message),
   });
