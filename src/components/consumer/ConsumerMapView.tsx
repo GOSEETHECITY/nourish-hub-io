@@ -42,7 +42,14 @@ class MapErrorBoundary extends Component<
 
 /* ── inner map component, only rendered once leaflet is loaded ── */
 function LeafletMap({ center, markers, onMarkerClick, modules }: MapViewProps & { modules: any }) {
-  const { MapContainer, TileLayer, Marker, Popup, orangeIcon, greenIcon } = modules;
+  const { MapContainer, TileLayer, Marker, Popup, orangeIcon, greenIcon, redIcon } = modules;
+
+  const iconFor = (t: MapLocation["type"]) =>
+    t === "event" ? greenIcon : t === "flash" ? redIcon : orangeIcon;
+  const labelFor = (t: MapLocation["type"]) =>
+    t === "event" ? "Event" : t === "flash" ? "Flash rescue" : "Restaurant";
+  const btnBgFor = (t: MapLocation["type"]) =>
+    t === "event" ? "bg-[#8DC63F]" : t === "flash" ? "bg-[#EF4444]" : "bg-[#F97316]";
 
   return (
     <div className="consumer-static-map h-full w-full overflow-hidden rounded-[28px] bg-muted">
@@ -70,16 +77,14 @@ function LeafletMap({ center, markers, onMarkerClick, modules }: MapViewProps & 
           maxZoom={20}
         />
         {markers.map((m) => (
-          <Marker key={m.id} position={[m.lat, m.lng]} icon={m.type === "event" ? greenIcon : orangeIcon}>
+          <Marker key={`${m.type}-${m.id}`} position={[m.lat, m.lng]} icon={iconFor(m.type)}>
             <Popup autoPan={false}>
               <div className="text-center">
                 <p className="font-semibold">{m.name}</p>
-                <p className="text-xs text-gray-500">{m.type === "event" ? "Event" : "Restaurant"}</p>
+                <p className="text-xs text-gray-500">{m.subtitle ?? labelFor(m.type)}</p>
                 <button
                   onClick={() => onMarkerClick(m.id)}
-                  className={`mt-1 px-3 py-1 text-white rounded-full text-xs font-semibold ${
-                    m.type === "event" ? "bg-[#8DC63F]" : "bg-[#F97316]"
-                  }`}
+                  className={`mt-1 px-3 py-1 text-white rounded-full text-xs font-semibold ${btnBgFor(m.type)}`}
                 >
                   View
                 </button>
