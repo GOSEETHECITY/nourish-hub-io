@@ -72,6 +72,24 @@ export default function VenueDonations() {
     enabled: !!profile?.organization_id,
   });
 
+  const listingIds = listings.map((l) => l.id);
+  const { data: receipts = [] } = useQuery({
+    queryKey: ["venue-tax-receipts", profile?.organization_id, listingIds],
+    queryFn: async () => {
+      if (!listingIds.length) return [];
+      const { data } = await supabase
+        .from("tax_receipts")
+        .select("food_listing_id, pdf_path, receipt_type, submitted_at")
+        .in("food_listing_id", listingIds)
+        .order("submitted_at", { ascending: false });
+      return data || [];
+    },
+    enabled: !!profile?.organization_id && listingIds.length > 0,
+  });
+  const receiptMap: Record<string, { pdf_path: string }> = {};
+  for (const r of receipts) if (!receiptMap[r.food_listing_id]) receiptMap[r.food_listing_id] = r;
+
+
   const createDonation = useMutation({
     mutationFn: async () => {
       const locId = selectedLocationId || locations[0]?.id;
