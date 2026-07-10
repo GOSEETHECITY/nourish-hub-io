@@ -144,6 +144,7 @@ export default function ConsumerMapView({ center, markers, onMarkerClick }: MapV
 
         const orangeIcon = makeSvgIcon("#F97316");
         const greenIcon = makeSvgIcon("#8DC63F");
+        const redIcon = makeSvgIcon("#EF4444");
 
         // Import react-leaflet and destructure named exports explicitly
         const RL = await import("react-leaflet");
@@ -153,7 +154,7 @@ export default function ConsumerMapView({ center, markers, onMarkerClick }: MapV
         const Popup = RL.Popup;
 
         if (!cancelled) {
-          setModules({ MapContainer, TileLayer, Marker, Popup, orangeIcon, greenIcon });
+          setModules({ MapContainer, TileLayer, Marker, Popup, orangeIcon, greenIcon, redIcon });
         }
       } catch (err) {
         console.error("Failed to load map:", err);
