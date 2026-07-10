@@ -63,6 +63,7 @@ import VenueLocations from "./pages/venue/VenueLocations";
 import VenueSettings from "./pages/venue/VenueSettings";
 import VenueSupport from "./pages/venue/VenueSupport";
 import VenueOnboarding from "./pages/venue/VenueOnboarding";
+import VenueTaxReceipts from "./pages/venue/VenueTaxReceipts";
 // Nonprofit
 import NonprofitDashboard from "./pages/nonprofit/NonprofitDashboard";
 import NonprofitDashboardHome from "./pages/nonprofit/NonprofitDashboardHome";
