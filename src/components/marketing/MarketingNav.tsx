@@ -20,10 +20,9 @@ const navItems: NavItem[] = [
     ],
   },
   { label: "About", href: "/about" },
-  { label: "Contact", href: "/contact" },
-
-  { label: "#FeedItOnward", href: "/feed-it-onward" },
   { label: "News", href: "/news" },
+  { label: "Contact", href: "/contact" },
+  { label: "#FeedItOnward", href: "/feed-it-onward" },
 ];
 
 export default function MarketingNav({ variant = "light" }: { variant?: "light" | "dark" }) {
