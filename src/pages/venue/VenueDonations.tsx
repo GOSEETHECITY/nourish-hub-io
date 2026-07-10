@@ -33,6 +33,8 @@ const emptyDonation = {
   food_type: "prepared_meals" as FoodType,
   pounds: "", estimated_donation_value: "", pickup_address: "",
   pickup_window_start: "", pickup_window_end: "", notes: "",
+  // Flash rescue fields (only used when isFlash is true)
+  flash_price: "", is_free_to_public: false,
 };
 
 export default function VenueDonations() {
@@ -45,6 +47,7 @@ export default function VenueDonations() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [itemized, setItemized] = useState(false);
   const [lineItems, setLineItems] = useState<LineItem[]>([emptyLine()]);
+  const [isFlash, setIsFlash] = useState(false);
 
   const lineItemsTotal = lineItems.reduce((sum, li) => {
     const q = Number(li.quantity) || 0;
@@ -125,6 +128,10 @@ export default function VenueDonations() {
         ? validItems.reduce((s, li) => s + Number(li.quantity) * Number(li.unit_value), 0)
         : (form.estimated_donation_value ? Number(form.estimated_donation_value) : null);
 
+      const flashPriceCents = isFlash && !form.is_free_to_public && form.flash_price
+        ? Math.round(Number(form.flash_price) * 100)
+        : (isFlash && form.is_free_to_public ? 0 : null);
+
       const { data: inserted, error } = await supabase.from("food_listings").insert({
         location_id: locId, organization_id: profile.organization_id,
         listing_type: "donation" as const, food_type: form.food_type,
@@ -134,7 +141,10 @@ export default function VenueDonations() {
         pickup_window_start: form.pickup_window_start || null,
         pickup_window_end: form.pickup_window_end || null,
         notes: form.notes || null,
-      }).select("id").single();
+        is_flash: isFlash || null,
+        is_free_to_public: isFlash ? form.is_free_to_public : null,
+        flash_price_cents: flashPriceCents,
+      } as any).select("id").single();
       if (error) throw error;
 
       if (itemized && validItems.length && inserted?.id) {
@@ -150,11 +160,12 @@ export default function VenueDonations() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["venue-listings"] });
-      toast.success("Donation posted!");
+      toast.success(isFlash ? "Flash rescue posted!" : "Donation posted!");
       setDialogOpen(false);
       setForm(emptyDonation);
       setItemized(false);
       setLineItems([emptyLine()]);
+      setIsFlash(false);
     },
     onError: (e) => toast.error(e.message),
   });
@@ -175,7 +186,7 @@ export default function VenueDonations() {
           <h1 className="text-2xl font-bold text-foreground">Donations</h1>
           <p className="text-sm text-muted-foreground mt-1">Manage all food donations across your locations</p>
         </div>
-        <Button size="lg" onClick={() => { setForm(emptyDonation); setSelectedLocationId(locations[0]?.id || ""); setDialogOpen(true); }}>
+        <Button size="lg" onClick={() => { setForm(emptyDonation); setIsFlash(false); setSelectedLocationId(locations[0]?.id || ""); setDialogOpen(true); }}>
           <Plus className="w-4 h-4 mr-2" />Post Donation
         </Button>
       </div>
@@ -255,8 +266,38 @@ export default function VenueDonations() {
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Post a Donation</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{isFlash ? "Post Flash Rescue" : "Post a Donation"}</DialogTitle></DialogHeader>
           <div className="space-y-4 pt-4">
+            <div className="rounded-lg border p-3 bg-muted/30">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-sm">Flash rescue (consumer pickup)</Label>
+                  <p className="text-xs text-muted-foreground">Open to nearby consumers, first-come first-served, no nonprofit needed.</p>
+                </div>
+                <Switch checked={isFlash} onCheckedChange={setIsFlash} />
+              </div>
+              {isFlash && (
+                <div className="mt-3 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">Free to public</Label>
+                    <Switch
+                      checked={form.is_free_to_public}
+                      onCheckedChange={(v) => setForm({ ...form, is_free_to_public: v })}
+                    />
+                  </div>
+                  {!form.is_free_to_public && (
+                    <div>
+                      <Label>Consumer price ($) *</Label>
+                      <Input type="number" min="0" step="0.01" value={form.flash_price}
+                        onChange={(e) => setForm({ ...form, flash_price: e.target.value })}
+                        placeholder="e.g. 4.99" />
+                      <p className="text-xs text-muted-foreground mt-1">Platform keeps 10%. Pickup window above is the flash window.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             {locations.length > 1 && (
               <div>
                 <Label>Location</Label>
@@ -328,8 +369,11 @@ export default function VenueDonations() {
             </div>
             <div><Label>Pickup Address <span className="text-muted-foreground text-xs">(optional — defaults to location)</span></Label><Input value={form.pickup_address} onChange={(e) => setForm({ ...form, pickup_address: e.target.value })} /></div>
             <div><Label>Notes <span className="text-muted-foreground text-xs">(optional)</span></Label><Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
-            <Button className="w-full" size="lg" onClick={() => createDonation.mutate()} disabled={!form.food_type || !form.pounds || !form.pickup_window_start || !form.pickup_window_end || createDonation.isPending}>
-              {createDonation.isPending ? "Posting..." : "Post Donation"}
+            <Button className="w-full" size="lg" onClick={() => createDonation.mutate()}
+              disabled={!form.food_type || !form.pounds || !form.pickup_window_start || !form.pickup_window_end
+                || (isFlash && !form.is_free_to_public && !form.flash_price)
+                || createDonation.isPending}>
+              {createDonation.isPending ? "Posting..." : (isFlash ? "Post Flash Rescue" : "Post Donation")}
             </Button>
           </div>
         </DialogContent>
