@@ -43,10 +43,15 @@ export default function VenueDashboardHome() {
   });
 
   const donations = listings.filter((l) => l.listing_type === "donation");
-  const totalPounds = donations.reduce((s, l) => s + (l.pounds || 0), 0);
-  const totalValue = donations.reduce((s, l) => s + (l.estimated_donation_value || 0), 0);
-  const activeDonations = donations.filter((l) => ["posted", "claimed", "picked_up"].includes(l.status)).length;
-  const co2 = totalPounds * CO2_LBS_PER_LB_FOOD;
+  const currentYear = new Date().getFullYear();
+  const yearDonations = donations.filter((l) => {
+    const d = l.created_at ? new Date(l.created_at) : null;
+    return d && d.getFullYear() === currentYear;
+  });
+  const yearCount = yearDonations.length;
+  const yearPounds = yearDonations.reduce((s, l) => s + (l.pounds || 0), 0);
+  const yearValue = yearDonations.reduce((s, l) => s + (l.estimated_donation_value || 0), 0);
+  const yearCo2 = yearPounds * CO2_LBS_PER_LB_FOOD;
   const locMap = Object.fromEntries(locations.map((l) => [l.id, l.name]));
   const formatStatus = (s: string) => s.split("_").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
 
