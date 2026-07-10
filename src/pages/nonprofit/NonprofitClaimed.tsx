@@ -10,6 +10,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import type { FoodListing } from "@/types/database";
+import TaxReceiptDialog from "@/components/tax-receipts/TaxReceiptDialog";
+import { openReceiptPdf } from "@/lib/taxReceipts";
+import { FileText } from "lucide-react";
 
 // Nonprofits use this page to track the donations they have claimed and to
 // advance them through the lifecycle:
