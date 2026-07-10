@@ -51,7 +51,7 @@ export default function VenueSettings() {
     queryFn: async () => {
       const { data, error } = await supabase.from("organizations").select("*").eq("id", profile!.organization_id!).single();
       if (error) throw error;
-      return data as Organization & {
+      return data as unknown as Organization & {
         business_bio: string | null;
         hours_of_operation: HoursOfOperation | null;
         logo_url: string | null;
