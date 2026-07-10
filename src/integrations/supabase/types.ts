@@ -730,6 +730,7 @@ export type Database = {
           notes: string | null
           organization_id: string
           photo_urls: string[] | null
+          picked_up_at: string | null
           pickup_address: string | null
           pickup_window_end: string | null
           pickup_window_start: string | null
@@ -747,6 +748,7 @@ export type Database = {
           notes?: string | null
           organization_id: string
           photo_urls?: string[] | null
+          picked_up_at?: string | null
           pickup_address?: string | null
           pickup_window_end?: string | null
           pickup_window_start?: string | null
@@ -764,6 +766,7 @@ export type Database = {
           notes?: string | null
           organization_id?: string
           photo_urls?: string[] | null
+          picked_up_at?: string | null
           pickup_address?: string | null
           pickup_window_end?: string | null
           pickup_window_start?: string | null
