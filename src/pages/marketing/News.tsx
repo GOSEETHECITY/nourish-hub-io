@@ -10,7 +10,7 @@ type Article = {
   id: string;
   title: string;
   slug: string;
-  category: "press_release" | "product_update" | "partnership" | "company_news" | "milestone";
+  category: "press_release" | "product_update" | "partnership" | "company_news" | "milestone" | "grand_opening";
   excerpt: string;
   cover_image_url: string | null;
   author: string;
@@ -18,7 +18,7 @@ type Article = {
   is_featured: boolean;
 };
 
-type Tab = "all" | "press" | "product_update" | "partnership" | "company_news" | "milestone";
+type Tab = "all" | "press" | "product_update" | "partnership" | "company_news" | "milestone" | "grand_opening";
 
 const TABS: { key: Tab; label: string }[] = [
   { key: "all", label: "All" },
@@ -27,6 +27,7 @@ const TABS: { key: Tab; label: string }[] = [
   { key: "partnership", label: "Partnerships" },
   { key: "company_news", label: "Company News" },
   { key: "milestone", label: "Milestones" },
+  { key: "grand_opening", label: "Grand Openings" },
 ];
 
 const CATEGORY_LABEL: Record<Article["category"], string> = {
@@ -35,6 +36,7 @@ const CATEGORY_LABEL: Record<Article["category"], string> = {
   partnership: "Partnership",
   company_news: "Company News",
   milestone: "Milestone",
+  grand_opening: "Grand Opening",
 };
 
 function formatDate(iso: string) {
@@ -53,6 +55,7 @@ const CATEGORY_PARAM_TO_TAB: Record<string, Tab> = {
   partnerships: "partnership",
   "company-news": "company_news",
   milestones: "milestone",
+  "grand-openings": "grand_opening",
 };
 
 export default function News() {

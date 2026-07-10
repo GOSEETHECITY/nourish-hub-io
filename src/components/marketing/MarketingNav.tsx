@@ -29,6 +29,7 @@ const navItems: NavItem[] = [
       { label: "Partnerships", href: "/news?category=partnerships" },
       { label: "Company News", href: "/news?category=company-news" },
       { label: "Milestones", href: "/news?category=milestones" },
+      { label: "Grand Openings", href: "/news?category=grand-openings" },
     ],
   },
   { label: "Contact", href: "/contact" },

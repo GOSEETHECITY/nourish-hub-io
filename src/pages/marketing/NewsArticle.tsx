@@ -9,7 +9,7 @@ type Article = {
   id: string;
   title: string;
   slug: string;
-  category: "press_release" | "product_update" | "partnership" | "company_news" | "milestone";
+  category: "press_release" | "product_update" | "partnership" | "company_news" | "milestone" | "grand_opening";
   excerpt: string;
   body: string;
   cover_image_url: string | null;
@@ -23,6 +23,7 @@ const CATEGORY_LABEL: Record<Article["category"], string> = {
   partnership: "Partnership",
   company_news: "Company News",
   milestone: "Milestone",
+  grand_opening: "Grand Opening",
 };
 
 function formatDate(iso: string) {
