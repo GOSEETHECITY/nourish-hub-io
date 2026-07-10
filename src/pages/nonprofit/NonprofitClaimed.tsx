@@ -257,6 +257,7 @@ export default function NonprofitClaimed() {
                               Submit Tax Receipt
                             </Button>
                           )}
+                          {!receiptMap[d.id] && <ReceiptCountdown pickedUpAt={d.picked_up_at} />}
                         </>
                       )}
                       {isCompleted && !isPickedUp && !receiptMap[d.id] && (
