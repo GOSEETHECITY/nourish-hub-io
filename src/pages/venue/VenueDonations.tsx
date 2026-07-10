@@ -369,8 +369,11 @@ export default function VenueDonations() {
             </div>
             <div><Label>Pickup Address <span className="text-muted-foreground text-xs">(optional — defaults to location)</span></Label><Input value={form.pickup_address} onChange={(e) => setForm({ ...form, pickup_address: e.target.value })} /></div>
             <div><Label>Notes <span className="text-muted-foreground text-xs">(optional)</span></Label><Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
-            <Button className="w-full" size="lg" onClick={() => createDonation.mutate()} disabled={!form.food_type || !form.pounds || !form.pickup_window_start || !form.pickup_window_end || createDonation.isPending}>
-              {createDonation.isPending ? "Posting..." : "Post Donation"}
+            <Button className="w-full" size="lg" onClick={() => createDonation.mutate()}
+              disabled={!form.food_type || !form.pounds || !form.pickup_window_start || !form.pickup_window_end
+                || (isFlash && !form.is_free_to_public && !form.flash_price)
+                || createDonation.isPending}>
+              {createDonation.isPending ? "Posting..." : (isFlash ? "Post Flash Rescue" : "Post Donation")}
             </Button>
           </div>
         </DialogContent>
