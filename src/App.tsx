@@ -182,6 +182,8 @@ const App = () => (
             <Route path="/feed-it-onward" element={<FeedItOnward />} />
             <Route path="/news" element={<News />} />
             <Route path="/news/:slug" element={<NewsArticle />} />
+            <Route path="/our-impact" element={<PublicImpact />} />
+            <Route path="/franchise" element={<ProtectedRoute allowedRoles={["venue_partner"]}><FranchiseDashboard /></ProtectedRoute>} />
             <Route path="/get-started" element={<GetStarted />} />
             <Route path="/get-started/:eventSlug" element={<EventGetStarted />} />
             <Route path="/partners/business/signup" element={<BusinessSignup />} />
@@ -241,6 +243,8 @@ const App = () => (
               <Route path="/venue/marketplace" element={<VenueMarketplace />} />
               <Route path="/venue/impact" element={<VenueImpact />} />
               <Route path="/venue/tax-receipts" element={<VenueTaxReceipts />} />
+              <Route path="/venue/compliance" element={<VenueCompliance />} />
+              <Route path="/venue/orders" element={<VenueOrders />} />
               <Route path="/venue/baseline" element={<VenueBaseline />} />
               <Route path="/venue/locations" element={<VenueLocations />} />
               <Route path="/venue/settings" element={<VenueSettings />} />
@@ -300,6 +304,7 @@ const App = () => (
             <Route path="/app/coupon/:id" element={<ProtectedConsumerWrapper><ConsumerCouponDetail /></ProtectedConsumerWrapper>} />
             <Route path="/app/events" element={<ProtectedConsumerWrapper><ConsumerEvents /></ProtectedConsumerWrapper>} />
             <Route path="/app/event/:id" element={<ProtectedConsumerWrapper><ConsumerEventDetail /></ProtectedConsumerWrapper>} />
+            <Route path="/app/flash/:id" element={<ProtectedConsumerWrapper><ConsumerFlashDetail /></ProtectedConsumerWrapper>} />
             <Route path="/app/profile" element={<ProtectedConsumerWrapper><ConsumerProfile /></ProtectedConsumerWrapper>} />
             <Route path="/app/profile/edit" element={<ProtectedConsumerWrapper><ConsumerProfileEdit /></ProtectedConsumerWrapper>} />
             <Route path="/app/checkins" element={<ProtectedConsumerWrapper><ConsumerCheckIns /></ProtectedConsumerWrapper>} />
