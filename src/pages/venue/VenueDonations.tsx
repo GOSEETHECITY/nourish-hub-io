@@ -42,6 +42,14 @@ export default function VenueDonations() {
   const [selectedLocationId, setSelectedLocationId] = useState<string>("");
   const [filterLocation, setFilterLocation] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [itemized, setItemized] = useState(false);
+  const [lineItems, setLineItems] = useState<LineItem[]>([emptyLine()]);
+
+  const lineItemsTotal = lineItems.reduce((sum, li) => {
+    const q = Number(li.quantity) || 0;
+    const v = Number(li.unit_value) || 0;
+    return sum + q * v;
+  }, 0);
 
   const { data: locations = [] } = useQuery({
     queryKey: ["venue-locations", profile?.organization_id],
