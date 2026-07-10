@@ -552,6 +552,47 @@ export type Database = {
           },
         ]
       }
+      donation_line_items: {
+        Row: {
+          created_at: string
+          description: string
+          food_listing_id: string
+          id: string
+          quantity: number
+          total_value: number | null
+          unit_value: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          food_listing_id: string
+          id?: string
+          quantity?: number
+          total_value?: number | null
+          unit_value?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          food_listing_id?: string
+          id?: string
+          quantity?: number
+          total_value?: number | null
+          unit_value?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "donation_line_items_food_listing_id_fkey"
+            columns: ["food_listing_id"]
+            isOneToOne: false
+            referencedRelation: "food_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_checkins: {
         Row: {
           checked_in_at: string | null

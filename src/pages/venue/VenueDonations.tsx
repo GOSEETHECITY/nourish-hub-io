@@ -10,6 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Switch } from "@/components/ui/switch";
+import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import type { FoodListing, Location, FoodType } from "@/types/database";
 
@@ -22,6 +24,9 @@ const FOOD_TYPES: { value: FoodType; label: string }[] = [
   { value: "shelf_stable", label: "Shelf Stable" },
   { value: "frozen", label: "Frozen" },
 ];
+
+type LineItem = { description: string; quantity: string; unit_value: string };
+const emptyLine = (): LineItem => ({ description: "", quantity: "1", unit_value: "" });
 
 const emptyDonation = {
   food_type: "prepared_meals" as FoodType,
@@ -37,6 +42,14 @@ export default function VenueDonations() {
   const [selectedLocationId, setSelectedLocationId] = useState<string>("");
   const [filterLocation, setFilterLocation] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [itemized, setItemized] = useState(false);
+  const [lineItems, setLineItems] = useState<LineItem[]>([emptyLine()]);
+
+  const lineItemsTotal = lineItems.reduce((sum, li) => {
+    const q = Number(li.quantity) || 0;
+    const v = Number(li.unit_value) || 0;
+    return sum + q * v;
+  }, 0);
 
   const { data: locations = [] } = useQuery({
     queryKey: ["venue-locations", profile?.organization_id],
@@ -63,23 +76,48 @@ export default function VenueDonations() {
       const locId = selectedLocationId || locations[0]?.id;
       if (!locId || !profile?.organization_id) throw new Error("No location selected");
       const loc = locations.find((l) => l.id === locId);
-      const { error } = await supabase.from("food_listings").insert({
+
+      // If itemized, validate at least one non-empty line with a value.
+      let validItems: LineItem[] = [];
+      if (itemized) {
+        validItems = lineItems.filter((li) => li.description.trim() && Number(li.quantity) > 0 && Number(li.unit_value) >= 0);
+        if (validItems.length === 0) throw new Error("Add at least one itemized line with a description and quantity");
+      }
+
+      const initialValue = itemized
+        ? validItems.reduce((s, li) => s + Number(li.quantity) * Number(li.unit_value), 0)
+        : (form.estimated_donation_value ? Number(form.estimated_donation_value) : null);
+
+      const { data: inserted, error } = await supabase.from("food_listings").insert({
         location_id: locId, organization_id: profile.organization_id,
         listing_type: "donation" as const, food_type: form.food_type,
         pounds: form.pounds ? Number(form.pounds) : null,
-        estimated_donation_value: form.estimated_donation_value ? Number(form.estimated_donation_value) : null,
+        estimated_donation_value: initialValue,
         pickup_address: form.pickup_address || loc?.pickup_address || null,
         pickup_window_start: form.pickup_window_start || null,
         pickup_window_end: form.pickup_window_end || null,
         notes: form.notes || null,
-      });
+      }).select("id").single();
       if (error) throw error;
+
+      if (itemized && validItems.length && inserted?.id) {
+        const rows = validItems.map((li) => ({
+          food_listing_id: inserted.id,
+          description: li.description.trim(),
+          quantity: Number(li.quantity),
+          unit_value: Number(li.unit_value),
+        }));
+        const { error: liErr } = await supabase.from("donation_line_items").insert(rows);
+        if (liErr) throw liErr;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["venue-listings"] });
       toast.success("Donation posted!");
       setDialogOpen(false);
       setForm(emptyDonation);
+      setItemized(false);
+      setLineItems([emptyLine()]);
     },
     onError: (e) => toast.error(e.message),
   });
@@ -182,7 +220,54 @@ export default function VenueDonations() {
               <div><Label>Pickup Start *</Label><Input type="datetime-local" value={form.pickup_window_start} onChange={(e) => setForm({ ...form, pickup_window_start: e.target.value })} /></div>
               <div><Label>Pickup End *</Label><Input type="datetime-local" value={form.pickup_window_end} onChange={(e) => setForm({ ...form, pickup_window_end: e.target.value })} /></div>
             </div>
-            <div><Label>Est. Value ($) <span className="text-muted-foreground text-xs">(optional)</span></Label><Input type="number" step="0.01" value={form.estimated_donation_value} onChange={(e) => setForm({ ...form, estimated_donation_value: e.target.value })} /></div>
+            <div className="rounded-lg border p-3 space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-sm">Itemize value</Label>
+                  <p className="text-xs text-muted-foreground">Track each item separately for tax receipts.</p>
+                </div>
+                <Switch checked={itemized} onCheckedChange={setItemized} />
+              </div>
+              {!itemized ? (
+                <div>
+                  <Label>Est. Value ($) <span className="text-muted-foreground text-xs">(optional)</span></Label>
+                  <Input type="number" step="0.01" min="0" value={form.estimated_donation_value} onChange={(e) => setForm({ ...form, estimated_donation_value: e.target.value })} />
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {lineItems.map((li, idx) => (
+                    <div key={idx} className="grid grid-cols-[1fr_70px_90px_auto] gap-2 items-end">
+                      <div>
+                        {idx === 0 && <Label className="text-xs">Description</Label>}
+                        <Input placeholder="e.g. Turkey sandwich" value={li.description}
+                          onChange={(e) => setLineItems(lineItems.map((x, i) => i === idx ? { ...x, description: e.target.value } : x))} />
+                      </div>
+                      <div>
+                        {idx === 0 && <Label className="text-xs">Qty</Label>}
+                        <Input type="number" min="0" step="1" value={li.quantity}
+                          onChange={(e) => setLineItems(lineItems.map((x, i) => i === idx ? { ...x, quantity: e.target.value } : x))} />
+                      </div>
+                      <div>
+                        {idx === 0 && <Label className="text-xs">Unit $</Label>}
+                        <Input type="number" min="0" step="0.01" value={li.unit_value}
+                          onChange={(e) => setLineItems(lineItems.map((x, i) => i === idx ? { ...x, unit_value: e.target.value } : x))} />
+                      </div>
+                      <Button type="button" variant="ghost" size="icon"
+                        onClick={() => setLineItems(lineItems.length === 1 ? [emptyLine()] : lineItems.filter((_, i) => i !== idx))}
+                        aria-label="Remove line">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <div className="flex items-center justify-between pt-1">
+                    <Button type="button" variant="outline" size="sm" onClick={() => setLineItems([...lineItems, emptyLine()])}>
+                      <Plus className="w-3.5 h-3.5 mr-1" /> Add item
+                    </Button>
+                    <div className="text-sm font-semibold">Total: ${lineItemsTotal.toFixed(2)}</div>
+                  </div>
+                </div>
+              )}
+            </div>
             <div><Label>Pickup Address <span className="text-muted-foreground text-xs">(optional — defaults to location)</span></Label><Input value={form.pickup_address} onChange={(e) => setForm({ ...form, pickup_address: e.target.value })} /></div>
             <div><Label>Notes <span className="text-muted-foreground text-xs">(optional)</span></Label><Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
             <Button className="w-full" size="lg" onClick={() => createDonation.mutate()} disabled={!form.food_type || !form.pounds || !form.pickup_window_start || !form.pickup_window_end || createDonation.isPending}>
