@@ -112,7 +112,34 @@ const ConsumerHome = () => {
             type: "event" as const,
           }));
 
-        setMarkers([...locMarkers, ...eventMarkers]);
+        // Flash rescue listings: active window, in this city (via location).
+        // Resolve city membership by joining through locations_public.
+        const cityLocIds = locs.map((l) => l.id);
+        let flashMarkers: MapLocation[] = [];
+        if (cityLocIds.length > 0) {
+          const { data: flash } = await supabase
+            .from("food_listings")
+            .select("id, food_type, latitude, longitude, pickup_window_end, flash_price_cents, is_free_to_public, location_id")
+            .eq("is_flash", true)
+            .in("location_id", cityLocIds)
+            .gt("pickup_window_end", new Date().toISOString());
+          flashMarkers = (flash || [])
+            .filter((f: any) => f.latitude != null && f.longitude != null)
+            .map((f: any) => {
+              const price = Number(f.flash_price_cents ?? 0);
+              const isFree = f.is_free_to_public || price === 0;
+              return {
+                id: f.id,
+                name: (f.food_type || "Surplus food").replace(/_/g, " "),
+                lat: Number(f.latitude),
+                lng: Number(f.longitude),
+                type: "flash" as const,
+                subtitle: isFree ? "Flash rescue · FREE" : `Flash rescue · $${(price / 100).toFixed(2)}`,
+              };
+            });
+        }
+
+        setMarkers([...locMarkers, ...eventMarkers, ...flashMarkers]);
       } catch (err) {
         console.error("Failed to load markers:", err);
       } finally {
@@ -121,6 +148,56 @@ const ConsumerHome = () => {
     };
     setLoading(true);
     load();
+  }, [city, state]);
+
+  // Realtime: refresh when flash listings change so pins appear/disappear live.
+  useEffect(() => {
+    const channel = supabase
+      .channel("consumer-home-flash")
+      .on("postgres_changes", { event: "*", schema: "public", table: "food_listings", filter: "is_flash=eq.true" }, () => {
+        // Trigger reload by bumping state key: simplest is re-run the effect above.
+        // We just refetch by toggling loading, then relying on the effect deps —
+        // but deps are [city,state]. Instead, dispatch a manual refetch:
+        (async () => {
+          setLoading(true);
+          // Re-run by no-op state update; simpler: replicate the load inline is overkill.
+          // We rely on the parent effect being reactive to `city,state`. To force a refresh
+          // without duplicating logic, we clear markers and refetch via a lightweight call.
+          const { data: locsRaw } = await (supabase as any)
+            .from("locations_public")
+            .select("id")
+            .eq("city", city).eq("state", state);
+          const ids = (locsRaw || []).map((l: any) => l.id);
+          if (!ids.length) { setLoading(false); return; }
+          const { data: flash } = await supabase
+            .from("food_listings")
+            .select("id, food_type, latitude, longitude, pickup_window_end, flash_price_cents, is_free_to_public")
+            .eq("is_flash", true)
+            .in("location_id", ids)
+            .gt("pickup_window_end", new Date().toISOString());
+          setMarkers((prev) => {
+            const nonFlash = prev.filter((m) => m.type !== "flash");
+            const flashMarkers: MapLocation[] = (flash || [])
+              .filter((f: any) => f.latitude != null && f.longitude != null)
+              .map((f: any) => {
+                const price = Number(f.flash_price_cents ?? 0);
+                const isFree = f.is_free_to_public || price === 0;
+                return {
+                  id: f.id,
+                  name: (f.food_type || "Surplus food").replace(/_/g, " "),
+                  lat: Number(f.latitude),
+                  lng: Number(f.longitude),
+                  type: "flash" as const,
+                  subtitle: isFree ? "Flash rescue · FREE" : `Flash rescue · $${(price / 100).toFixed(2)}`,
+                };
+              });
+            return [...nonFlash, ...flashMarkers];
+          });
+          setLoading(false);
+        })();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, [city, state]);
 
   return (
