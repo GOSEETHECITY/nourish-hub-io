@@ -215,7 +215,9 @@ const ConsumerHome = () => {
               markers={loading ? [] : markers}
               onMarkerClick={(id) => {
                 const m = markers.find((mk) => mk.id === id);
-                navigate(m?.type === "event" ? `/app/event/${id}` : `/app/restaurant/${id}`);
+                if (m?.type === "event") navigate(`/app/event/${id}`);
+                else if (m?.type === "flash") navigate(`/app/flash/${id}`);
+                else navigate(`/app/restaurant/${id}`);
               }}
             />
           ) : (
