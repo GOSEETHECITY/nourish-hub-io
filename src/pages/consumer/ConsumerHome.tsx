@@ -12,7 +12,8 @@ interface MapLocation {
   name: string;
   lat: number;
   lng: number;
-  type: "restaurant" | "event";
+  type: "restaurant" | "event" | "flash";
+  subtitle?: string;
 }
 
 async function geocode(address: string): Promise<{ lat: number; lng: number } | null> {
