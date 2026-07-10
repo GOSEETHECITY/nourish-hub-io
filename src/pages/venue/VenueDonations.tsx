@@ -186,7 +186,7 @@ export default function VenueDonations() {
           <h1 className="text-2xl font-bold text-foreground">Donations</h1>
           <p className="text-sm text-muted-foreground mt-1">Manage all food donations across your locations</p>
         </div>
-        <Button size="lg" onClick={() => { setForm(emptyDonation); setSelectedLocationId(locations[0]?.id || ""); setDialogOpen(true); }}>
+        <Button size="lg" onClick={() => { setForm(emptyDonation); setIsFlash(false); setSelectedLocationId(locations[0]?.id || ""); setDialogOpen(true); }}>
           <Plus className="w-4 h-4 mr-2" />Post Donation
         </Button>
       </div>
