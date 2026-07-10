@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
-import { Trash2, FileText } from "lucide-react";
+import { Trash2, FileText, Heart } from "lucide-react";
 import { toast } from "sonner";
 import type { FoodListing, Location, FoodType } from "@/types/database";
 import { openReceiptPdf } from "@/lib/taxReceipts";
@@ -88,6 +88,24 @@ export default function VenueDonations() {
   });
   const receiptMap: Record<string, { pdf_path: string }> = {};
   for (const r of receipts) if (!receiptMap[r.food_listing_id]) receiptMap[r.food_listing_id] = r;
+
+  const { data: surveys = [] } = useQuery({
+    queryKey: ["venue-impact-surveys", profile?.organization_id, listingIds],
+    queryFn: async () => {
+      if (!listingIds.length) return [];
+      const { data } = await supabase
+        .from("impact_surveys")
+        .select("food_listing_id, people_fed, demographics, food_condition_good, condition_comment, testimonial, photo_urls, submitted_at")
+        .in("food_listing_id", listingIds)
+        .not("submitted_at", "is", null);
+      return data || [];
+    },
+    enabled: !!profile?.organization_id && listingIds.length > 0,
+  });
+  const surveyMap: Record<string, any> = {};
+  for (const s of surveys) surveyMap[s.food_listing_id] = s;
+  const [surveyOpen, setSurveyOpen] = useState<any>(null);
+
 
 
   const createDonation = useMutation({
