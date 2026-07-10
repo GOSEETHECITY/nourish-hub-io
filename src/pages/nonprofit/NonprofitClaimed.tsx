@@ -12,7 +12,29 @@ import { toast } from "sonner";
 import type { FoodListing } from "@/types/database";
 import TaxReceiptDialog from "@/components/tax-receipts/TaxReceiptDialog";
 import { openReceiptPdf } from "@/lib/taxReceipts";
-import { FileText } from "lucide-react";
+import { FileText, Clock, AlertTriangle } from "lucide-react";
+
+function ReceiptCountdown({ pickedUpAt }: { pickedUpAt: string | null | undefined }) {
+  if (!pickedUpAt) return null;
+  const deadline = new Date(pickedUpAt).getTime() + 72 * 3600 * 1000;
+  const remainingMs = deadline - Date.now();
+  if (remainingMs <= 0) {
+    return (
+      <span className="inline-flex items-center gap-1 text-xs font-semibold text-destructive">
+        <AlertTriangle className="w-3 h-3" /> Overdue
+      </span>
+    );
+  }
+  const hrs = Math.floor(remainingMs / 3600000);
+  const mins = Math.floor((remainingMs % 3600000) / 60000);
+  const urgent = hrs < 24;
+  return (
+    <span className={`inline-flex items-center gap-1 text-xs font-semibold ${urgent ? "text-chart-4" : "text-muted-foreground"}`}>
+      <Clock className="w-3 h-3" />
+      {hrs}h {mins}m to submit receipt
+    </span>
+  );
+}
 
 // Nonprofits use this page to track the donations they have claimed and to
 // advance them through the lifecycle:
@@ -235,6 +257,7 @@ export default function NonprofitClaimed() {
                               Submit Tax Receipt
                             </Button>
                           )}
+                          {!receiptMap[d.id] && <ReceiptCountdown pickedUpAt={d.picked_up_at} />}
                         </>
                       )}
                       {isCompleted && !isPickedUp && !receiptMap[d.id] && (
