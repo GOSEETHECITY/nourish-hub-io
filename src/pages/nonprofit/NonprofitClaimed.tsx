@@ -24,6 +24,7 @@ export default function NonprofitClaimed() {
   const { profile } = useAuth();
   const queryClient = useQueryClient();
   const [reportListing, setReportListing] = useState<FoodListing | null>(null);
+  const [receiptListing, setReceiptListing] = useState<FoodListing | null>(null);
   const [form, setForm] = useState({ meals_served: "", date_distributed: "", notes: "" });
 
   const { data: claimed = [] } = useQuery({
