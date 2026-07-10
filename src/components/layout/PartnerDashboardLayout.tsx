@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import logo from "@/assets/logo.png";
-import NotificationBell from "./NotificationBell";
+import PartnerNotificationBell from "./PartnerNotificationBell";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export interface NavItem {
@@ -166,7 +166,7 @@ export default function PartnerDashboardLayout({
           )}
 
           <div className="flex items-center gap-4 ml-auto">
-            <NotificationBell />
+            <PartnerNotificationBell />
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-full bg-accent text-accent-foreground flex items-center justify-center text-sm font-bold">{initials}</div>
               <div className="hidden md:block">

@@ -1275,6 +1275,45 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          link_path: string | null
+          metadata: Json
+          organization_id: string | null
+          read_at: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          link_path?: string | null
+          metadata?: Json
+          organization_id?: string | null
+          read_at?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          link_path?: string | null
+          metadata?: Json
+          organization_id?: string | null
+          read_at?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       organization_pricing: {
         Row: {
           billing_cycle: Database["public"]["Enums"]["override_billing_cycle"]
@@ -2103,6 +2142,17 @@ export type Database = {
       }
       increment_attendee_count: { Args: { eid: string }; Returns: undefined }
       increment_share_count: { Args: { event_id: string }; Returns: undefined }
+      notify_org_members: {
+        Args: {
+          p_body: string
+          p_link: string
+          p_metadata?: Json
+          p_org_id: string
+          p_title: string
+          p_type: string
+        }
+        Returns: undefined
+      }
       update_own_profile: {
         Args: { p_first_name?: string; p_last_name?: string; p_phone?: string }
         Returns: undefined
