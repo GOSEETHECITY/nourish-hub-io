@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
-import { LayoutDashboard, Package, Store, BarChart3, Leaf, MapPin, Settings, Headphones } from "lucide-react";
+import { LayoutDashboard, Package, Store, BarChart3, Leaf, MapPin, Settings, Headphones, Receipt } from "lucide-react";
 import PartnerDashboardLayout from "@/components/layout/PartnerDashboardLayout";
 import { MARKETPLACE_ELIGIBLE_TYPES } from "@/lib/marketplace";
 import type { Location } from "@/types/database";
