@@ -112,9 +112,13 @@ const ConsumerHome = () => {
             type: "event" as const,
           }));
 
-        // Flash rescue listings: active window, in this city (via location).
-        // Resolve city membership by joining through locations_public.
-        const cityLocIds = locs.map((l) => l.id);
+        // Flash rescue listings: active window, in this city.
+        // Include ANY city location (not just marketplace-enabled ones).
+        const { data: allCityLocs } = await (supabase as any)
+          .from("locations_public")
+          .select("id")
+          .eq("city", city).eq("state", state);
+        const cityLocIds = (allCityLocs || []).map((l: any) => l.id);
         let flashMarkers: MapLocation[] = [];
         if (cityLocIds.length > 0) {
           const { data: flash } = await supabase
