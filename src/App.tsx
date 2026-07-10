@@ -235,6 +235,7 @@ const App = () => (
               <Route path="/venue/donations" element={<VenueDonations />} />
               <Route path="/venue/marketplace" element={<VenueMarketplace />} />
               <Route path="/venue/impact" element={<VenueImpact />} />
+              <Route path="/venue/tax-receipts" element={<VenueTaxReceipts />} />
               <Route path="/venue/baseline" element={<VenueBaseline />} />
               <Route path="/venue/locations" element={<VenueLocations />} />
               <Route path="/venue/settings" element={<VenueSettings />} />
