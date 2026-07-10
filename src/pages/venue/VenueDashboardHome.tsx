@@ -68,20 +68,24 @@ export default function VenueDashboardHome() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-card rounded-xl border p-5">
-          <p className="text-sm text-muted-foreground flex items-center gap-2"><Package className="w-4 h-4" />Active Donations</p>
-          <p className="text-3xl font-bold text-foreground mt-2">{activeDonations}</p>
-        </div>
-        <div className="bg-card rounded-xl border p-5">
-          <p className="text-sm text-muted-foreground flex items-center gap-2"><Leaf className="w-4 h-4" />Pounds Diverted</p>
-          <p className="text-3xl font-bold text-foreground mt-2">{totalPounds.toLocaleString()}</p>
+          <p className="text-sm text-muted-foreground flex items-center gap-2"><Package className="w-4 h-4" />Donations Made</p>
+          <p className="text-3xl font-bold text-foreground mt-2">{yearCount.toLocaleString()}</p>
+          <p className="text-xs text-muted-foreground mt-1">This year</p>
         </div>
         <div className="bg-card rounded-xl border p-5">
           <p className="text-sm text-muted-foreground flex items-center gap-2"><DollarSign className="w-4 h-4" />Donation Value</p>
-          <p className="text-3xl font-bold text-foreground mt-2">${totalValue.toLocaleString()}</p>
+          <p className="text-3xl font-bold text-foreground mt-2">${yearValue.toLocaleString()}</p>
+          <p className="text-xs text-muted-foreground mt-1">This year</p>
+        </div>
+        <div className="bg-card rounded-xl border p-5">
+          <p className="text-sm text-muted-foreground flex items-center gap-2"><Leaf className="w-4 h-4" />Pounds Diverted</p>
+          <p className="text-3xl font-bold text-foreground mt-2">{yearPounds.toLocaleString()}</p>
+          <p className="text-xs text-muted-foreground mt-1">This year</p>
         </div>
         <div className="bg-card rounded-xl border p-5">
           <p className="text-sm text-muted-foreground flex items-center gap-2"><BarChart3 className="w-4 h-4" />CO₂ Prevented</p>
-          <p className="text-3xl font-bold text-foreground mt-2">{co2.toLocaleString()} lbs</p>
+          <p className="text-3xl font-bold text-foreground mt-2">{yearCo2.toLocaleString()} lbs</p>
+          <p className="text-xs text-muted-foreground mt-1">This year</p>
         </div>
       </div>
 
