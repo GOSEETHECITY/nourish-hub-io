@@ -55,6 +55,7 @@ const CATEGORY_PARAM_TO_TAB: Record<string, Tab> = {
   partnerships: "partnership",
   "company-news": "company_news",
   milestones: "milestone",
+  "grand-openings": "grand_opening",
 };
 
 export default function News() {
