@@ -334,6 +334,53 @@ export default function VenueDonations() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!surveyOpen} onOpenChange={(o) => !o && setSurveyOpen(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>Impact Report</DialogTitle></DialogHeader>
+          {surveyOpen && (
+            <div className="space-y-4 pt-2">
+              {surveyOpen.people_fed != null && (
+                <div>
+                  <div className="text-3xl font-bold text-success">{surveyOpen.people_fed}</div>
+                  <div className="text-xs text-muted-foreground uppercase tracking-wide">People fed</div>
+                </div>
+              )}
+              {surveyOpen.demographics?.length > 0 && (
+                <div>
+                  <Label className="text-xs">Demographics served</Label>
+                  <p className="text-sm">{surveyOpen.demographics.join(", ")}</p>
+                </div>
+              )}
+              <div>
+                <Label className="text-xs">Food condition</Label>
+                <p className="text-sm">
+                  {surveyOpen.food_condition_good ? "Good" : "Issue reported"}
+                  {surveyOpen.condition_comment && <> — {surveyOpen.condition_comment}</>}
+                </p>
+              </div>
+              {surveyOpen.testimonial && (
+                <div>
+                  <Label className="text-xs">Testimonial</Label>
+                  <p className="text-sm italic">"{surveyOpen.testimonial}"</p>
+                </div>
+              )}
+              {surveyOpen.photo_urls?.length > 0 && (
+                <div>
+                  <Label className="text-xs">Photos</Label>
+                  <p className="text-sm text-muted-foreground">
+                    {surveyOpen.photo_urls.length} photo{surveyOpen.photo_urls.length > 1 ? "s" : ""} submitted
+                  </p>
+                </div>
+              )}
+              <div className="text-xs text-muted-foreground pt-2 border-t">
+                Submitted {new Date(surveyOpen.submitted_at).toLocaleDateString()}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
