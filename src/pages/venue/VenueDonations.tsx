@@ -214,11 +214,12 @@ export default function VenueDonations() {
               <TableHead>Status</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Receipt</TableHead>
+              <TableHead>Impact</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground">No donations posted yet — click "Post Donation" to get started.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={8} className="text-center py-12 text-muted-foreground">No donations posted yet — click "Post Donation" to get started.</TableCell></TableRow>
             ) : filtered.map((d) => (
               <TableRow key={d.id}>
                 <TableCell className="font-medium">{locMap[d.location_id] || "—"}</TableCell>
@@ -236,8 +237,18 @@ export default function VenueDonations() {
                     <span className="text-xs text-muted-foreground">—</span>
                   )}
                 </TableCell>
+                <TableCell>
+                  {surveyMap[d.id] ? (
+                    <Button variant="ghost" size="sm" onClick={() => setSurveyOpen(surveyMap[d.id])}>
+                      <Heart className="w-3.5 h-3.5 mr-1 text-success" /> View
+                    </Button>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  )}
+                </TableCell>
               </TableRow>
             ))}
+
           </TableBody>
         </Table>
       </div>
