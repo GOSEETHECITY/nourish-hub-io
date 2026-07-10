@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
-import { LayoutDashboard, Package, Store, BarChart3, Leaf, MapPin, Settings, Headphones } from "lucide-react";
+import { LayoutDashboard, Package, Store, BarChart3, Leaf, MapPin, Settings, Headphones, Receipt } from "lucide-react";
 import PartnerDashboardLayout from "@/components/layout/PartnerDashboardLayout";
 import { MARKETPLACE_ELIGIBLE_TYPES } from "@/lib/marketplace";
 import type { Location } from "@/types/database";
@@ -42,6 +42,7 @@ export default function VenueDashboard() {
     { icon: Package, label: "Donations", path: "/venue/donations" },
     ...(hasMarketplace ? [{ icon: Store, label: "Marketplace", path: "/venue/marketplace" }] : []),
     { icon: BarChart3, label: "Impact", path: "/venue/impact" },
+    { icon: Receipt, label: "Tax & Receipts", path: "/venue/tax-receipts" },
     { icon: Leaf, label: "Sustainability Baseline", path: "/venue/baseline" },
     { icon: MapPin, label: "Locations", path: "/venue/locations" },
   ];
