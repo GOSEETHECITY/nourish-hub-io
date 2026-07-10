@@ -11,9 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
-import { Trash2 } from "lucide-react";
+import { Trash2, FileText } from "lucide-react";
 import { toast } from "sonner";
 import type { FoodListing, Location, FoodType } from "@/types/database";
+import { openReceiptPdf } from "@/lib/taxReceipts";
 
 const FOOD_TYPES: { value: FoodType; label: string }[] = [
   { value: "prepared_meals", label: "Prepared Meals" },
