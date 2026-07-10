@@ -54,6 +54,26 @@ export default function NonprofitClaimed() {
   const orgMap = useMemo(() => Object.fromEntries(orgs.map((o: any) => [o.id, o.name])), [orgs]);
   const formatStatus = (s: string) => s.split("_").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
 
+  const listingIds = useMemo(() => claimed.map((l) => l.id), [claimed]);
+  const { data: receipts = [] } = useQuery({
+    queryKey: ["tax-receipts", "np", profile?.nonprofit_id, listingIds],
+    queryFn: async () => {
+      if (!listingIds.length) return [];
+      const { data } = await supabase
+        .from("tax_receipts")
+        .select("id, food_listing_id, pdf_path, receipt_type, submitted_at")
+        .in("food_listing_id", listingIds)
+        .order("submitted_at", { ascending: false });
+      return data || [];
+    },
+    enabled: !!profile?.nonprofit_id && listingIds.length > 0,
+  });
+  const receiptMap = useMemo(() => {
+    const m: Record<string, (typeof receipts)[number]> = {};
+    for (const r of receipts) if (!m[r.food_listing_id]) m[r.food_listing_id] = r;
+    return m;
+  }, [receipts]);
+
   const markPickedUp = useMutation({
     mutationFn: async (listingId: string) => {
       const { error } = await supabase
