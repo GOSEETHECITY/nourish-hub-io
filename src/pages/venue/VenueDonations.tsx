@@ -128,6 +128,10 @@ export default function VenueDonations() {
         ? validItems.reduce((s, li) => s + Number(li.quantity) * Number(li.unit_value), 0)
         : (form.estimated_donation_value ? Number(form.estimated_donation_value) : null);
 
+      const flashPriceCents = isFlash && !form.is_free_to_public && form.flash_price
+        ? Math.round(Number(form.flash_price) * 100)
+        : (isFlash && form.is_free_to_public ? 0 : null);
+
       const { data: inserted, error } = await supabase.from("food_listings").insert({
         location_id: locId, organization_id: profile.organization_id,
         listing_type: "donation" as const, food_type: form.food_type,
@@ -137,7 +141,10 @@ export default function VenueDonations() {
         pickup_window_start: form.pickup_window_start || null,
         pickup_window_end: form.pickup_window_end || null,
         notes: form.notes || null,
-      }).select("id").single();
+        is_flash: isFlash || null,
+        is_free_to_public: isFlash ? form.is_free_to_public : null,
+        flash_price_cents: flashPriceCents,
+      } as any).select("id").single();
       if (error) throw error;
 
       if (itemized && validItems.length && inserted?.id) {
@@ -153,11 +160,12 @@ export default function VenueDonations() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["venue-listings"] });
-      toast.success("Donation posted!");
+      toast.success(isFlash ? "Flash rescue posted!" : "Donation posted!");
       setDialogOpen(false);
       setForm(emptyDonation);
       setItemized(false);
       setLineItems([emptyLine()]);
+      setIsFlash(false);
     },
     onError: (e) => toast.error(e.message),
   });
