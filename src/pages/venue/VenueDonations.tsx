@@ -47,6 +47,7 @@ export default function VenueDonations() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [itemized, setItemized] = useState(false);
   const [lineItems, setLineItems] = useState<LineItem[]>([emptyLine()]);
+  const [isFlash, setIsFlash] = useState(false);
 
   const lineItemsTotal = lineItems.reduce((sum, li) => {
     const q = Number(li.quantity) || 0;
