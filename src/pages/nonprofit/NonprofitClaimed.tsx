@@ -294,6 +294,12 @@ export default function NonprofitClaimed() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <TaxReceiptDialog
+        open={!!receiptListing}
+        onOpenChange={(o) => !o && setReceiptListing(null)}
+        listing={receiptListing}
+      />
     </div>
   );
 }
