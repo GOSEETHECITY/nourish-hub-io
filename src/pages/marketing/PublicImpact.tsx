@@ -31,7 +31,7 @@ export default function PublicImpact() {
     meta.setAttribute("content", desc);
 
     supabase.from("impact_stats").select("*").eq("id", 1).maybeSingle()
-      .then(({ data }) => { setData(data as Snapshot | null); setLoading(false); });
+      .then(({ data }) => { setData((data as unknown as Snapshot) ?? null); setLoading(false); });
   }, []);
 
   const t = data?.platform_totals ?? {};
