@@ -16,7 +16,7 @@ import NonprofitSignup from "./pages/marketing/NonprofitSignup";
 import Solutions from "./pages/marketing/Solutions";
 import Partners from "./pages/marketing/Partners";
 import About from "./pages/marketing/About";
-import Press from "./pages/marketing/Press";
+
 import Contact from "./pages/marketing/Contact";
 import Privacy from "./pages/marketing/Privacy";
 import Terms from "./pages/marketing/Terms";
@@ -175,7 +175,7 @@ const App = () => (
             <Route path="/solutions" element={<Solutions />} />
             <Route path="/partners" element={<Partners />} />
             <Route path="/about" element={<About />} />
-            <Route path="/press" element={<Press />} />
+            
             <Route path="/contact" element={<Contact />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />

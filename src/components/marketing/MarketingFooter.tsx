@@ -29,8 +29,8 @@ export default function MarketingFooter() {
             <h4 className="text-white font-semibold text-sm mb-4">Company</h4>
             <ul className="space-y-3 text-sm">
               <li><Link to="/about" className="hover:text-white transition">About</Link></li>
-              <li><Link to="/press" className="hover:text-white transition">Press</Link></li>
               <li><Link to="/contact" className="hover:text-white transition">Contact</Link></li>
+
             </ul>
           </div>
 
