@@ -33,6 +33,8 @@ const emptyDonation = {
   food_type: "prepared_meals" as FoodType,
   pounds: "", estimated_donation_value: "", pickup_address: "",
   pickup_window_start: "", pickup_window_end: "", notes: "",
+  // Flash rescue fields (only used when isFlash is true)
+  flash_price: "", is_free_to_public: false,
 };
 
 export default function VenueDonations() {
