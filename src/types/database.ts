@@ -130,6 +130,7 @@ export interface FoodListing {
   notes: string | null;
   status: ListingStatus;
   nonprofit_claimed_id: string | null;
+  picked_up_at: string | null;
   created_at: string;
 }
 
