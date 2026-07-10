@@ -64,6 +64,11 @@ import VenueSettings from "./pages/venue/VenueSettings";
 import VenueSupport from "./pages/venue/VenueSupport";
 import VenueOnboarding from "./pages/venue/VenueOnboarding";
 import VenueTaxReceipts from "./pages/venue/VenueTaxReceipts";
+import VenueCompliance from "./pages/venue/VenueCompliance";
+import VenueOrders from "./pages/venue/VenueOrders";
+import FranchiseDashboard from "./pages/franchise/FranchiseDashboard";
+import PublicImpact from "./pages/marketing/PublicImpact";
+import ConsumerFlashDetail from "./pages/consumer/ConsumerFlashDetail";
 // Nonprofit
 import NonprofitDashboard from "./pages/nonprofit/NonprofitDashboard";
 import NonprofitDashboardHome from "./pages/nonprofit/NonprofitDashboardHome";
@@ -146,7 +151,7 @@ const ProtectedConsumerWrapper = ({ children }: { children: React.ReactNode }) =
 // When a visitor lands on the root of thegoapp.co, send them into the consumer
 // app at /app. On hariet.ai (or any other host, including the Lovable preview
 // and localhost) the marketing home renders normally. Also handles www. prefix.
-const APP_HOSTS = new Set(["thegoapp.co", "www.thegoapp.co"]);
+const APP_HOSTS = new Set(["thegoapp.co", "www.thegoapp.co", "goseethecity.com", "www.goseethecity.com"]);
 
 const RootDomainRouter = () => {
   const { pathname } = useLocation();
@@ -177,6 +182,8 @@ const App = () => (
             <Route path="/feed-it-onward" element={<FeedItOnward />} />
             <Route path="/news" element={<News />} />
             <Route path="/news/:slug" element={<NewsArticle />} />
+            <Route path="/our-impact" element={<PublicImpact />} />
+            <Route path="/franchise" element={<ProtectedRoute allowedRoles={["venue_partner"]}><FranchiseDashboard /></ProtectedRoute>} />
             <Route path="/get-started" element={<GetStarted />} />
             <Route path="/get-started/:eventSlug" element={<EventGetStarted />} />
             <Route path="/partners/business/signup" element={<BusinessSignup />} />
@@ -236,6 +243,8 @@ const App = () => (
               <Route path="/venue/marketplace" element={<VenueMarketplace />} />
               <Route path="/venue/impact" element={<VenueImpact />} />
               <Route path="/venue/tax-receipts" element={<VenueTaxReceipts />} />
+              <Route path="/venue/compliance" element={<VenueCompliance />} />
+              <Route path="/venue/orders" element={<VenueOrders />} />
               <Route path="/venue/baseline" element={<VenueBaseline />} />
               <Route path="/venue/locations" element={<VenueLocations />} />
               <Route path="/venue/settings" element={<VenueSettings />} />
@@ -295,6 +304,7 @@ const App = () => (
             <Route path="/app/coupon/:id" element={<ProtectedConsumerWrapper><ConsumerCouponDetail /></ProtectedConsumerWrapper>} />
             <Route path="/app/events" element={<ProtectedConsumerWrapper><ConsumerEvents /></ProtectedConsumerWrapper>} />
             <Route path="/app/event/:id" element={<ProtectedConsumerWrapper><ConsumerEventDetail /></ProtectedConsumerWrapper>} />
+            <Route path="/app/flash/:id" element={<ProtectedConsumerWrapper><ConsumerFlashDetail /></ProtectedConsumerWrapper>} />
             <Route path="/app/profile" element={<ProtectedConsumerWrapper><ConsumerProfile /></ProtectedConsumerWrapper>} />
             <Route path="/app/profile/edit" element={<ProtectedConsumerWrapper><ConsumerProfileEdit /></ProtectedConsumerWrapper>} />
             <Route path="/app/checkins" element={<ProtectedConsumerWrapper><ConsumerCheckIns /></ProtectedConsumerWrapper>} />

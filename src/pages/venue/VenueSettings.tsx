@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Upload, ImageIcon, Trash2 } from "lucide-react";
 import PasswordInput from "@/components/ui/password-input";
+import StripeConnectSection from "@/components/venue/StripeConnectSection";
 import type { Organization } from "@/types/database";
 import {
   DAY_KEYS,
@@ -200,6 +201,7 @@ export default function VenueSettings() {
 
   return (
     <div className="space-y-8 max-w-3xl">
+      <StripeConnectSection />
       <div>
         <h1 className="text-2xl font-bold text-foreground">Settings</h1>
         <p className="text-sm text-muted-foreground mt-1">Organization profile and account settings</p>
