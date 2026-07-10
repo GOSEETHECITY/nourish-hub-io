@@ -1,0 +1,1 @@
+ALTER TYPE public.article_category ADD VALUE IF NOT EXISTS 'grand_opening';
