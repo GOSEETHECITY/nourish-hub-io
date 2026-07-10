@@ -2606,6 +2606,7 @@ export type Database = {
         | "partnership"
         | "company_news"
         | "milestone"
+        | "grand_opening"
       article_status: "draft" | "published"
       billing_cycle: "free" | "monthly" | "annual"
       coupon_status: "active" | "sold_out" | "expired" | "taken_down"
@@ -2806,6 +2807,7 @@ export const Constants = {
         "partnership",
         "company_news",
         "milestone",
+        "grand_opening",
       ],
       article_status: ["draft", "published"],
       billing_cycle: ["free", "monthly", "annual"],
