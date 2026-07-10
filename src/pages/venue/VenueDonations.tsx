@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Switch } from "@/components/ui/switch";
-import { Trash2, FileText } from "lucide-react";
+import { Trash2, FileText, Heart } from "lucide-react";
 import { toast } from "sonner";
 import type { FoodListing, Location, FoodType } from "@/types/database";
 import { openReceiptPdf } from "@/lib/taxReceipts";
@@ -88,6 +88,24 @@ export default function VenueDonations() {
   });
   const receiptMap: Record<string, { pdf_path: string }> = {};
   for (const r of receipts) if (!receiptMap[r.food_listing_id]) receiptMap[r.food_listing_id] = r;
+
+  const { data: surveys = [] } = useQuery({
+    queryKey: ["venue-impact-surveys", profile?.organization_id, listingIds],
+    queryFn: async () => {
+      if (!listingIds.length) return [];
+      const { data } = await supabase
+        .from("impact_surveys")
+        .select("food_listing_id, people_fed, demographics, food_condition_good, condition_comment, testimonial, photo_urls, submitted_at")
+        .in("food_listing_id", listingIds)
+        .not("submitted_at", "is", null);
+      return data || [];
+    },
+    enabled: !!profile?.organization_id && listingIds.length > 0,
+  });
+  const surveyMap: Record<string, any> = {};
+  for (const s of surveys) surveyMap[s.food_listing_id] = s;
+  const [surveyOpen, setSurveyOpen] = useState<any>(null);
+
 
 
   const createDonation = useMutation({
@@ -196,11 +214,12 @@ export default function VenueDonations() {
               <TableHead>Status</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Receipt</TableHead>
+              <TableHead>Impact</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground">No donations posted yet — click "Post Donation" to get started.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={8} className="text-center py-12 text-muted-foreground">No donations posted yet — click "Post Donation" to get started.</TableCell></TableRow>
             ) : filtered.map((d) => (
               <TableRow key={d.id}>
                 <TableCell className="font-medium">{locMap[d.location_id] || "—"}</TableCell>
@@ -218,8 +237,18 @@ export default function VenueDonations() {
                     <span className="text-xs text-muted-foreground">—</span>
                   )}
                 </TableCell>
+                <TableCell>
+                  {surveyMap[d.id] ? (
+                    <Button variant="ghost" size="sm" onClick={() => setSurveyOpen(surveyMap[d.id])}>
+                      <Heart className="w-3.5 h-3.5 mr-1 text-success" /> View
+                    </Button>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  )}
+                </TableCell>
               </TableRow>
             ))}
+
           </TableBody>
         </Table>
       </div>
@@ -305,6 +334,53 @@ export default function VenueDonations() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!surveyOpen} onOpenChange={(o) => !o && setSurveyOpen(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>Impact Report</DialogTitle></DialogHeader>
+          {surveyOpen && (
+            <div className="space-y-4 pt-2">
+              {surveyOpen.people_fed != null && (
+                <div>
+                  <div className="text-3xl font-bold text-success">{surveyOpen.people_fed}</div>
+                  <div className="text-xs text-muted-foreground uppercase tracking-wide">People fed</div>
+                </div>
+              )}
+              {surveyOpen.demographics?.length > 0 && (
+                <div>
+                  <Label className="text-xs">Demographics served</Label>
+                  <p className="text-sm">{surveyOpen.demographics.join(", ")}</p>
+                </div>
+              )}
+              <div>
+                <Label className="text-xs">Food condition</Label>
+                <p className="text-sm">
+                  {surveyOpen.food_condition_good ? "Good" : "Issue reported"}
+                  {surveyOpen.condition_comment && <> — {surveyOpen.condition_comment}</>}
+                </p>
+              </div>
+              {surveyOpen.testimonial && (
+                <div>
+                  <Label className="text-xs">Testimonial</Label>
+                  <p className="text-sm italic">"{surveyOpen.testimonial}"</p>
+                </div>
+              )}
+              {surveyOpen.photo_urls?.length > 0 && (
+                <div>
+                  <Label className="text-xs">Photos</Label>
+                  <p className="text-sm text-muted-foreground">
+                    {surveyOpen.photo_urls.length} photo{surveyOpen.photo_urls.length > 1 ? "s" : ""} submitted
+                  </p>
+                </div>
+              )}
+              <div className="text-xs text-muted-foreground pt-2 border-t">
+                Submitted {new Date(surveyOpen.submitted_at).toLocaleDateString()}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+

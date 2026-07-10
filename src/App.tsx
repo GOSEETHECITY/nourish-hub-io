@@ -51,6 +51,7 @@ import ForgotPassword from "./pages/auth/ForgotPassword";
 import ResetPassword from "./pages/auth/ResetPassword";
 import AcceptInvitation from "./pages/auth/AcceptInvitation";
 import FIUDashboard from "./pages/FIUDashboard";
+import ImpactSurvey from "./pages/ImpactSurvey";
 // Venue
 import VenueDashboard from "./pages/venue/VenueDashboard";
 import VenueDashboardHome from "./pages/venue/VenueDashboardHome";
@@ -187,6 +188,7 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/accept-invitation" element={<AcceptInvitation />} />
             <Route path="/fiu" element={<FIUDashboard />} />
+            <Route path="/survey/:token" element={<ImpactSurvey />} />
 
             {/* Admin routes — moved from / to /dashboard */}
             <Route
