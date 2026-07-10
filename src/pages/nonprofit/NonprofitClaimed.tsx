@@ -205,18 +205,39 @@ export default function NonprofitClaimed() {
                           </Button>
                         </>
                       )}
-                      {isPickedUp && (
-                        <Button
-                          size="sm"
-                          onClick={() => {
-                            setReportListing(d);
-                            setForm({ meals_served: "", date_distributed: "", notes: "" });
-                          }}
-                        >
-                          Submit Impact Report
-                        </Button>
+                      {(isPickedUp || isCompleted) && (
+                        <>
+                          {isPickedUp && (
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                setReportListing(d);
+                                setForm({ meals_served: "", date_distributed: "", notes: "" });
+                              }}
+                            >
+                              Submit Impact Report
+                            </Button>
+                          )}
+                          {receiptMap[d.id] ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => openReceiptPdf(receiptMap[d.id].pdf_path)}
+                            >
+                              <FileText className="w-3.5 h-3.5 mr-1" /> View Receipt
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setReceiptListing(d)}
+                            >
+                              Submit Tax Receipt
+                            </Button>
+                          )}
+                        </>
                       )}
-                      {isCompleted && (
+                      {isCompleted && !isPickedUp && !receiptMap[d.id] && (
                         <span className="text-xs text-muted-foreground">Completed</span>
                       )}
                     </div>
