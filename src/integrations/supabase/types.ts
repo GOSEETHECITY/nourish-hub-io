@@ -1293,12 +1293,15 @@ export type Database = {
           address: string | null
           approval_status: Database["public"]["Enums"]["approval_status"]
           billing_contact: string | null
+          business_bio: string | null
           city: string | null
           county: string | null
           created_at: string
           government_regions: Json | null
+          hours_of_operation: Json | null
           id: string
           join_code: string | null
+          logo_url: string | null
           name: string
           primary_contact_email: string | null
           primary_contact_name: string | null
@@ -1311,12 +1314,15 @@ export type Database = {
           address?: string | null
           approval_status?: Database["public"]["Enums"]["approval_status"]
           billing_contact?: string | null
+          business_bio?: string | null
           city?: string | null
           county?: string | null
           created_at?: string
           government_regions?: Json | null
+          hours_of_operation?: Json | null
           id?: string
           join_code?: string | null
+          logo_url?: string | null
           name: string
           primary_contact_email?: string | null
           primary_contact_name?: string | null
@@ -1329,12 +1335,15 @@ export type Database = {
           address?: string | null
           approval_status?: Database["public"]["Enums"]["approval_status"]
           billing_contact?: string | null
+          business_bio?: string | null
           city?: string | null
           county?: string | null
           created_at?: string
           government_regions?: Json | null
+          hours_of_operation?: Json | null
           id?: string
           join_code?: string | null
+          logo_url?: string | null
           name?: string
           primary_contact_email?: string | null
           primary_contact_name?: string | null
