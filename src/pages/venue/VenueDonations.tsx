@@ -266,8 +266,38 @@ export default function VenueDonations() {
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Post a Donation</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{isFlash ? "Post Flash Rescue" : "Post a Donation"}</DialogTitle></DialogHeader>
           <div className="space-y-4 pt-4">
+            <div className="rounded-lg border p-3 bg-muted/30">
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label className="text-sm">Flash rescue (consumer pickup)</Label>
+                  <p className="text-xs text-muted-foreground">Open to nearby consumers, first-come first-served, no nonprofit needed.</p>
+                </div>
+                <Switch checked={isFlash} onCheckedChange={setIsFlash} />
+              </div>
+              {isFlash && (
+                <div className="mt-3 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm">Free to public</Label>
+                    <Switch
+                      checked={form.is_free_to_public}
+                      onCheckedChange={(v) => setForm({ ...form, is_free_to_public: v })}
+                    />
+                  </div>
+                  {!form.is_free_to_public && (
+                    <div>
+                      <Label>Consumer price ($) *</Label>
+                      <Input type="number" min="0" step="0.01" value={form.flash_price}
+                        onChange={(e) => setForm({ ...form, flash_price: e.target.value })}
+                        placeholder="e.g. 4.99" />
+                      <p className="text-xs text-muted-foreground mt-1">Platform keeps 10%. Pickup window above is the flash window.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             {locations.length > 1 && (
               <div>
                 <Label>Location</Label>
