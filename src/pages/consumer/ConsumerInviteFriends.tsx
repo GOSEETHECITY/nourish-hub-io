@@ -1,4 +1,4 @@
-import { Copy, Share2 } from "lucide-react";
+import { Copy, Share2, Trophy } from "lucide-react";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useConsumerAuth } from "@/contexts/ConsumerAuthContext";
@@ -8,22 +8,33 @@ import { useState } from "react";
 const ConsumerInviteFriends = () => {
   const navigate = useNavigate();
   const { consumer } = useConsumerAuth();
-  const code = consumer?.invite_code_used || "GOSEE2026";
+  const code = consumer?.referral_code || "";
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = () => { navigator.clipboard.writeText(code); setCopied(true); setTimeout(() => setCopied(false), 2000); };
-  const handleShare = () => { navigator.share?.({ title: "GO See The City", text: `Join me on GO See The City! Use code: ${code}` }); };
+  const handleCopy = () => {
+    if (!code) return;
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  const handleShare = () => {
+    if (!code) return;
+    navigator.share?.({
+      title: "GO See The City",
+      text: `Join me on GO See The City! Use my referral code: ${code}`,
+    });
+  };
 
   return (
     <ConsumerMobileLayout>
       <header className="flex items-center gap-3 px-4 py-4">
-        <button onClick={() => navigate(-1)}><ArrowLeft className="w-6 h-6 text-[#1B2A4A]" /></button>
+        <button onClick={() => navigate(-1)} aria-label="Back"><ArrowLeft className="w-6 h-6 text-[#1B2A4A]" /></button>
         <h1 className="text-lg font-bold text-[#1B2A4A]">Invite Friends</h1>
       </header>
       <div className="px-6 flex flex-col items-center gap-6 pt-12">
-        <p className="text-gray-600 text-center">Share your invite code with friends</p>
+        <p className="text-gray-600 text-center">Share your personal referral code with friends. You'll earn a badge for your first friend who joins.</p>
         <div className="bg-gray-100 rounded-2xl px-8 py-4 text-center">
-          <p className="text-2xl font-bold tracking-widest text-[#1B2A4A]">{code}</p>
+          <p className="text-2xl font-bold tracking-widest text-[#1B2A4A]">{code || "…"}</p>
         </div>
         <div className="flex gap-3 w-full">
           <button onClick={handleCopy}
@@ -35,6 +46,10 @@ const ConsumerInviteFriends = () => {
             <Share2 className="w-4 h-4" />Share
           </button>
         </div>
+        <button onClick={() => navigate("/app/leaderboard")}
+          className="w-full flex items-center justify-center gap-2 py-3 rounded-full bg-[#8DC63F] text-white font-semibold mt-4">
+          <Trophy className="w-4 h-4" /> See leaderboard
+        </button>
       </div>
     </ConsumerMobileLayout>
   );
