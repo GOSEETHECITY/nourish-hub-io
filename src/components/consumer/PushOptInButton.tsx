@@ -25,7 +25,7 @@ const PushOptInButton = () => {
       const reg = await navigator.serviceWorker.register("/sw.js");
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as BufferSource,
       });
       const json = sub.toJSON();
       const { error } = await supabase.from("push_subscriptions").insert({

@@ -8,7 +8,7 @@ import { useState } from "react";
 const ConsumerInviteFriends = () => {
   const navigate = useNavigate();
   const { consumer } = useConsumerAuth();
-  const code = consumer?.referral_code || "";
+  const code = (consumer as any)?.referral_code || "";
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
