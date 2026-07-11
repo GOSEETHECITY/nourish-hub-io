@@ -2666,6 +2666,7 @@ export type Database = {
       }
     }
     Functions: {
+      apply_referral: { Args: { p_code: string }; Returns: string }
       award_badge: {
         Args: {
           p_consumer_id: string
