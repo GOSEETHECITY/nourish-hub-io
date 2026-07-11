@@ -249,7 +249,8 @@ export type Database = {
         Row: {
           badge_description: string | null
           badge_icon: string | null
-          badge_id: number
+          badge_id: number | null
+          badge_key: string | null
           badge_name: string
           consumer_id: string | null
           earned_at: string | null
@@ -258,7 +259,8 @@ export type Database = {
         Insert: {
           badge_description?: string | null
           badge_icon?: string | null
-          badge_id: number
+          badge_id?: number | null
+          badge_key?: string | null
           badge_name: string
           consumer_id?: string | null
           earned_at?: string | null
@@ -267,7 +269,8 @@ export type Database = {
         Update: {
           badge_description?: string | null
           badge_icon?: string | null
-          badge_id?: number
+          badge_id?: number | null
+          badge_key?: string | null
           badge_name?: string
           consumer_id?: string | null
           earned_at?: string | null
@@ -497,6 +500,7 @@ export type Database = {
           money_saved: number | null
           phone: string | null
           pounds_rescued: number | null
+          referral_code: string | null
           user_id: string | null
           zip_code: string | null
         }
@@ -513,6 +517,7 @@ export type Database = {
           money_saved?: number | null
           phone?: string | null
           pounds_rescued?: number | null
+          referral_code?: string | null
           user_id?: string | null
           zip_code?: string | null
         }
@@ -529,6 +534,7 @@ export type Database = {
           money_saved?: number | null
           phone?: string | null
           pounds_rescued?: number | null
+          referral_code?: string | null
           user_id?: string | null
           zip_code?: string | null
         }
@@ -1650,6 +1656,72 @@ export type Database = {
           },
         ]
       }
+      organization_submissions: {
+        Row: {
+          address: string | null
+          city: string | null
+          contact_email: string
+          contact_name: string
+          contact_phone: string | null
+          created_at: string
+          created_organization_id: string | null
+          ein: string | null
+          id: string
+          irs_verification_notes: string | null
+          irs_verification_status: string | null
+          organization_name: string
+          organization_type: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          state: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          contact_email: string
+          contact_name: string
+          contact_phone?: string | null
+          created_at?: string
+          created_organization_id?: string | null
+          ein?: string | null
+          id?: string
+          irs_verification_notes?: string | null
+          irs_verification_status?: string | null
+          organization_name: string
+          organization_type: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          state?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          contact_email?: string
+          contact_name?: string
+          contact_phone?: string | null
+          created_at?: string
+          created_organization_id?: string | null
+          ein?: string | null
+          id?: string
+          irs_verification_notes?: string | null
+          irs_verification_status?: string | null
+          organization_name?: string
+          organization_type?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          state?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       organizations: {
         Row: {
           address: string | null
@@ -1757,10 +1829,13 @@ export type Database = {
           email: string
           id: string
           name: string
+          notes: string | null
           organization: string | null
           pathway: string
           phone: string | null
           source: string | null
+          status: Database["public"]["Enums"]["lead_status"]
+          updated_at: string
         }
         Insert: {
           address?: string | null
@@ -1769,10 +1844,13 @@ export type Database = {
           email: string
           id?: string
           name: string
+          notes?: string | null
           organization?: string | null
           pathway?: string
           phone?: string | null
           source?: string | null
+          status?: Database["public"]["Enums"]["lead_status"]
+          updated_at?: string
         }
         Update: {
           address?: string | null
@@ -1781,10 +1859,13 @@ export type Database = {
           email?: string
           id?: string
           name?: string
+          notes?: string | null
           organization?: string | null
           pathway?: string
           phone?: string | null
           source?: string | null
+          status?: Database["public"]["Enums"]["lead_status"]
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1884,6 +1965,44 @@ export type Database = {
           },
         ]
       }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          consumer_id: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          user_agent: string | null
+        }
+        Insert: {
+          auth: string
+          consumer_id: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          user_agent?: string | null
+        }
+        Update: {
+          auth?: string
+          consumer_id?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_consumer_id_fkey"
+            columns: ["consumer_id"]
+            isOneToOne: false
+            referencedRelation: "consumers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rate_limit_attempts: {
         Row: {
           bucket: string
@@ -1907,6 +2026,45 @@ export type Database = {
           success?: boolean
         }
         Relationships: []
+      }
+      referrals: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          referee_consumer_id: string
+          referrer_consumer_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          referee_consumer_id: string
+          referrer_consumer_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          referee_consumer_id?: string
+          referrer_consumer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referrals_referee_consumer_id_fkey"
+            columns: ["referee_consumer_id"]
+            isOneToOne: true
+            referencedRelation: "consumers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referrals_referrer_consumer_id_fkey"
+            columns: ["referrer_consumer_id"]
+            isOneToOne: false
+            referencedRelation: "consumers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       regions: {
         Row: {
@@ -2508,6 +2666,25 @@ export type Database = {
       }
     }
     Functions: {
+      award_badge: {
+        Args: {
+          p_consumer_id: string
+          p_description: string
+          p_icon: string
+          p_key: string
+          p_name: string
+        }
+        Returns: undefined
+      }
+      city_referral_leaderboard: {
+        Args: { p_city: string; p_limit?: number }
+        Returns: {
+          consumer_id: string
+          first_name: string
+          rank: number
+          referral_count: number
+        }[]
+      }
       consume_government_invitation_code: {
         Args: { p_code: string }
         Returns: {
@@ -2518,6 +2695,7 @@ export type Database = {
         Args: { p_coupon_id: string; p_quantity: number }
         Returns: string
       }
+      gen_referral_code: { Args: never; Returns: string }
       get_impact_survey_by_token: {
         Args: { p_token: string }
         Returns: {
@@ -2544,6 +2722,13 @@ export type Database = {
       }
       increment_attendee_count: { Args: { eid: string }; Returns: undefined }
       increment_share_count: { Args: { event_id: string }; Returns: undefined }
+      my_referral_rank: {
+        Args: { p_city: string }
+        Returns: {
+          rank: number
+          referral_count: number
+        }[]
+      }
       notify_org_members: {
         Args: {
           p_body: string
@@ -2621,6 +2806,12 @@ export type Database = {
         | "frozen"
       import_log_status: "success" | "skipped" | "pending_image_retry" | "error"
       invitation_code_status: "active" | "inactive"
+      lead_status:
+        | "new"
+        | "contacted"
+        | "in_progress"
+        | "converted"
+        | "not_interested"
       listing_status:
         | "posted"
         | "claimed"
@@ -2824,6 +3015,13 @@ export const Constants = {
       ],
       import_log_status: ["success", "skipped", "pending_image_retry", "error"],
       invitation_code_status: ["active", "inactive"],
+      lead_status: [
+        "new",
+        "contacted",
+        "in_progress",
+        "converted",
+        "not_interested",
+      ],
       listing_status: [
         "posted",
         "claimed",

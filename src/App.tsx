@@ -113,6 +113,8 @@ import ConsumerFollows from "./pages/consumer/ConsumerFollows";
 import ConsumerNotifications from "./pages/consumer/ConsumerNotifications";
 import ConsumerFeedback from "./pages/consumer/ConsumerFeedback";
 import ConsumerInviteFriends from "./pages/consumer/ConsumerInviteFriends";
+import ConsumerLeaderboard from "./pages/consumer/ConsumerLeaderboard";
+import BadgeToastListener from "./components/consumer/BadgeToastListener";
 
 import ConsumerForgotPassword from "./pages/consumer/ConsumerForgotPassword";
 import ConsumerResetPassword from "./pages/consumer/ConsumerResetPassword";
@@ -133,6 +135,7 @@ const ConsumerWrapper = ({ children }: { children: React.ReactNode }) => (
     <ConsumerCartProvider>
       <LocationProvider>
         <ErrorBoundary>
+          <BadgeToastListener />
           {children}
         </ErrorBoundary>
       </LocationProvider>
@@ -315,6 +318,7 @@ const App = () => (
             <Route path="/app/notifications" element={<ProtectedConsumerWrapper><ConsumerNotifications /></ProtectedConsumerWrapper>} />
             <Route path="/app/feedback" element={<ProtectedConsumerWrapper><ConsumerFeedback /></ProtectedConsumerWrapper>} />
             <Route path="/app/invite-friends" element={<ProtectedConsumerWrapper><ConsumerInviteFriends /></ProtectedConsumerWrapper>} />
+            <Route path="/app/leaderboard" element={<ProtectedConsumerWrapper><ConsumerLeaderboard /></ProtectedConsumerWrapper>} />
 
             {/* Public gated event preview */}
             <Route path="/event-preview/:id" element={<EventPreview />} />

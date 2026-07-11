@@ -16,6 +16,7 @@ interface Consumer {
   money_saved: number;
   pounds_rescued: number;
   invite_code_used?: string;
+  referral_code?: string;
 }
 
 interface ConsumerAuthContextType {
