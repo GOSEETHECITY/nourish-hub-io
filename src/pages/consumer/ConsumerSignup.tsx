@@ -86,6 +86,14 @@ const ConsumerSignup = () => {
     }
 
     await refreshConsumer();
+
+    // If the user was invited by a friend, record the referral and award the referrer's badge.
+    const referralCode = sessionStorage.getItem("referral_code");
+    if (referralCode) {
+      try { await supabase.rpc("apply_referral" as any, { p_code: referralCode }); } catch (_) {}
+      sessionStorage.removeItem("referral_code");
+    }
+
     sessionStorage.removeItem("phone_verified");
     sessionStorage.removeItem("signup_phone_e164");
     setLoading(false);

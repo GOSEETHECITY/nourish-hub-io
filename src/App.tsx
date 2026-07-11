@@ -26,6 +26,7 @@ import NewsArticle from "./pages/marketing/NewsArticle";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Dashboard from "./pages/Index";
 import Organizations from "./pages/Organizations";
+import LeadsInbox from "./pages/admin/LeadsInbox";
 import OrganizationDetail from "./pages/OrganizationDetail";
 import LocationDetail from "./pages/LocationDetail";
 import FoodListingsDonations from "./pages/FoodListingsDonations";
@@ -211,6 +212,7 @@ const App = () => (
             >
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/organizations" element={<Organizations />} />
+              <Route path="/admin/leads" element={<LeadsInbox />} />
               <Route path="/organizations/:id" element={<OrganizationDetail />} />
               <Route path="/organizations/:id/locations/:locationId" element={<LocationDetail />} />
               <Route path="/food-listings/donations" element={<FoodListingsDonations />} />
