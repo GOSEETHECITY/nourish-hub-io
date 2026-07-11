@@ -26,6 +26,7 @@ import NewsArticle from "./pages/marketing/NewsArticle";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Dashboard from "./pages/Index";
 import Organizations from "./pages/Organizations";
+import LeadsInbox from "./pages/admin/LeadsInbox";
 import OrganizationDetail from "./pages/OrganizationDetail";
 import LocationDetail from "./pages/LocationDetail";
 import FoodListingsDonations from "./pages/FoodListingsDonations";
