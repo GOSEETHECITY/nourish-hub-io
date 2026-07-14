@@ -26,6 +26,16 @@ const mainNav = [
   { icon: Store, label: "Marketplace", path: "/marketplace" },
   { icon: BarChart3, label: "Impact", path: "/impact" },
   { icon: Users, label: "Users", path: "/users" },
+  {
+    icon: Users, label: "Onboarding", path: "/admin/onboarding",
+    children: [
+      { label: "Pending Approvals", path: "/admin/organizations-pending" },
+      { label: "New Leads", path: "/admin/leads" },
+      { label: "Bulk Import", path: "/admin/organizations-bulk-import" },
+      { label: "Send Invites", path: "/admin/send-invites" },
+      { label: "All Accounts", path: "/admin/accounts" },
+    ],
+  },
   { icon: CreditCard, label: "Billing", path: "/billing" },
   { icon: FileText, label: "Import Logs", path: "/import-logs" },
 ];
