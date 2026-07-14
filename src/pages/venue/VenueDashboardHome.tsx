@@ -78,15 +78,8 @@ export default function VenueDashboardHome() {
         return { id: loc.id, name: loc.name, city: loc.city, count: locYear.length, pounds, value, co2: pounds * CO2_LBS_PER_LB_FOOD };
       })
     : [];
-    const d = l.created_at ? new Date(l.created_at) : null;
-    return d && d.getFullYear() === currentYear;
-  });
-  const yearCount = yearDonations.length;
-  const yearPounds = yearDonations.reduce((s, l) => s + (l.pounds || 0), 0);
-  const yearValue = yearDonations.reduce((s, l) => s + (l.estimated_donation_value || 0), 0);
-  const yearCo2 = yearPounds * CO2_LBS_PER_LB_FOOD;
-  const locMap = Object.fromEntries(locations.map((l) => [l.id, l.name]));
-  const formatStatus = (s: string) => s.split("_").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
+
+  const marketplaceUnlocked = Boolean(cityThreshold?.marketplace_unlocked);
 
   const marketplaceUnlocked = Boolean(cityThreshold?.marketplace_unlocked);
 
