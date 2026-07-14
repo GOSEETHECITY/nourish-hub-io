@@ -42,6 +42,18 @@ export default function VenueDashboardHome() {
     enabled: !!venueCity,
   });
 
+  // Per-city marketplace status (for multi-city orgs)
+  const uniqueCities = Array.from(new Set(locations.map((l) => l.city).filter(Boolean))) as string[];
+  const { data: cityStatuses = [] } = useQuery({
+    queryKey: ["city-thresholds-all", uniqueCities.join(",")],
+    queryFn: async () => {
+      if (uniqueCities.length === 0) return [];
+      const { data } = await supabase.from("city_thresholds").select("city, marketplace_unlocked").in("city", uniqueCities);
+      return data || [];
+    },
+    enabled: uniqueCities.length > 1,
+  });
+
   const donations = listings.filter((l) => l.listing_type === "donation");
   const currentYear = new Date().getFullYear();
   const yearDonations = donations.filter((l) => {
@@ -55,6 +67,18 @@ export default function VenueDashboardHome() {
   const locMap = Object.fromEntries(locations.map((l) => [l.id, l.name]));
   const formatStatus = (s: string) => s.split("_").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
 
+  // Per-location rollup for multi-location orgs
+  const isMultiLocation = locations.length > 1;
+  const perLocation = isMultiLocation
+    ? locations.map((loc) => {
+        const locDonations = donations.filter((d) => d.location_id === loc.id);
+        const locYear = locDonations.filter((l) => l.created_at && new Date(l.created_at).getFullYear() === currentYear);
+        const pounds = locYear.reduce((s, l) => s + (l.pounds || 0), 0);
+        const value = locYear.reduce((s, l) => s + (l.estimated_donation_value || 0), 0);
+        return { id: loc.id, name: loc.name, city: loc.city, count: locYear.length, pounds, value, co2: pounds * CO2_LBS_PER_LB_FOOD };
+      })
+    : [];
+
   const marketplaceUnlocked = Boolean(cityThreshold?.marketplace_unlocked);
 
   return (
@@ -65,6 +89,44 @@ export default function VenueDashboardHome() {
       </div>
 
       <OnboardingChecklist />
+
+      {isMultiLocation && (
+        <div className="bg-primary/5 border border-primary/20 rounded-xl p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-foreground">Organization Rollup</h2>
+            <span className="text-xs text-muted-foreground">{locations.length} locations · combined this year</span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div><p className="text-xs text-muted-foreground">Donations</p><p className="text-2xl font-bold">{yearCount.toLocaleString()}</p></div>
+            <div><p className="text-xs text-muted-foreground">Value</p><p className="text-2xl font-bold">${yearValue.toLocaleString()}</p></div>
+            <div><p className="text-xs text-muted-foreground">Pounds</p><p className="text-2xl font-bold">{yearPounds.toLocaleString()}</p></div>
+            <div><p className="text-xs text-muted-foreground">CO₂ (lbs)</p><p className="text-2xl font-bold">{yearCo2.toLocaleString()}</p></div>
+          </div>
+          {cityStatuses.length > 0 && (
+            <div className="flex flex-wrap gap-2 pt-2 border-t">
+              {cityStatuses.map((c: any) => (
+                <span key={c.city} className={`px-2.5 py-1 rounded-full text-xs font-semibold ${c.marketplace_unlocked ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>
+                  {c.city}: {c.marketplace_unlocked ? "Unlocked" : "Coming soon"}
+                </span>
+              ))}
+            </div>
+          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-2">
+            {perLocation.map((loc) => (
+              <a key={loc.id} href={`/venue/locations`} className="block bg-card border rounded-lg p-3 hover:border-primary transition-colors">
+                <p className="font-semibold text-sm truncate">{loc.name}</p>
+                <p className="text-xs text-muted-foreground">{loc.city}</p>
+                <div className="mt-2 grid grid-cols-3 gap-1 text-xs">
+                  <div><span className="text-muted-foreground">Don</span><p className="font-bold">{loc.count}</p></div>
+                  <div><span className="text-muted-foreground">Lbs</span><p className="font-bold">{loc.pounds}</p></div>
+                  <div><span className="text-muted-foreground">$</span><p className="font-bold">{loc.value}</p></div>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-card rounded-xl border p-5">
