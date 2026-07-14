@@ -146,9 +146,65 @@ async function fetchGooglePlaces(): Promise<SourcedEvent[]> {
   }).filter((e) => e.city && e.state);
 }
 
-// --- Placeholder for future Facebook Events source ---
-async function fetchFacebookEvents(): Promise<SourcedEvent[]> {
-  return []; // Add when Facebook API access is approved.
+// --- Source: Web search via Lovable AI Gateway (Gemini with Google Search grounding) ---
+// Uses LOVABLE_API_KEY. Queries the model for grand opening announcements in target cities
+// and parses a strict JSON schema back. Falls back to empty array on any failure.
+const TARGET_CITIES: Array<{ city: string; state: string }> = [
+  { city: "Orlando", state: "FL" },
+  { city: "Tampa", state: "FL" },
+  { city: "Miami", state: "FL" },
+  { city: "Austin", state: "TX" },
+];
+
+async function fetchWebSearch(): Promise<SourcedEvent[]> {
+  if (!LOVABLE_API_KEY) return [];
+  const out: SourcedEvent[] = [];
+  const today = new Date().toISOString().slice(0, 10);
+  for (const { city, state } of TARGET_CITIES) {
+    try {
+      const prompt =
+        `Search the web for upcoming grand opening events in ${city}, ${state} within the next 60 days. ` +
+        `Queries to consider: "${city} grand opening events", "${city} new business opening", "grand opening near ${city}". ` +
+        `Return ONLY a JSON array (no prose, no markdown fences) where each item has: ` +
+        `business_name, address, city, state, zip_code (nullable), event_date (YYYY-MM-DD), event_time (HH:MM or null), ` +
+        `category (one of: restaurant, retail, fitness, entertainment, beauty, medical, other), description, source_url. ` +
+        `Only include real, verifiable openings with a specific date. If nothing found, return [].`;
+      const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages: [{ role: "user", content: prompt }],
+        }),
+      });
+      if (!res.ok) { console.error("web_search", res.status, await res.text()); continue; }
+      const data = await res.json();
+      const text = data?.choices?.[0]?.message?.content ?? "";
+      const jsonMatch = text.match(/\[[\s\S]*\]/);
+      if (!jsonMatch) continue;
+      const arr = JSON.parse(jsonMatch[0]);
+      for (const it of arr) {
+        if (!it?.business_name || !it?.event_date || !it?.city) continue;
+        out.push({
+          business_name: String(it.business_name).slice(0, 200),
+          address: String(it.address ?? ""),
+          city: String(it.city),
+          state: String(it.state ?? state),
+          zip_code: it.zip_code ?? null,
+          event_date: String(it.event_date),
+          event_time: it.event_time ?? null,
+          category: (["restaurant","retail","fitness","entertainment","beauty","medical","other"].includes(it.category) ? it.category : inferCategory(it.business_name, it.description ?? "")) as Category,
+          description: String(it.description ?? `Grand opening in ${it.city}.`),
+          photo_url: null,
+          source_url: String(it.source_url ?? "https://hariet.ai"),
+          source: "web_search",
+        });
+      }
+    } catch (e) {
+      console.error("web_search error", city, e);
+    }
+  }
+  return out;
 }
 
 // --- AI flyer generation ---
@@ -242,7 +298,7 @@ async function run() {
   for (const [name, fn] of Object.entries({
     eventbrite: fetchEventbrite,
     google_places: fetchGooglePlaces,
-    facebook: fetchFacebookEvents,
+    web_search: fetchWebSearch,
   })) {
     try {
       const items = await fn();
