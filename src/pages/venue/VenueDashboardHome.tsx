@@ -81,8 +81,6 @@ export default function VenueDashboardHome() {
 
   const marketplaceUnlocked = Boolean(cityThreshold?.marketplace_unlocked);
 
-  const marketplaceUnlocked = Boolean(cityThreshold?.marketplace_unlocked);
-
   return (
     <div className="space-y-6">
       <div>
