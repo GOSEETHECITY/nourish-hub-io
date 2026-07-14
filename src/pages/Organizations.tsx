@@ -385,6 +385,97 @@ export default function Organizations() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Bulk Import Dialog */}
+      <Dialog open={bulkOpen} onOpenChange={(o) => { if (!o) closeBulk(); else setBulkOpen(true); }}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Bulk Import Organizations</DialogTitle></DialogHeader>
+          <div className="space-y-4 pt-2">
+            <label className="border-2 border-dashed border-border rounded-lg p-6 flex flex-col items-center gap-2 cursor-pointer hover:border-primary/50 transition-colors">
+              <Upload className="w-6 h-6 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">
+                {bulkFile ? bulkFile.name : "Choose CSV file"}
+              </span>
+              <input type="file" accept=".csv,text/csv" className="hidden"
+                onChange={(e) => e.target.files?.[0] && handleBulkFile(e.target.files[0])} />
+            </label>
+
+            {bulkError && (
+              <div className="rounded-md bg-red-50 border border-red-200 text-red-700 text-sm p-3">
+                {bulkError}
+              </div>
+            )}
+
+            {bulkPreview.length > 0 && !bulkResults && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm">
+                  <span className="font-medium">Detected:</span>
+                  {bulkDetected ? (
+                    <span className="px-2 py-0.5 rounded bg-green-50 text-green-700 border border-green-200 text-xs">
+                      {bulkDetected === "nonprofits" ? "Nonprofits" : "Businesses / Organizations"}
+                    </span>
+                  ) : (
+                    <span className="px-2 py-0.5 rounded bg-red-50 text-red-700 border border-red-200 text-xs">Unknown</span>
+                  )}
+                </div>
+                <div className="text-xs text-muted-foreground">Preview of first 3 rows:</div>
+                <div className="border rounded max-h-56 overflow-auto text-xs">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        {Object.keys(bulkPreview[0]).slice(0, 6).map((k) => (
+                          <TableHead key={k} className="text-xs">{k}</TableHead>
+                        ))}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {bulkPreview.map((r, i) => (
+                        <TableRow key={i}>
+                          {Object.keys(bulkPreview[0]).slice(0, 6).map((k) => (
+                            <TableCell key={k} className="text-xs">{r[k]}</TableCell>
+                          ))}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            )}
+
+            {bulkResults && (
+              <div className="space-y-2">
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="bg-muted rounded p-3"><p className="text-xs text-muted-foreground">Total</p><p className="text-xl font-bold">{bulkResults.length}</p></div>
+                  <div className="bg-green-50 rounded p-3"><p className="text-xs text-green-700">Created</p><p className="text-xl font-bold text-green-700">{bulkResults.filter(r => r.status === "created").length}</p></div>
+                  <div className="bg-red-50 rounded p-3"><p className="text-xs text-red-700">Failed</p><p className="text-xl font-bold text-red-700">{bulkResults.filter(r => r.status === "failed").length}</p></div>
+                </div>
+                <div className="max-h-56 overflow-auto text-sm border rounded p-2">
+                  {bulkResults.map((r) => (
+                    <div key={r.row} className="flex items-center gap-2 py-1 border-b last:border-0">
+                      {r.status === "created" ? <CheckCircle2 className="w-4 h-4 text-green-600" /> : <XCircle className="w-4 h-4 text-red-600" />}
+                      <span className="w-8 text-muted-foreground">#{r.row}</span>
+                      <span className="flex-1 font-medium truncate">{r.organization_name}</span>
+                      {r.join_code && <code className="text-xs bg-muted px-2 py-0.5 rounded">{r.join_code}</code>}
+                      {r.reason && <span className="text-xs text-red-600 truncate max-w-[220px]">{r.reason}</span>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" onClick={closeBulk} disabled={bulkImporting}>
+                {bulkResults ? "Close" : "Cancel"}
+              </Button>
+              {!bulkResults && (
+                <Button onClick={runBulkImport} disabled={!bulkDetected || bulkImporting || !!bulkError}>
+                  {bulkImporting ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Importing…</> : "Import"}
+                </Button>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
