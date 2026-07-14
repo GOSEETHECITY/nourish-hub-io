@@ -41,6 +41,16 @@ export default function Organizations() {
   const [baseline, setBaseline] = useState<SustainabilityBaselineData>(emptySustainabilityBaseline);
   const [showBaseline, setShowBaseline] = useState(false);
 
+  // Bulk import state
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkFile, setBulkFile] = useState<File | null>(null);
+  const [bulkCsvText, setBulkCsvText] = useState<string>("");
+  const [bulkPreview, setBulkPreview] = useState<Record<string, string>[]>([]);
+  const [bulkDetected, setBulkDetected] = useState<"nonprofits" | "organizations" | null>(null);
+  const [bulkError, setBulkError] = useState<string | null>(null);
+  const [bulkImporting, setBulkImporting] = useState(false);
+  const [bulkResults, setBulkResults] = useState<Array<{ row: number; organization_name: string; status: string; join_code?: string; reason?: string }> | null>(null);
+
   const { data: orgs = [], isLoading } = useQuery({
     queryKey: ["organizations"],
     queryFn: async () => {
