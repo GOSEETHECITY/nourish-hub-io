@@ -32,3 +32,9 @@ verify_jwt = false
 
 [functions.release-expired-flash-reservations]
 verify_jwt = false
+
+[functions.auth-email-hook]
+verify_jwt = false
+
+[functions.internal-push-fanout]
+verify_jwt = false
