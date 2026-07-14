@@ -217,8 +217,8 @@ export default function Organizations() {
     if (!bulkCsvText || !bulkDetected) return;
     setBulkImporting(true); setBulkError(null);
     try {
-      const { data, error } = await supabase.functions.invoke("bulk-import-organizations", { body: { csv_text: bulkCsvText } });
-      if (error) throw new Error(error.message);
+      const { callBulkImport } = await import("@/lib/callBulkImport");
+      const data = await callBulkImport({ csv_text: bulkCsvText });
       setBulkResults(data?.results ?? []);
       const created = (data?.results ?? []).filter((r: any) => r.status === "created").length;
       const failed = (data?.results ?? []).filter((r: any) => r.status === "failed").length;
