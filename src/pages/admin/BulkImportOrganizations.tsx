@@ -9,7 +9,7 @@ type ImportRow = Record<string, string>;
 type ImportResult = { row: number; organization_name: string; status: "created" | "failed"; id?: string; join_code?: string; reason?: string };
 
 const REQUIRED = ["organization_name", "organization_type"];
-const OPTIONAL = ["address", "city", "state", "zip_code", "contact_name", "contact_email", "contact_phone", "ein", "parent_organization_id"];
+const OPTIONAL = ["address", "city", "state", "zip_code", "contact_name", "contact_email", "contact_phone", "ein", "parent_organization_id", "logo_url", "business_bio", "website_url", "marketplace_enabled", "stripe_account_id", "is_verified"];
 
 function parseCSV(text: string): ImportRow[] {
   const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
