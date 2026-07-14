@@ -2,7 +2,7 @@
 // summarizing donations in a chosen year and citing the applicable state law.
 import { PDFDocument, StandardFonts, rgb } from "npm:pdf-lib@1.17.1";
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-internal-secret, stripe-signature" };
 import { z } from "npm:zod@3.23.8";
 
 const BodySchema = z.object({

@@ -3,7 +3,7 @@
 // Admins/service role only.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import webpush from "npm:web-push@3.6.7";
-import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-internal-secret, stripe-signature" };
 
 webpush.setVapidDetails(
   Deno.env.get("VAPID_SUBJECT") || "mailto:Hello@hariet.ai",
