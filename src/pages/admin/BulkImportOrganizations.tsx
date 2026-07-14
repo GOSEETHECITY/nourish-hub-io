@@ -9,7 +9,7 @@ type ImportRow = Record<string, string>;
 type ImportResult = { row: number; organization_name: string; status: "created" | "failed"; id?: string; join_code?: string; reason?: string };
 
 const REQUIRED = ["organization_name", "organization_type"];
-const OPTIONAL = ["address", "city", "state", "zip_code", "contact_name", "contact_email", "contact_phone", "ein", "parent_organization_id"];
+const OPTIONAL = ["address", "city", "state", "zip_code", "contact_name", "contact_email", "contact_phone", "ein", "parent_organization_id", "logo_url", "business_bio", "website_url", "marketplace_enabled", "stripe_account_id", "is_verified"];
 
 function parseCSV(text: string): ImportRow[] {
   const lines = text.split(/\r?\n/).filter((l) => l.trim().length > 0);
@@ -72,7 +72,7 @@ export default function BulkImportOrganizations() {
   };
 
   const downloadTemplate = () => {
-    const csv = [REQUIRED.concat(OPTIONAL).join(","), "Example Org,restaurant,123 Main St,Austin,TX,78701,Jane Doe,jane@example.com,(512) 555-0100,,"].join("\n");
+    const csv = [REQUIRED.concat(OPTIONAL).join(","), "Example Org,restaurant,123 Main St,Austin,TX,78701,Jane Doe,jane@example.com,(512) 555-0100,,,https://example.com/logo.png,Short bio here,https://example.com,false,,false"].join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);

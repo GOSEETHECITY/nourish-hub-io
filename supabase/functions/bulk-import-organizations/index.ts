@@ -23,7 +23,27 @@ interface Row {
   contact_phone?: string;
   ein?: string;
   parent_organization_id?: string;
+  logo_url?: string;
+  business_bio?: string;
+  website_url?: string;
+  marketplace_enabled?: string | boolean;
+  stripe_account_id?: string;
+  is_verified?: string | boolean;
 }
+
+const nullify = (v: unknown): string | null => {
+  if (v == null) return null;
+  const s = String(v).trim();
+  return s === "" ? null : s;
+};
+const toBool = (v: unknown): boolean | null => {
+  if (v == null) return null;
+  const s = String(v).trim().toLowerCase();
+  if (s === "") return null;
+  if (["true", "1", "yes", "y", "t"].includes(s)) return true;
+  if (["false", "0", "no", "n", "f"].includes(s)) return false;
+  return null;
+};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -105,18 +125,22 @@ Deno.serve(async (req) => {
         if (isNonprofit) {
           const { data: np, error: npErr } = await admin.from("nonprofits").insert({
             organization_name: orgName,
-            address: r.address || null,
-            city: r.city || null,
-            state: r.state || null,
+            address: nullify(r.address),
+            city: nullify(r.city),
+            state: nullify(r.state),
             zip,
-            ein: r.ein || null,
+            ein: nullify(r.ein),
             join_code: joinCode,
             approval_status: "approved",
-            primary_contact_name: r.contact_name || null,
+            primary_contact_name: nullify(r.contact_name),
             primary_contact_email: email,
-            primary_contact_phone: r.contact_phone || null,
+            primary_contact_phone: nullify(r.contact_phone),
             temp_password_hint: email ? password : null,
             user_id: userId,
+            logo_url: nullify(r.logo_url),
+            organization_bio: nullify(r.business_bio),
+            website_url: nullify(r.website_url),
+            is_verified: toBool(r.is_verified) ?? false,
           }).select("id").single();
           if (npErr) throw new Error(npErr.message);
 
@@ -129,17 +153,23 @@ Deno.serve(async (req) => {
           const { data: org, error: orgErr } = await admin.from("organizations").insert({
             name: orgName,
             type: orgType,
-            address: r.address || null,
-            city: r.city || null,
-            state: r.state || null,
+            address: nullify(r.address),
+            city: nullify(r.city),
+            state: nullify(r.state),
             zip,
             join_code: joinCode,
             approval_status: "approved",
             parent_organization_id: parentId,
-            primary_contact_name: r.contact_name || null,
+            primary_contact_name: nullify(r.contact_name),
             primary_contact_email: email,
-            primary_contact_phone: r.contact_phone || null,
+            primary_contact_phone: nullify(r.contact_phone),
             temp_password_hint: email ? password : null,
+            logo_url: nullify(r.logo_url),
+            business_bio: nullify(r.business_bio),
+            website_url: nullify(r.website_url),
+            marketplace_enabled: toBool(r.marketplace_enabled) ?? false,
+            stripe_account_id: nullify(r.stripe_account_id),
+            is_verified: toBool(r.is_verified) ?? false,
           }).select("id").single();
           if (orgErr) throw new Error(`${orgErr.message} (valid types: restaurant, cafe, catering_company, event, hotel, convention_center, stadium, arena, farm, grocery_store, food_truck, airport, festival, resort, food_beverage_group, hospitality_group, venue_events_group, farm_grocery_group, franchise, municipal_government, county_government, state_government, government_entity, nonprofit_organization)`);
 
