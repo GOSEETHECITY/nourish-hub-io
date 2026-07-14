@@ -298,7 +298,7 @@ async function run() {
   for (const [name, fn] of Object.entries({
     eventbrite: fetchEventbrite,
     google_places: fetchGooglePlaces,
-    facebook: fetchFacebookEvents,
+    web_search: fetchWebSearch,
   })) {
     try {
       const items = await fn();
