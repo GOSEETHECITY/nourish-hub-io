@@ -72,7 +72,7 @@ export default function BulkImportOrganizations() {
   };
 
   const downloadTemplate = () => {
-    const csv = [REQUIRED.concat(OPTIONAL).join(","), "Example Org,restaurant,123 Main St,Austin,TX,78701,Jane Doe,jane@example.com,(512) 555-0100,,"].join("\n");
+    const csv = [REQUIRED.concat(OPTIONAL).join(","), "Example Org,restaurant,123 Main St,Austin,TX,78701,Jane Doe,jane@example.com,(512) 555-0100,,,https://example.com/logo.png,Short bio here,https://example.com,false,,false"].join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
