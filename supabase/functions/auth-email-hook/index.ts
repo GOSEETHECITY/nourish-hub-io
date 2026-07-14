@@ -8,7 +8,7 @@
 // Requires: RESEND_API_KEY (set), hariet.ai verified in Resend.
 
 import { Webhook } from "npm:standardwebhooks@1.0.0";
-import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-internal-secret, stripe-signature" };
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const HOOK_SECRET = Deno.env.get("SEND_EMAIL_HOOK_SECRET"); // v1,whsec_...
