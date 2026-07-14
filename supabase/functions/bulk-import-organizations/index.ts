@@ -23,7 +23,27 @@ interface Row {
   contact_phone?: string;
   ein?: string;
   parent_organization_id?: string;
+  logo_url?: string;
+  business_bio?: string;
+  website_url?: string;
+  marketplace_enabled?: string | boolean;
+  stripe_account_id?: string;
+  is_verified?: string | boolean;
 }
+
+const nullify = (v: unknown): string | null => {
+  if (v == null) return null;
+  const s = String(v).trim();
+  return s === "" ? null : s;
+};
+const toBool = (v: unknown): boolean | null => {
+  if (v == null) return null;
+  const s = String(v).trim().toLowerCase();
+  if (s === "") return null;
+  if (["true", "1", "yes", "y", "t"].includes(s)) return true;
+  if (["false", "0", "no", "n", "f"].includes(s)) return false;
+  return null;
+};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
