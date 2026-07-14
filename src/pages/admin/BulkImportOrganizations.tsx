@@ -59,11 +59,15 @@ export default function BulkImportOrganizations() {
     const parents = rows.filter((r) => !r.parent_organization_id);
     const children = rows.filter((r) => r.parent_organization_id);
     let all: ImportResult[] = [];
-    for (const batch of [parents, children]) {
-      if (!batch.length) continue;
-      const { data, error } = await supabase.functions.invoke("bulk-import-organizations", { body: { rows: batch } });
-      if (error) { toast({ title: "Import error", description: error.message, variant: "destructive" }); break; }
-      all = all.concat(data?.results ?? []);
+    const { callBulkImport } = await import("@/lib/callBulkImport");
+    try {
+      for (const batch of [parents, children]) {
+        if (!batch.length) continue;
+        const data = await callBulkImport({ rows: batch });
+        all = all.concat(data?.results ?? []);
+      }
+    } catch (e: any) {
+      toast({ title: "Import error", description: e?.message || String(e), variant: "destructive" });
     }
     setResults(all);
     setProcessing(false);
