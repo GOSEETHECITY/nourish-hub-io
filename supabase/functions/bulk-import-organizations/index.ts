@@ -59,9 +59,22 @@ Deno.serve(async (req) => {
     const { data: isAdmin } = await admin.rpc("has_role", { _user_id: user.id, _role: "admin" });
     if (!isAdmin) return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-    const { rows } = await req.json() as { rows: Row[] };
+    // Accept either { rows: [...] } (legacy) or { csv_text: "..." } or multipart file upload.
+    let rows: Row[] = [];
+    const contentType = req.headers.get("content-type") || "";
+    let csvText: string | null = null;
+    if (contentType.includes("multipart/form-data")) {
+      const form = await req.formData();
+      const file = form.get("file");
+      if (file instanceof File) csvText = await file.text();
+    } else {
+      const body = await req.json().catch(() => ({} as any));
+      if (typeof body?.csv_text === "string") csvText = body.csv_text;
+      else if (Array.isArray(body?.rows)) rows = body.rows;
+    }
+    if (csvText) rows = parseCSV(csvText);
     if (!Array.isArray(rows) || rows.length === 0) {
-      return new Response(JSON.stringify({ error: "rows required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ error: "No rows found. Provide csv_text, a file upload, or rows[]." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const results: Array<{ row: number; organization_name: string; status: "created" | "failed"; id?: string; join_code?: string; reason?: string }> = [];
