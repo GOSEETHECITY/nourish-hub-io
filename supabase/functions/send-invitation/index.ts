@@ -143,7 +143,7 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "HarietAI <noreply@updates.hariet.ai>",
+        from: "HarietAI <noreply@hariet.ai>",
         to: [email],
         subject: `You've been invited to join ${entity_name} on HarietAI`,
         html: emailHtml,
