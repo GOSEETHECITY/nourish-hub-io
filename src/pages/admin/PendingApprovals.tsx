@@ -26,9 +26,15 @@ export default function PendingApprovals() {
       address: s.address, city: s.city, state: s.state, zip_code: s.zip_code,
       contact_name: s.contact_name, contact_email: s.contact_email, contact_phone: s.contact_phone, ein: s.ein,
     }];
-    const { data, error } = await supabase.functions.invoke("bulk-import-organizations", { body: { rows } });
-    if (error || !data?.results?.[0] || data.results[0].status !== "created") {
-      toast({ title: "Approve failed", description: data?.results?.[0]?.reason || error?.message, variant: "destructive" }); return;
+    let data: any;
+    try {
+      const { callBulkImport } = await import("@/lib/callBulkImport");
+      data = await callBulkImport({ rows });
+    } catch (e: any) {
+      toast({ title: "Approve failed", description: e?.message || String(e), variant: "destructive" }); return;
+    }
+    if (!data?.results?.[0] || data.results[0].status !== "created") {
+      toast({ title: "Approve failed", description: data?.results?.[0]?.reason || "Unknown error", variant: "destructive" }); return;
     }
     const created = data.results[0];
     // Send the credentials email immediately
