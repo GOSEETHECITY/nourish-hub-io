@@ -8,6 +8,7 @@ import ConsumerDecorativeBackground from "@/components/consumer/ConsumerDecorati
 const ConsumerInviteCode = () => {
   const navigate = useNavigate();
   const [inviteCode, setInviteCode] = useState("");
+  const [referralCode, setReferralCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -25,6 +26,9 @@ const ConsumerInviteCode = () => {
         return;
       }
       sessionStorage.setItem("invite_code", inviteCode.trim().toUpperCase());
+      if (referralCode.trim()) {
+        sessionStorage.setItem("referral_code", referralCode.trim().toUpperCase());
+      }
       navigate("/app/phone-entry");
     } catch {
       setError("Something went wrong");
@@ -54,6 +58,15 @@ const ConsumerInviteCode = () => {
           placeholder="Enter code"
           className="w-full py-3 px-4 rounded-full border border-gray-300 text-center text-lg uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-[#F97316] placeholder:text-gray-400"
         />
+        <input
+          value={referralCode}
+          onChange={(e) => setReferralCode(e.target.value)}
+          placeholder="Friend's referral code (optional)"
+          className="w-full py-3 px-4 rounded-full border border-gray-300 text-center text-base uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-[#8DC63F] placeholder:text-gray-400"
+        />
+        <p className="text-xs text-gray-500 text-center -mt-2">
+          Have a friend's code? Add it above. You'll both earn a badge once your first check-in is complete.
+        </p>
         {error && <p className="text-red-500 text-sm">{error}</p>}
         <button
           onClick={handleSubmit}
