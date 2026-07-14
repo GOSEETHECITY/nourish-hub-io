@@ -154,6 +154,93 @@ export default function Organizations() {
     });
   }, [orgs, search, filterType, filterStatus, filterCity, filterState]);
 
+  const RECOGNIZED_VENUE_TYPES = new Set([
+    "venue_events_group","stadium","arena","convention_center","resort","event","hotel",
+    "farm","grocery_store","school","festival","corporate_campus","government",
+    "restaurant_independent","restaurant_multi_location","franchise",
+    "restaurant","cafe","catering_company","food_truck","airport","food_beverage_group",
+    "hospitality_group","farm_grocery_group","municipal_government","county_government",
+    "state_government","government_entity",
+  ]);
+
+  const parseCsvClient = (text: string): Record<string,string>[] => {
+    const lines: string[] = [];
+    let cur = "", inQ = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (c === '"') { if (inQ && text[i+1] === '"') { cur += '"'; i++; } else inQ = !inQ; cur += c; }
+      else if ((c === "\n" || c === "\r") && !inQ) {
+        if (c === "\r" && text[i+1] === "\n") i++;
+        if (cur.trim().length) lines.push(cur); cur = "";
+      } else cur += c;
+    }
+    if (cur.trim().length) lines.push(cur);
+    if (!lines.length) return [];
+    const parseLine = (line: string) => {
+      const out: string[] = []; let s = "", q = false;
+      for (let i = 0; i < line.length; i++) {
+        const c = line[i];
+        if (c === '"') { if (q && line[i+1] === '"') { s += '"'; i++; } else q = !q; }
+        else if (c === "," && !q) { out.push(s); s = ""; } else s += c;
+      }
+      out.push(s); return out.map(x => x.trim());
+    };
+    const headers = parseLine(lines[0]).map(h => h.toLowerCase().replace(/^\ufeff/,"").replace(/\s+/g,"_"));
+    return lines.slice(1).map(l => {
+      const cells = parseLine(l); const row: Record<string,string> = {};
+      headers.forEach((h, i) => row[h] = cells[i] ?? ""); return row;
+    });
+  };
+
+  const handleBulkFile = async (f: File) => {
+    setBulkFile(f); setBulkError(null); setBulkResults(null);
+    const text = await f.text();
+    setBulkCsvText(text);
+    const parsed = parseCsvClient(text);
+    setBulkPreview(parsed.slice(0, 3));
+    if (!parsed.length) { setBulkDetected(null); setBulkError("CSV appears empty."); return; }
+    const types = parsed.map(r => (r.organization_type || "").trim().toLowerCase()).filter(Boolean);
+    if (!types.length) { setBulkDetected(null); setBulkError("Missing organization_type column."); return; }
+    const hasNonprofit = types.some(t => t === "nonprofit" || t === "nonprofit_organization");
+    const hasVenue = types.some(t => RECOGNIZED_VENUE_TYPES.has(t));
+    const hasUnknown = types.some(t => t !== "nonprofit" && t !== "nonprofit_organization" && !RECOGNIZED_VENUE_TYPES.has(t));
+    if (hasNonprofit && !hasVenue) setBulkDetected("nonprofits");
+    else if (hasVenue && !hasNonprofit) setBulkDetected("organizations");
+    else if (hasNonprofit && hasVenue) { setBulkDetected("organizations"); }
+    else { setBulkDetected(null); }
+    if (hasUnknown && !hasVenue && !hasNonprofit) {
+      setBulkError("CSV type not recognized. Ensure organization_type contains valid values.");
+    }
+  };
+
+  const runBulkImport = async () => {
+    if (!bulkCsvText || !bulkDetected) return;
+    setBulkImporting(true); setBulkError(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("bulk-import-organizations", { body: { csv_text: bulkCsvText } });
+      if (error) throw new Error(error.message);
+      setBulkResults(data?.results ?? []);
+      const created = (data?.results ?? []).filter((r: any) => r.status === "created").length;
+      const failed = (data?.results ?? []).filter((r: any) => r.status === "failed").length;
+      toast.success(`${data?.total ?? 0} rows processed, ${created} created, ${failed} failed`);
+      queryClient.invalidateQueries({ queryKey: ["organizations"] });
+      queryClient.invalidateQueries({ queryKey: ["location-counts"] });
+      if (failed === 0) {
+        setTimeout(() => { closeBulk(); }, 1200);
+      }
+    } catch (e: any) {
+      setBulkError(e?.message || String(e));
+      toast.error(e?.message || "Import failed");
+    } finally {
+      setBulkImporting(false);
+    }
+  };
+
+  const closeBulk = () => {
+    setBulkOpen(false); setBulkFile(null); setBulkCsvText(""); setBulkPreview([]);
+    setBulkDetected(null); setBulkError(null); setBulkResults(null); setBulkImporting(false);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -161,9 +248,14 @@ export default function Organizations() {
           <h1 className="text-2xl font-bold text-foreground">Organizations</h1>
           <p className="text-sm text-muted-foreground mt-1">Manage all registered organizations</p>
         </div>
-        <Button onClick={() => { setEditingOrg(null); setForm(emptyForm); setBaseline(emptySustainabilityBaseline); setShowBaseline(false); setDialogOpen(true); }}>
-          <Plus className="w-4 h-4 mr-2" />Add Organization
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setBulkOpen(true)}>
+            <Upload className="w-4 h-4 mr-2" />Bulk Import
+          </Button>
+          <Button onClick={() => { setEditingOrg(null); setForm(emptyForm); setBaseline(emptySustainabilityBaseline); setShowBaseline(false); setDialogOpen(true); }}>
+            <Plus className="w-4 h-4 mr-2" />Add Organization
+          </Button>
+        </div>
       </div>
 
       <div className="flex flex-wrap gap-3 items-end">
