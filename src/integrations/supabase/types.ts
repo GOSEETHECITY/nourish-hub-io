@@ -1537,9 +1537,11 @@ export type Database = {
           estimated_weekly_served: number | null
           food_types_accepted: Database["public"]["Enums"]["food_type"][] | null
           id: string
+          is_verified: boolean | null
           join_code: string | null
           logo_url: string | null
           operating_hours: string | null
+          organization_bio: string | null
           organization_name: string
           population_served: string | null
           primary_contact: string | null
@@ -1554,6 +1556,7 @@ export type Database = {
           temp_password_hint: string | null
           user_id: string | null
           website: string | null
+          website_url: string | null
           zip: string | null
         }
         Insert: {
@@ -1571,9 +1574,11 @@ export type Database = {
             | Database["public"]["Enums"]["food_type"][]
             | null
           id?: string
+          is_verified?: boolean | null
           join_code?: string | null
           logo_url?: string | null
           operating_hours?: string | null
+          organization_bio?: string | null
           organization_name: string
           population_served?: string | null
           primary_contact?: string | null
@@ -1588,6 +1593,7 @@ export type Database = {
           temp_password_hint?: string | null
           user_id?: string | null
           website?: string | null
+          website_url?: string | null
           zip?: string | null
         }
         Update: {
@@ -1605,9 +1611,11 @@ export type Database = {
             | Database["public"]["Enums"]["food_type"][]
             | null
           id?: string
+          is_verified?: boolean | null
           join_code?: string | null
           logo_url?: string | null
           operating_hours?: string | null
+          organization_bio?: string | null
           organization_name?: string
           population_served?: string | null
           primary_contact?: string | null
@@ -1622,6 +1630,7 @@ export type Database = {
           temp_password_hint?: string | null
           user_id?: string | null
           website?: string | null
+          website_url?: string | null
           zip?: string | null
         }
         Relationships: []
@@ -1949,8 +1958,10 @@ export type Database = {
           government_regions: Json | null
           hours_of_operation: Json | null
           id: string
+          is_verified: boolean | null
           join_code: string | null
           logo_url: string | null
+          marketplace_enabled: boolean | null
           name: string
           parent_organization_id: string | null
           platform_fee_percentage: number
@@ -1964,6 +1975,7 @@ export type Database = {
           stripe_payouts_enabled: boolean
           temp_password_hint: string | null
           type: Database["public"]["Enums"]["organization_type"]
+          website_url: string | null
           zip: string | null
         }
         Insert: {
@@ -1978,8 +1990,10 @@ export type Database = {
           government_regions?: Json | null
           hours_of_operation?: Json | null
           id?: string
+          is_verified?: boolean | null
           join_code?: string | null
           logo_url?: string | null
+          marketplace_enabled?: boolean | null
           name: string
           parent_organization_id?: string | null
           platform_fee_percentage?: number
@@ -1993,6 +2007,7 @@ export type Database = {
           stripe_payouts_enabled?: boolean
           temp_password_hint?: string | null
           type: Database["public"]["Enums"]["organization_type"]
+          website_url?: string | null
           zip?: string | null
         }
         Update: {
@@ -2007,8 +2022,10 @@ export type Database = {
           government_regions?: Json | null
           hours_of_operation?: Json | null
           id?: string
+          is_verified?: boolean | null
           join_code?: string | null
           logo_url?: string | null
+          marketplace_enabled?: boolean | null
           name?: string
           parent_organization_id?: string | null
           platform_fee_percentage?: number
@@ -2022,6 +2039,7 @@ export type Database = {
           stripe_payouts_enabled?: boolean
           temp_password_hint?: string | null
           type?: Database["public"]["Enums"]["organization_type"]
+          website_url?: string | null
           zip?: string | null
         }
         Relationships: [
