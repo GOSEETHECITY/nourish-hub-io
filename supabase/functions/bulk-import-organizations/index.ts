@@ -99,13 +99,16 @@ Deno.serve(async (req) => {
           }
         }
 
+        const zip = r.zip_code != null && String(r.zip_code).trim() !== ""
+          ? String(r.zip_code).padStart(5, "0").slice(0, 5) : null;
+
         if (isNonprofit) {
           const { data: np, error: npErr } = await admin.from("nonprofits").insert({
             organization_name: orgName,
-            street: r.address || null,
+            address: r.address || null,
             city: r.city || null,
             state: r.state || null,
-            zip_code: r.zip_code != null ? String(r.zip_code).padStart(5, "0").slice(0, 5) : null,
+            zip,
             ein: r.ein || null,
             join_code: joinCode,
             approval_status: "approved",
@@ -125,11 +128,11 @@ Deno.serve(async (req) => {
         } else {
           const { data: org, error: orgErr } = await admin.from("organizations").insert({
             name: orgName,
-            organization_type: orgType,
+            type: orgType,
             address: r.address || null,
             city: r.city || null,
             state: r.state || null,
-            zip_code: r.zip_code != null ? String(r.zip_code).padStart(5, "0").slice(0, 5) : null,
+            zip,
             join_code: joinCode,
             approval_status: "approved",
             parent_organization_id: parentId,
@@ -138,7 +141,7 @@ Deno.serve(async (req) => {
             primary_contact_phone: r.contact_phone || null,
             temp_password_hint: email ? password : null,
           }).select("id").single();
-          if (orgErr) throw new Error(orgErr.message);
+          if (orgErr) throw new Error(`${orgErr.message} (valid types: restaurant, cafe, catering_company, event, hotel, convention_center, stadium, arena, farm, grocery_store, food_truck, airport, festival, resort, food_beverage_group, hospitality_group, venue_events_group, farm_grocery_group, franchise, municipal_government, county_government, state_government, government_entity, nonprofit_organization)`);
 
           if (userId) {
             await admin.from("profiles").upsert({ id: userId, email: email!, organization_id: org.id, first_name: (r.contact_name || "").split(" ")[0] || "", last_name: (r.contact_name || "").split(" ").slice(1).join(" ") || "", phone: r.contact_phone || null });
