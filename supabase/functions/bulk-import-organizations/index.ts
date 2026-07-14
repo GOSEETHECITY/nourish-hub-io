@@ -45,6 +45,45 @@ const toBool = (v: unknown): boolean | null => {
   return null;
 };
 
+function parseCSV(text: string): Row[] {
+  const lines: string[] = [];
+  { // split preserving quoted newlines
+    let cur = "", inQ = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (c === '"') { if (inQ && text[i + 1] === '"') { cur += '"'; i++; } else inQ = !inQ; cur += c; }
+      else if ((c === "\n" || c === "\r") && !inQ) {
+        if (c === "\r" && text[i + 1] === "\n") i++;
+        if (cur.trim().length) lines.push(cur);
+        cur = "";
+      } else cur += c;
+    }
+    if (cur.trim().length) lines.push(cur);
+  }
+  if (!lines.length) return [];
+  const parseLine = (line: string): string[] => {
+    const out: string[] = [];
+    let cur = "", inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') {
+        if (inQ && line[i + 1] === '"') { cur += '"'; i++; }
+        else inQ = !inQ;
+      } else if (c === "," && !inQ) { out.push(cur); cur = ""; }
+      else cur += c;
+    }
+    out.push(cur);
+    return out.map((s) => s.trim());
+  };
+  const headers = parseLine(lines[0]).map((h) => h.toLowerCase().replace(/^\ufeff/, "").replace(/\s+/g, "_"));
+  return lines.slice(1).map((line) => {
+    const cells = parseLine(line);
+    const row: any = {};
+    headers.forEach((h, i) => (row[h] = cells[i] ?? ""));
+    return row as Row;
+  });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
