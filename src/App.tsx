@@ -27,6 +27,11 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import Dashboard from "./pages/Index";
 import Organizations from "./pages/Organizations";
 import LeadsInbox from "./pages/admin/LeadsInbox";
+import BulkImportOrganizations from "./pages/admin/BulkImportOrganizations";
+import SendInvites from "./pages/admin/SendInvites";
+import PendingApprovals from "./pages/admin/PendingApprovals";
+import AccountsList from "./pages/admin/AccountsList";
+import PartnerSignup from "./pages/marketing/PartnerSignup";
 import OrganizationDetail from "./pages/OrganizationDetail";
 import LocationDetail from "./pages/LocationDetail";
 import FoodListingsDonations from "./pages/FoodListingsDonations";
@@ -152,16 +157,19 @@ const ProtectedConsumerWrapper = ({ children }: { children: React.ReactNode }) =
   </ConsumerWrapper>
 );
 
-// When a visitor lands on the root of thegoapp.co, send them into the consumer
-// app at /app. On hariet.ai (or any other host, including the Lovable preview
-// and localhost) the marketing home renders normally. Also handles www. prefix.
-const APP_HOSTS = new Set(["thegoapp.co", "www.thegoapp.co", "goseethecity.com", "www.goseethecity.com"]);
+// When a visitor lands on the root of goseethecity.com, redirect them to
+// hariet.ai. Deep /app/* routes continue to work on goseethecity.com so the
+// consumer app is still reachable at goseethecity.com/app/login.
+const GOSEE_HOSTS = new Set(["goseethecity.com", "www.goseethecity.com", "thegoapp.co", "www.thegoapp.co"]);
 
 const RootDomainRouter = () => {
   const { pathname } = useLocation();
   const hostname = typeof window !== "undefined" ? window.location.hostname : "";
-  if (APP_HOSTS.has(hostname) && pathname === "/") {
-    return <Navigate to="/app" replace />;
+  if (GOSEE_HOSTS.has(hostname) && pathname === "/") {
+    if (typeof window !== "undefined") {
+      window.location.replace("https://hariet.ai");
+    }
+    return null;
   }
   return <MarketingHome />;
 };
@@ -192,6 +200,7 @@ const App = () => (
             <Route path="/get-started/:eventSlug" element={<EventGetStarted />} />
             <Route path="/partners/business/signup" element={<BusinessSignup />} />
             <Route path="/partners/nonprofit/signup" element={<NonprofitSignup />} />
+            <Route path="/partner-signup" element={<PartnerSignup />} />
 
             {/* Public auth routes */}
             <Route path="/login" element={<Login />} />
@@ -213,6 +222,10 @@ const App = () => (
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/organizations" element={<Organizations />} />
               <Route path="/admin/leads" element={<LeadsInbox />} />
+              <Route path="/admin/organizations-bulk-import" element={<BulkImportOrganizations />} />
+              <Route path="/admin/send-invites" element={<SendInvites />} />
+              <Route path="/admin/organizations-pending" element={<PendingApprovals />} />
+              <Route path="/admin/accounts" element={<AccountsList />} />
               <Route path="/organizations/:id" element={<OrganizationDetail />} />
               <Route path="/organizations/:id/locations/:locationId" element={<LocationDetail />} />
               <Route path="/food-listings/donations" element={<FoodListingsDonations />} />
