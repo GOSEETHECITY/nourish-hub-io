@@ -45,6 +45,45 @@ const toBool = (v: unknown): boolean | null => {
   return null;
 };
 
+function parseCSV(text: string): Row[] {
+  const lines: string[] = [];
+  { // split preserving quoted newlines
+    let cur = "", inQ = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (c === '"') { if (inQ && text[i + 1] === '"') { cur += '"'; i++; } else inQ = !inQ; cur += c; }
+      else if ((c === "\n" || c === "\r") && !inQ) {
+        if (c === "\r" && text[i + 1] === "\n") i++;
+        if (cur.trim().length) lines.push(cur);
+        cur = "";
+      } else cur += c;
+    }
+    if (cur.trim().length) lines.push(cur);
+  }
+  if (!lines.length) return [];
+  const parseLine = (line: string): string[] => {
+    const out: string[] = [];
+    let cur = "", inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') {
+        if (inQ && line[i + 1] === '"') { cur += '"'; i++; }
+        else inQ = !inQ;
+      } else if (c === "," && !inQ) { out.push(cur); cur = ""; }
+      else cur += c;
+    }
+    out.push(cur);
+    return out.map((s) => s.trim());
+  };
+  const headers = parseLine(lines[0]).map((h) => h.toLowerCase().replace(/^\ufeff/, "").replace(/\s+/g, "_"));
+  return lines.slice(1).map((line) => {
+    const cells = parseLine(line);
+    const row: any = {};
+    headers.forEach((h, i) => (row[h] = cells[i] ?? ""));
+    return row as Row;
+  });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
@@ -59,9 +98,22 @@ Deno.serve(async (req) => {
     const { data: isAdmin } = await admin.rpc("has_role", { _user_id: user.id, _role: "admin" });
     if (!isAdmin) return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-    const { rows } = await req.json() as { rows: Row[] };
+    // Accept either { rows: [...] } (legacy) or { csv_text: "..." } or multipart file upload.
+    let rows: Row[] = [];
+    const contentType = req.headers.get("content-type") || "";
+    let csvText: string | null = null;
+    if (contentType.includes("multipart/form-data")) {
+      const form = await req.formData();
+      const file = form.get("file");
+      if (file instanceof File) csvText = await file.text();
+    } else {
+      const body = await req.json().catch(() => ({} as any));
+      if (typeof body?.csv_text === "string") csvText = body.csv_text;
+      else if (Array.isArray(body?.rows)) rows = body.rows;
+    }
+    if (csvText) rows = parseCSV(csvText);
     if (!Array.isArray(rows) || rows.length === 0) {
-      return new Response(JSON.stringify({ error: "rows required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ error: "No rows found. Provide csv_text, a file upload, or rows[]." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const results: Array<{ row: number; organization_name: string; status: "created" | "failed"; id?: string; join_code?: string; reason?: string }> = [];
