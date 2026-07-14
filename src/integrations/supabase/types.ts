@@ -86,6 +86,24 @@ export type Database = {
         }
         Relationships: []
       }
+      app_config: {
+        Row: {
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
       articles: {
         Row: {
           author: string
@@ -2167,6 +2185,36 @@ export type Database = {
           },
         ]
       }
+      push_dispatch_log: {
+        Row: {
+          audience: string
+          created_at: string
+          id: string
+          request_id: number | null
+          target: string | null
+          title: string | null
+          trigger_name: string
+        }
+        Insert: {
+          audience: string
+          created_at?: string
+          id?: string
+          request_id?: number | null
+          target?: string | null
+          title?: string | null
+          trigger_name: string
+        }
+        Update: {
+          audience?: string
+          created_at?: string
+          id?: string
+          request_id?: number | null
+          target?: string | null
+          title?: string | null
+          trigger_name?: string
+        }
+        Relationships: []
+      }
       push_subscriptions: {
         Row: {
           auth: string
@@ -2897,6 +2945,10 @@ export type Database = {
       create_consumer_order: {
         Args: { p_coupon_id: string; p_quantity: number }
         Returns: string
+      }
+      dispatch_push: {
+        Args: { p_body: Json; p_trigger: string }
+        Returns: undefined
       }
       gen_pickup_code: { Args: never; Returns: string }
       gen_referral_code: { Args: never; Returns: string }
