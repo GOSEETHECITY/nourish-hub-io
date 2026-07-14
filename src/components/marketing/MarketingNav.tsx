@@ -11,6 +11,7 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { label: "Home", href: "/" },
+  { label: "GO See The City", href: "#go-see-the-city" },
   { label: "Solutions", href: "/solutions" },
   {
     label: "Partners",
@@ -143,6 +144,29 @@ export default function MarketingNav({ variant = "light" }: { variant?: "light" 
               );
             }
 
+            // Anchor link for on-page section scroll — orange pill for GO See The City
+            if (item.href?.startsWith("#")) {
+              const isGoSee = item.label === "GO See The City";
+              const handleAnchor = (e: React.MouseEvent) => {
+                e.preventDefault();
+                if (pathname !== "/") { window.location.href = "/" + item.href; return; }
+                document.querySelector(item.href!)?.scrollIntoView({ behavior: "smooth", block: "start" });
+              };
+              if (isGoSee) {
+                return (
+                  <a key={item.label} href={item.href} onClick={handleAnchor}
+                    className="text-sm font-bold px-3.5 py-1.5 rounded-full bg-[#F97316] text-white hover:bg-[#EA6C10] transition shadow-sm">
+                    {item.label}
+                  </a>
+                );
+              }
+              return (
+                <a key={item.label} href={item.href} onClick={handleAnchor}
+                  className={`text-sm font-bold transition ${isDark ? "text-white/80 hover:text-white" : "text-black hover:text-[#6d412a]"}`}>
+                  {item.label}
+                </a>
+              );
+            }
             return (
               <Link
                 key={item.href}

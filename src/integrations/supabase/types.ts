@@ -390,9 +390,11 @@ export type Database = {
           organization_id: string | null
           payment_method_last4: string | null
           picked_up_at: string | null
+          pickup_code: string | null
           pickup_window_end: string | null
           pickup_window_start: string | null
           quantity: number | null
+          ready_at: string | null
           refund_reason: string | null
           refunded_at: string | null
           status: string | null
@@ -413,9 +415,11 @@ export type Database = {
           organization_id?: string | null
           payment_method_last4?: string | null
           picked_up_at?: string | null
+          pickup_code?: string | null
           pickup_window_end?: string | null
           pickup_window_start?: string | null
           quantity?: number | null
+          ready_at?: string | null
           refund_reason?: string | null
           refunded_at?: string | null
           status?: string | null
@@ -436,9 +440,11 @@ export type Database = {
           organization_id?: string | null
           payment_method_last4?: string | null
           picked_up_at?: string | null
+          pickup_code?: string | null
           pickup_window_end?: string | null
           pickup_window_start?: string | null
           quantity?: number | null
+          ready_at?: string | null
           refund_reason?: string | null
           refunded_at?: string | null
           status?: string | null
@@ -1278,6 +1284,36 @@ export type Database = {
         }
         Relationships: []
       }
+      irs_pub78_orgs: {
+        Row: {
+          city: string | null
+          country: string | null
+          deductibility_status: string | null
+          ein: string
+          last_synced_at: string
+          organization_name: string | null
+          state: string | null
+        }
+        Insert: {
+          city?: string | null
+          country?: string | null
+          deductibility_status?: string | null
+          ein: string
+          last_synced_at?: string
+          organization_name?: string | null
+          state?: string | null
+        }
+        Update: {
+          city?: string | null
+          country?: string | null
+          deductibility_status?: string | null
+          ein?: string
+          last_synced_at?: string
+          organization_name?: string | null
+          state?: string | null
+        }
+        Relationships: []
+      }
       locations: {
         Row: {
           address: string | null
@@ -1478,6 +1514,7 @@ export type Database = {
           cold_storage: boolean | null
           county: string | null
           created_at: string
+          credentials_sent_at: string | null
           ein: string | null
           estimated_weekly_served: number | null
           food_types_accepted: Database["public"]["Enums"]["food_type"][] | null
@@ -1489,12 +1526,14 @@ export type Database = {
           population_served: string | null
           primary_contact: string | null
           primary_contact_email: string | null
+          primary_contact_name: string | null
           primary_contact_phone: string | null
           proof_of_insurance_url: string | null
           refrigeration: boolean | null
           signed_agreement_url: string | null
           social_handles: Json | null
           state: string | null
+          temp_password_hint: string | null
           user_id: string | null
           website: string | null
           zip: string | null
@@ -1507,6 +1546,7 @@ export type Database = {
           cold_storage?: boolean | null
           county?: string | null
           created_at?: string
+          credentials_sent_at?: string | null
           ein?: string | null
           estimated_weekly_served?: number | null
           food_types_accepted?:
@@ -1520,12 +1560,14 @@ export type Database = {
           population_served?: string | null
           primary_contact?: string | null
           primary_contact_email?: string | null
+          primary_contact_name?: string | null
           primary_contact_phone?: string | null
           proof_of_insurance_url?: string | null
           refrigeration?: boolean | null
           signed_agreement_url?: string | null
           social_handles?: Json | null
           state?: string | null
+          temp_password_hint?: string | null
           user_id?: string | null
           website?: string | null
           zip?: string | null
@@ -1538,6 +1580,7 @@ export type Database = {
           cold_storage?: boolean | null
           county?: string | null
           created_at?: string
+          credentials_sent_at?: string | null
           ein?: string | null
           estimated_weekly_served?: number | null
           food_types_accepted?:
@@ -1551,15 +1594,47 @@ export type Database = {
           population_served?: string | null
           primary_contact?: string | null
           primary_contact_email?: string | null
+          primary_contact_name?: string | null
           primary_contact_phone?: string | null
           proof_of_insurance_url?: string | null
           refrigeration?: boolean | null
           signed_agreement_url?: string | null
           social_handles?: Json | null
           state?: string | null
+          temp_password_hint?: string | null
           user_id?: string | null
           website?: string | null
           zip?: string | null
+        }
+        Relationships: []
+      }
+      notification_preferences: {
+        Row: {
+          category: string
+          created_at: string
+          email_enabled: boolean
+          id: string
+          sms_enabled: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          email_enabled?: boolean
+          id?: string
+          sms_enabled?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          email_enabled?: boolean
+          id?: string
+          sms_enabled?: boolean
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -1601,6 +1676,127 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      onboarding_submissions: {
+        Row: {
+          address: string | null
+          city: string | null
+          contact_email: string
+          contact_name: string
+          contact_phone: string | null
+          created_at: string
+          created_nonprofit_id: string | null
+          created_organization_id: string | null
+          ein: string | null
+          ein_verification_result: Json | null
+          ein_verified: boolean | null
+          id: string
+          organization_name: string
+          organization_type: string
+          parent_organization_id: string | null
+          parent_organization_name: string | null
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          state: string | null
+          status: string
+          updated_at: string
+          zip_code: string | null
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          contact_email: string
+          contact_name: string
+          contact_phone?: string | null
+          created_at?: string
+          created_nonprofit_id?: string | null
+          created_organization_id?: string | null
+          ein?: string | null
+          ein_verification_result?: Json | null
+          ein_verified?: boolean | null
+          id?: string
+          organization_name: string
+          organization_type: string
+          parent_organization_id?: string | null
+          parent_organization_name?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          state?: string | null
+          status?: string
+          updated_at?: string
+          zip_code?: string | null
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          contact_email?: string
+          contact_name?: string
+          contact_phone?: string | null
+          created_at?: string
+          created_nonprofit_id?: string | null
+          created_organization_id?: string | null
+          ein?: string | null
+          ein_verification_result?: Json | null
+          ein_verified?: boolean | null
+          id?: string
+          organization_name?: string
+          organization_type?: string
+          parent_organization_id?: string | null
+          parent_organization_name?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          state?: string | null
+          status?: string
+          updated_at?: string
+          zip_code?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_submissions_created_nonprofit_id_fkey"
+            columns: ["created_nonprofit_id"]
+            isOneToOne: false
+            referencedRelation: "nonprofits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_submissions_created_nonprofit_id_fkey"
+            columns: ["created_nonprofit_id"]
+            isOneToOne: false
+            referencedRelation: "nonprofits_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_submissions_created_organization_id_fkey"
+            columns: ["created_organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_submissions_created_organization_id_fkey"
+            columns: ["created_organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_submissions_parent_organization_id_fkey"
+            columns: ["parent_organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_submissions_parent_organization_id_fkey"
+            columns: ["parent_organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       organization_pricing: {
         Row: {
@@ -1731,6 +1927,7 @@ export type Database = {
           city: string | null
           county: string | null
           created_at: string
+          credentials_sent_at: string | null
           government_regions: Json | null
           hours_of_operation: Json | null
           id: string
@@ -1747,6 +1944,7 @@ export type Database = {
           stripe_charges_enabled: boolean
           stripe_details_submitted: boolean
           stripe_payouts_enabled: boolean
+          temp_password_hint: string | null
           type: Database["public"]["Enums"]["organization_type"]
           zip: string | null
         }
@@ -1758,6 +1956,7 @@ export type Database = {
           city?: string | null
           county?: string | null
           created_at?: string
+          credentials_sent_at?: string | null
           government_regions?: Json | null
           hours_of_operation?: Json | null
           id?: string
@@ -1774,6 +1973,7 @@ export type Database = {
           stripe_charges_enabled?: boolean
           stripe_details_submitted?: boolean
           stripe_payouts_enabled?: boolean
+          temp_password_hint?: string | null
           type: Database["public"]["Enums"]["organization_type"]
           zip?: string | null
         }
@@ -1785,6 +1985,7 @@ export type Database = {
           city?: string | null
           county?: string | null
           created_at?: string
+          credentials_sent_at?: string | null
           government_regions?: Json | null
           hours_of_operation?: Json | null
           id?: string
@@ -1801,6 +2002,7 @@ export type Database = {
           stripe_charges_enabled?: boolean
           stripe_details_submitted?: boolean
           stripe_payouts_enabled?: boolean
+          temp_password_hint?: string | null
           type?: Database["public"]["Enums"]["organization_type"]
           zip?: string | null
         }
@@ -2696,6 +2898,7 @@ export type Database = {
         Args: { p_coupon_id: string; p_quantity: number }
         Returns: string
       }
+      gen_pickup_code: { Args: never; Returns: string }
       gen_referral_code: { Args: never; Returns: string }
       get_impact_survey_by_token: {
         Args: { p_token: string }
@@ -2771,6 +2974,7 @@ export type Database = {
         Returns: Json
       }
       validate_join_code: { Args: { p_code: string }; Returns: Json }
+      verify_ein: { Args: { p_ein: string }; Returns: Json }
     }
     Enums: {
       admin_notification_type:

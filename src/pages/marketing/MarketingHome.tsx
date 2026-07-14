@@ -229,7 +229,7 @@ export default function MarketingHome() {
       </section>
 
       {/* ── GO SEE THE CITY CONSUMER APP ──────────── */}
-      <section className="py-24 bg-[#1a1a1a] text-white overflow-hidden">
+      <section id="go-see-the-city" className="py-24 bg-[#1a1a1a] text-white overflow-hidden scroll-mt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div>
