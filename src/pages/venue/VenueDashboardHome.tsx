@@ -42,9 +42,42 @@ export default function VenueDashboardHome() {
     enabled: !!venueCity,
   });
 
+  // Per-city marketplace status (for multi-city orgs)
+  const uniqueCities = Array.from(new Set(locations.map((l) => l.city).filter(Boolean))) as string[];
+  const { data: cityStatuses = [] } = useQuery({
+    queryKey: ["city-thresholds-all", uniqueCities.join(",")],
+    queryFn: async () => {
+      if (uniqueCities.length === 0) return [];
+      const { data } = await supabase.from("city_thresholds").select("city, marketplace_unlocked").in("city", uniqueCities);
+      return data || [];
+    },
+    enabled: uniqueCities.length > 1,
+  });
+
   const donations = listings.filter((l) => l.listing_type === "donation");
   const currentYear = new Date().getFullYear();
   const yearDonations = donations.filter((l) => {
+    const d = l.created_at ? new Date(l.created_at) : null;
+    return d && d.getFullYear() === currentYear;
+  });
+  const yearCount = yearDonations.length;
+  const yearPounds = yearDonations.reduce((s, l) => s + (l.pounds || 0), 0);
+  const yearValue = yearDonations.reduce((s, l) => s + (l.estimated_donation_value || 0), 0);
+  const yearCo2 = yearPounds * CO2_LBS_PER_LB_FOOD;
+  const locMap = Object.fromEntries(locations.map((l) => [l.id, l.name]));
+  const formatStatus = (s: string) => s.split("_").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
+
+  // Per-location rollup for multi-location orgs
+  const isMultiLocation = locations.length > 1;
+  const perLocation = isMultiLocation
+    ? locations.map((loc) => {
+        const locDonations = donations.filter((d) => d.location_id === loc.id);
+        const locYear = locDonations.filter((l) => l.created_at && new Date(l.created_at).getFullYear() === currentYear);
+        const pounds = locYear.reduce((s, l) => s + (l.pounds || 0), 0);
+        const value = locYear.reduce((s, l) => s + (l.estimated_donation_value || 0), 0);
+        return { id: loc.id, name: loc.name, city: loc.city, count: locYear.length, pounds, value, co2: pounds * CO2_LBS_PER_LB_FOOD };
+      })
+    : [];
     const d = l.created_at ? new Date(l.created_at) : null;
     return d && d.getFullYear() === currentYear;
   });
