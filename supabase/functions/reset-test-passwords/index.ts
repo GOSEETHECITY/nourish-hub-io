@@ -1,7 +1,7 @@
 // One-shot admin utility: reset the six standing test accounts to HarietTest2026!.
-// Auth: bearer must be an admin. Emits list of results.
+// Auth: either X-Internal-Secret matching PUSH_INTERNAL_SECRET, or an admin bearer JWT.
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-internal-secret" };
 
 const TEST_ACCOUNTS = [
   "hello@goseethecity.com",
@@ -20,18 +20,27 @@ const NEW_PASSWORD = "HarietTest2026!";
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
+    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const authHeader = req.headers.get("Authorization") ?? "";
-    if (!authHeader.startsWith("Bearer ")) {
+    const internal = req.headers.get("X-Internal-Secret") ?? "";
+    const INTERNAL = Deno.env.get("PUSH_INTERNAL_SECRET") ?? "";
+
+    let authorized = false;
+    if (internal && INTERNAL && internal === INTERNAL) {
+      authorized = true;
+    } else if (authHeader.startsWith("Bearer ")) {
+      const anon = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: userRes } = await anon.auth.getUser();
+      if (userRes?.user) {
+        const { data: isAdmin } = await admin.rpc("has_role", { _user_id: userRes.user.id, _role: "admin" });
+        authorized = Boolean(isAdmin);
+      }
+    }
+    if (!authorized) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-    const anon = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: userRes } = await anon.auth.getUser();
-    if (!userRes?.user) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    const { data: isAdmin } = await admin.rpc("has_role", { _user_id: userRes.user.id, _role: "admin" });
-    if (!isAdmin) return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     const results: Array<{ email: string; ok: boolean; error?: string }> = [];
     for (const email of TEST_ACCOUNTS) {
