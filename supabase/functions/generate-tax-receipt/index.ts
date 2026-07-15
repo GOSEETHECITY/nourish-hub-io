@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
       admin.from("nonprofits").select("id, organization_name, ein, address, city, state, zip_code, logo_url").eq("id", listing.nonprofit_claimed_id).maybeSingle(),
       admin.from("organizations").select("id, name, business_bio, logo_url").eq("id", listing.organization_id).maybeSingle(),
       admin.from("locations").select("name, address, city, state, zip_code").eq("id", listing.location_id).maybeSingle(),
-      admin.from("donation_line_items").select("description, quantity, unit_value, total_value").eq("food_listing_id", food_listing_id),
+      admin.from("donation_line_items").select("description, food_type, pounds, quantity, unit_value, total_value").eq("food_listing_id", food_listing_id),
     ]);
 
     // ---------- Build PDF (Hariet.AI palette: gold, bronze, dark) ----------
@@ -126,16 +126,20 @@ Deno.serve(async (req) => {
     if (lineItems && lineItems.length > 0) {
       section("Itemized breakdown");
       page.drawText("Description", { x: 40, y, size: 9, font: bold, color: muted });
-      page.drawText("Qty", { x: 340, y, size: 9, font: bold, color: muted });
-      page.drawText("Unit $", { x: 400, y, size: 9, font: bold, color: muted });
-      page.drawText("Total $", { x: 480, y, size: 9, font: bold, color: muted });
+      page.drawText("Food type", { x: 220, y, size: 9, font: bold, color: muted });
+      page.drawText("Lbs", { x: 330, y, size: 9, font: bold, color: muted });
+      page.drawText("Qty", { x: 380, y, size: 9, font: bold, color: muted });
+      page.drawText("Unit $", { x: 425, y, size: 9, font: bold, color: muted });
+      page.drawText("Total $", { x: 490, y, size: 9, font: bold, color: muted });
       y -= 14;
-      for (const li of lineItems) {
+      for (const li of lineItems as any[]) {
         if (y < 160) break;
-        page.drawText(String(li.description || "").slice(0, 55), { x: 40, y, size: 10, font, color: dark });
-        page.drawText(String(li.quantity), { x: 340, y, size: 10, font, color: dark });
-        page.drawText(`$${Number(li.unit_value).toFixed(2)}`, { x: 400, y, size: 10, font, color: dark });
-        page.drawText(`$${Number(li.total_value).toFixed(2)}`, { x: 480, y, size: 10, font, color: dark });
+        page.drawText(String(li.description || "").slice(0, 28), { x: 40, y, size: 10, font, color: dark });
+        page.drawText(String(li.food_type || "—").replace(/_/g, " ").slice(0, 16), { x: 220, y, size: 10, font, color: dark });
+        page.drawText(li.pounds != null ? String(li.pounds) : "—", { x: 330, y, size: 10, font, color: dark });
+        page.drawText(String(li.quantity), { x: 380, y, size: 10, font, color: dark });
+        page.drawText(`$${Number(li.unit_value).toFixed(2)}`, { x: 425, y, size: 10, font, color: dark });
+        page.drawText(`$${Number(li.total_value).toFixed(2)}`, { x: 490, y, size: 10, font, color: dark });
         y -= 14;
       }
     }

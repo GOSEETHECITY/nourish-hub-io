@@ -26,8 +26,15 @@ const FOOD_TYPES: { value: FoodType; label: string }[] = [
   { value: "frozen", label: "Frozen" },
 ];
 
-type LineItem = { description: string; quantity: string; unit_value: string };
-const emptyLine = (): LineItem => ({ description: "", quantity: "1", unit_value: "" });
+const FLASH_ELIGIBLE_TYPES = new Set([
+  "food_beverage_group",
+  "restaurant_independent",
+  "restaurant_multi_location",
+  "franchise",
+]);
+
+type LineItem = { description: string; food_type: FoodType; pounds: string; quantity: string; unit_value: string };
+const emptyLine = (): LineItem => ({ description: "", food_type: "prepared_meals", pounds: "", quantity: "1", unit_value: "" });
 
 const emptyDonation = {
   food_type: "prepared_meals" as FoodType,
@@ -54,6 +61,18 @@ export default function VenueDonations() {
     const v = Number(li.unit_value) || 0;
     return sum + q * v;
   }, 0);
+  const lineItemsPounds = lineItems.reduce((s, li) => s + (Number(li.pounds) || 0), 0);
+
+  const { data: org } = useQuery({
+    queryKey: ["venue-org", profile?.organization_id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("organizations").select("type, marketplace_enabled").eq("id", profile!.organization_id!).maybeSingle();
+      if (error) throw error;
+      return data as { type: string; marketplace_enabled: boolean } | null;
+    },
+    enabled: !!profile?.organization_id,
+  });
+  const canFlash = !!(org?.marketplace_enabled && FLASH_ELIGIBLE_TYPES.has(org.type));
 
   const { data: locations = [] } = useQuery({
     queryKey: ["venue-locations", profile?.organization_id],
@@ -120,13 +139,30 @@ export default function VenueDonations() {
       // If itemized, validate at least one non-empty line with a value.
       let validItems: LineItem[] = [];
       if (itemized) {
-        validItems = lineItems.filter((li) => li.description.trim() && Number(li.quantity) > 0 && Number(li.unit_value) >= 0);
-        if (validItems.length === 0) throw new Error("Add at least one itemized line with a description and quantity");
+        validItems = lineItems.filter((li) =>
+          li.description.trim() &&
+          Number(li.quantity) > 0 &&
+          Number(li.unit_value) >= 0 &&
+          Number(li.pounds) >= 0
+        );
+        if (validItems.length === 0) throw new Error("Add at least one itemized line with a description, weight, and quantity");
       }
 
       const initialValue = itemized
         ? validItems.reduce((s, li) => s + Number(li.quantity) * Number(li.unit_value), 0)
         : (form.estimated_donation_value ? Number(form.estimated_donation_value) : null);
+
+      // In itemized mode: sum pounds from line items, and if items span multiple food types the listing is "mixed".
+      let finalPounds: number | null;
+      let finalFoodType: FoodType;
+      if (itemized) {
+        finalPounds = validItems.reduce((s, li) => s + (Number(li.pounds) || 0), 0);
+        const uniqueTypes = Array.from(new Set(validItems.map((li) => li.food_type)));
+        finalFoodType = uniqueTypes.length > 1 ? ("mixed" as FoodType) : uniqueTypes[0];
+      } else {
+        finalPounds = form.pounds ? Number(form.pounds) : null;
+        finalFoodType = form.food_type;
+      }
 
       const flashPriceCents = isFlash && !form.is_free_to_public && form.flash_price
         ? Math.round(Number(form.flash_price) * 100)
@@ -134,8 +170,8 @@ export default function VenueDonations() {
 
       const { data: inserted, error } = await supabase.from("food_listings").insert({
         location_id: locId, organization_id: profile.organization_id,
-        listing_type: "donation" as const, food_type: form.food_type,
-        pounds: form.pounds ? Number(form.pounds) : null,
+        listing_type: "donation" as const, food_type: finalFoodType,
+        pounds: finalPounds,
         estimated_donation_value: initialValue,
         pickup_address: form.pickup_address || loc?.pickup_address || null,
         pickup_window_start: form.pickup_window_start || null,
@@ -151,6 +187,8 @@ export default function VenueDonations() {
         const rows = validItems.map((li) => ({
           food_listing_id: inserted.id,
           description: li.description.trim(),
+          food_type: li.food_type,
+          pounds: Number(li.pounds) || 0,
           quantity: Number(li.quantity),
           unit_value: Number(li.unit_value),
         }));
@@ -268,35 +306,37 @@ export default function VenueDonations() {
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{isFlash ? "Post Flash Rescue" : "Post a Donation"}</DialogTitle></DialogHeader>
           <div className="space-y-4 pt-4">
-            <div className="rounded-lg border p-3 bg-muted/30">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-sm">Flash rescue (consumer pickup)</Label>
-                  <p className="text-xs text-muted-foreground">Open to nearby consumers, first-come first-served, no nonprofit needed.</p>
-                </div>
-                <Switch checked={isFlash} onCheckedChange={setIsFlash} />
-              </div>
-              {isFlash && (
-                <div className="mt-3 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm">Free to public</Label>
-                    <Switch
-                      checked={form.is_free_to_public}
-                      onCheckedChange={(v) => setForm({ ...form, is_free_to_public: v })}
-                    />
+            {canFlash && (
+              <div className="rounded-lg border p-3 bg-muted/30">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm">Flash rescue (consumer pickup)</Label>
+                    <p className="text-xs text-muted-foreground">Open to nearby consumers, first-come first-served, no nonprofit needed.</p>
                   </div>
-                  {!form.is_free_to_public && (
-                    <div>
-                      <Label>Consumer price ($) *</Label>
-                      <Input type="number" min="0" step="0.01" value={form.flash_price}
-                        onChange={(e) => setForm({ ...form, flash_price: e.target.value })}
-                        placeholder="e.g. 4.99" />
-                      <p className="text-xs text-muted-foreground mt-1">Platform keeps 10%. Pickup window above is the flash window.</p>
-                    </div>
-                  )}
+                  <Switch checked={isFlash} onCheckedChange={setIsFlash} />
                 </div>
-              )}
-            </div>
+                {isFlash && (
+                  <div className="mt-3 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm">Free to public</Label>
+                      <Switch
+                        checked={form.is_free_to_public}
+                        onCheckedChange={(v) => setForm({ ...form, is_free_to_public: v })}
+                      />
+                    </div>
+                    {!form.is_free_to_public && (
+                      <div>
+                        <Label>Consumer price ($) *</Label>
+                        <Input type="number" min="0" step="0.01" value={form.flash_price}
+                          onChange={(e) => setForm({ ...form, flash_price: e.target.value })}
+                          placeholder="e.g. 4.99" />
+                        <p className="text-xs text-muted-foreground mt-1">Platform keeps 10%. Pickup window above is the flash window.</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             {locations.length > 1 && (
               <div>
@@ -307,14 +347,23 @@ export default function VenueDonations() {
                 </Select>
               </div>
             )}
+            {!itemized && (
+              <div>
+                <Label>Food Type *</Label>
+                <Select value={form.food_type} onValueChange={(v) => setForm({ ...form, food_type: v as FoodType })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{FOOD_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            )}
             <div>
-              <Label>Food Type *</Label>
-              <Select value={form.food_type} onValueChange={(v) => setForm({ ...form, food_type: v as FoodType })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{FOOD_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
-              </Select>
+              <Label>{itemized ? "Total Weight (lbs)" : "Estimated Pounds *"}</Label>
+              {itemized ? (
+                <Input type="number" value={lineItemsPounds || ""} readOnly className="bg-muted/40" placeholder="Auto-calculated from items" />
+              ) : (
+                <Input type="number" value={form.pounds} onChange={(e) => setForm({ ...form, pounds: e.target.value })} placeholder="e.g. 50" />
+              )}
             </div>
-            <div><Label>Estimated Pounds *</Label><Input type="number" value={form.pounds} onChange={(e) => setForm({ ...form, pounds: e.target.value })} placeholder="e.g. 50" /></div>
             <div className="grid grid-cols-2 gap-4">
               <div><Label>Pickup Start *</Label><Input type="datetime-local" value={form.pickup_window_start} onChange={(e) => setForm({ ...form, pickup_window_start: e.target.value })} /></div>
               <div><Label>Pickup End *</Label><Input type="datetime-local" value={form.pickup_window_end} onChange={(e) => setForm({ ...form, pickup_window_end: e.target.value })} /></div>
@@ -322,8 +371,8 @@ export default function VenueDonations() {
             <div className="rounded-lg border p-3 space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <Label className="text-sm">Itemize value</Label>
-                  <p className="text-xs text-muted-foreground">Track each item separately for tax receipts.</p>
+                  <Label className="text-sm">Itemize donation</Label>
+                  <p className="text-xs text-muted-foreground">Track each item's food type, weight, and value separately.</p>
                 </div>
                 <Switch checked={itemized} onCheckedChange={setItemized} />
               </div>
@@ -333,36 +382,53 @@ export default function VenueDonations() {
                   <Input type="number" step="0.01" min="0" value={form.estimated_donation_value} onChange={(e) => setForm({ ...form, estimated_donation_value: e.target.value })} />
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {lineItems.map((li, idx) => (
-                    <div key={idx} className="grid grid-cols-[1fr_70px_90px_auto] gap-2 items-end">
-                      <div>
-                        {idx === 0 && <Label className="text-xs">Description</Label>}
-                        <Input placeholder="e.g. Turkey sandwich" value={li.description}
+                    <div key={idx} className="grid grid-cols-12 gap-2 items-end pb-2 border-b last:border-b-0">
+                      <div className="col-span-12">
+                        <Label className="text-xs">Description</Label>
+                        <Input placeholder="e.g. Turkey sandwich trays" value={li.description}
                           onChange={(e) => setLineItems(lineItems.map((x, i) => i === idx ? { ...x, description: e.target.value } : x))} />
                       </div>
-                      <div>
-                        {idx === 0 && <Label className="text-xs">Qty</Label>}
+                      <div className="col-span-5">
+                        <Label className="text-xs">Food type</Label>
+                        <Select value={li.food_type} onValueChange={(v) => setLineItems(lineItems.map((x, i) => i === idx ? { ...x, food_type: v as FoodType } : x))}>
+                          <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                          <SelectContent>{FOOD_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
+                      <div className="col-span-3">
+                        <Label className="text-xs">Weight (lbs)</Label>
+                        <Input type="number" min="0" step="0.01" value={li.pounds}
+                          onChange={(e) => setLineItems(lineItems.map((x, i) => i === idx ? { ...x, pounds: e.target.value } : x))} />
+                      </div>
+                      <div className="col-span-1">
+                        <Label className="text-xs">Qty</Label>
                         <Input type="number" min="0" step="1" value={li.quantity}
                           onChange={(e) => setLineItems(lineItems.map((x, i) => i === idx ? { ...x, quantity: e.target.value } : x))} />
                       </div>
-                      <div>
-                        {idx === 0 && <Label className="text-xs">Unit $</Label>}
+                      <div className="col-span-2">
+                        <Label className="text-xs">Unit $</Label>
                         <Input type="number" min="0" step="0.01" value={li.unit_value}
                           onChange={(e) => setLineItems(lineItems.map((x, i) => i === idx ? { ...x, unit_value: e.target.value } : x))} />
                       </div>
-                      <Button type="button" variant="ghost" size="icon"
-                        onClick={() => setLineItems(lineItems.length === 1 ? [emptyLine()] : lineItems.filter((_, i) => i !== idx))}
-                        aria-label="Remove line">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      <div className="col-span-1 flex justify-end">
+                        <Button type="button" variant="ghost" size="icon"
+                          onClick={() => setLineItems(lineItems.length === 1 ? [emptyLine()] : lineItems.filter((_, i) => i !== idx))}
+                          aria-label="Remove line">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                   <div className="flex items-center justify-between pt-1">
                     <Button type="button" variant="outline" size="sm" onClick={() => setLineItems([...lineItems, emptyLine()])}>
                       <Plus className="w-3.5 h-3.5 mr-1" /> Add item
                     </Button>
-                    <div className="text-sm font-semibold">Total: ${lineItemsTotal.toFixed(2)}</div>
+                    <div className="text-sm font-semibold">
+                      <span className="text-muted-foreground font-normal mr-3">Total: {lineItemsPounds || 0} lbs</span>
+                      ${lineItemsTotal.toFixed(2)}
+                    </div>
                   </div>
                 </div>
               )}
@@ -370,7 +436,9 @@ export default function VenueDonations() {
             <div><Label>Pickup Address <span className="text-muted-foreground text-xs">(optional — defaults to location)</span></Label><Input value={form.pickup_address} onChange={(e) => setForm({ ...form, pickup_address: e.target.value })} /></div>
             <div><Label>Notes <span className="text-muted-foreground text-xs">(optional)</span></Label><Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
             <Button className="w-full" size="lg" onClick={() => createDonation.mutate()}
-              disabled={!form.food_type || !form.pounds || !form.pickup_window_start || !form.pickup_window_end
+              disabled={!form.pickup_window_start || !form.pickup_window_end
+                || (!itemized && (!form.food_type || !form.pounds))
+                || (itemized && lineItemsPounds <= 0)
                 || (isFlash && !form.is_free_to_public && !form.flash_price)
                 || createDonation.isPending}>
               {createDonation.isPending ? "Posting..." : (isFlash ? "Post Flash Rescue" : "Post Donation")}

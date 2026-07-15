@@ -668,7 +668,9 @@ export type Database = {
           created_at: string
           description: string
           food_listing_id: string
+          food_type: Database["public"]["Enums"]["food_type"] | null
           id: string
+          pounds: number | null
           quantity: number
           total_value: number | null
           unit_value: number
@@ -678,7 +680,9 @@ export type Database = {
           created_at?: string
           description: string
           food_listing_id: string
+          food_type?: Database["public"]["Enums"]["food_type"] | null
           id?: string
+          pounds?: number | null
           quantity?: number
           total_value?: number | null
           unit_value?: number
@@ -688,7 +692,9 @@ export type Database = {
           created_at?: string
           description?: string
           food_listing_id?: string
+          food_type?: Database["public"]["Enums"]["food_type"] | null
           id?: string
+          pounds?: number | null
           quantity?: number
           total_value?: number | null
           unit_value?: number
@@ -3082,6 +3088,7 @@ export type Database = {
         | "baked_goods"
         | "shelf_stable"
         | "frozen"
+        | "mixed"
       import_log_status: "success" | "skipped" | "pending_image_retry" | "error"
       invitation_code_status: "active" | "inactive"
       lead_status:
@@ -3290,6 +3297,7 @@ export const Constants = {
         "baked_goods",
         "shelf_stable",
         "frozen",
+        "mixed",
       ],
       import_log_status: ["success", "skipped", "pending_image_retry", "error"],
       invitation_code_status: ["active", "inactive"],

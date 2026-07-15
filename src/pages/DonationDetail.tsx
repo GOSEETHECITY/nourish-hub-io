@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import type { FoodListing, Organization, Location, Nonprofit, ImpactReport, ListingStatus, FoodType } from "@/types/database";
+import DonationLineItems from "@/components/donations/DonationLineItems";
 
 const STATUSES: ListingStatus[] = ["posted", "claimed", "picked_up", "pending_impact_report", "completed", "cancelled"];
 const FOOD_TYPES: FoodType[] = ["prepared_meals", "produce", "dairy", "meat_protein", "baked_goods", "shelf_stable", "frozen"];
@@ -109,6 +110,9 @@ export default function DonationDetail() {
           </Select>
         </div>
       </div>
+
+      <DonationLineItems listingId={listing.id} />
+
 
       {nonprofit && (
         <div className="bg-card rounded-xl border p-6">

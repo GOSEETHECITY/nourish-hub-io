@@ -12,7 +12,8 @@ import { toast } from "sonner";
 import type { FoodListing } from "@/types/database";
 import TaxReceiptDialog from "@/components/tax-receipts/TaxReceiptDialog";
 import { openReceiptPdf } from "@/lib/taxReceipts";
-import { FileText, Clock, AlertTriangle } from "lucide-react";
+import { FileText, Clock, AlertTriangle, List } from "lucide-react";
+import DonationLineItems from "@/components/donations/DonationLineItems";
 
 function ReceiptCountdown({ pickedUpAt }: { pickedUpAt: string | null | undefined }) {
   if (!pickedUpAt) return null;
@@ -47,6 +48,7 @@ export default function NonprofitClaimed() {
   const queryClient = useQueryClient();
   const [reportListing, setReportListing] = useState<FoodListing | null>(null);
   const [receiptListing, setReceiptListing] = useState<FoodListing | null>(null);
+  const [itemsListing, setItemsListing] = useState<FoodListing | null>(null);
   const [form, setForm] = useState({ meals_served: "", date_distributed: "", notes: "" });
 
   const { data: claimed = [] } = useQuery({
@@ -207,6 +209,9 @@ export default function NonprofitClaimed() {
                   <TableCell>{new Date(d.created_at).toLocaleDateString()}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex gap-2 justify-end flex-wrap">
+                      <Button size="sm" variant="ghost" onClick={() => setItemsListing(d)}>
+                        <List className="w-3.5 h-3.5 mr-1" /> Items
+                      </Button>
                       {isClaimed && (
                         <>
                           <Button
@@ -323,6 +328,23 @@ export default function NonprofitClaimed() {
         onOpenChange={(o) => !o && setReceiptListing(null)}
         listing={receiptListing}
       />
+
+      <Dialog open={!!itemsListing} onOpenChange={(o) => !o && setItemsListing(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Donation Details</DialogTitle>
+          </DialogHeader>
+          {itemsListing && (
+            <div className="space-y-3">
+              <div className="text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">{orgMap[itemsListing.organization_id] || "—"}</span> —{" "}
+                {itemsListing.food_type?.replace(/_/g, " ")} · {itemsListing.pounds || 0} lbs
+              </div>
+              <DonationLineItems listingId={itemsListing.id} />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
