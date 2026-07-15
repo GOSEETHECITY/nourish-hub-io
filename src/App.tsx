@@ -245,6 +245,7 @@ const App = () => (
               <Route path="/import-logs" element={<ImportLogs />} />
               <Route path="/support" element={<Support />} />
               <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/admin/profile" element={<SettingsPage />} />
             </Route>
 
             {/* Venue Partner routes */}
