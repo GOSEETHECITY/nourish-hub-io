@@ -74,6 +74,7 @@ export default function SettingsPage() {
       {/* Admin Profile */}
       <section className="bg-card rounded-xl border p-6 space-y-4">
         <h2 className="text-lg font-bold text-foreground">Admin Profile</h2>
+        {user && <AvatarUploader userId={user.id} currentPath={(profile as any)?.avatar_url ?? null} />}
         <div className="grid grid-cols-2 gap-4">
           <div><Label>First Name</Label><Input value={profileForm.first_name} onChange={(e) => setProfileForm({ ...profileForm, first_name: e.target.value })} /></div>
           <div><Label>Last Name</Label><Input value={profileForm.last_name} onChange={(e) => setProfileForm({ ...profileForm, last_name: e.target.value })} /></div>
