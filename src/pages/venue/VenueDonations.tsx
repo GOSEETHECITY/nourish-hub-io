@@ -26,8 +26,15 @@ const FOOD_TYPES: { value: FoodType; label: string }[] = [
   { value: "frozen", label: "Frozen" },
 ];
 
-type LineItem = { description: string; quantity: string; unit_value: string };
-const emptyLine = (): LineItem => ({ description: "", quantity: "1", unit_value: "" });
+const FLASH_ELIGIBLE_TYPES = new Set([
+  "food_beverage_group",
+  "restaurant_independent",
+  "restaurant_multi_location",
+  "franchise",
+]);
+
+type LineItem = { description: string; food_type: FoodType; pounds: string; quantity: string; unit_value: string };
+const emptyLine = (): LineItem => ({ description: "", food_type: "prepared_meals", pounds: "", quantity: "1", unit_value: "" });
 
 const emptyDonation = {
   food_type: "prepared_meals" as FoodType,
