@@ -201,7 +201,7 @@ export default function VenueSettings() {
 
   return (
     <div className="space-y-8 max-w-3xl">
-      <StripeConnectSection />
+      {(org as any)?.marketplace_enabled === true && <StripeConnectSection />}
       <div>
         <h1 className="text-2xl font-bold text-foreground">Settings</h1>
         <p className="text-sm text-muted-foreground mt-1">Organization profile and account settings</p>
