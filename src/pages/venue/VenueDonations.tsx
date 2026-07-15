@@ -184,7 +184,7 @@ export default function VenueDonations() {
         pickup_window_end: form.pickup_window_end || null,
         notes: form.notes || null,
         is_flash: isFlash === true,
-        is_free_to_public: isFlash ? form.is_free_to_public : null,
+        is_free_to_public: isFlash ? form.is_free_to_public : false,
         flash_price_cents: flashPriceCents,
         photo_urls: photoUrls.length ? photoUrls : null,
       } as any).select("id").single();
