@@ -94,6 +94,21 @@ export default function PartnerDashboardLayout({
 
   const showSwitcher = switcherItems && switcherItems.length > 1;
 
+  const { data: orgLogoUrl } = useQuery({
+    queryKey: ["header-org-logo", profile?.organization_id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("organizations")
+        .select("logo_url")
+        .eq("id", profile!.organization_id!)
+        .maybeSingle();
+      const path = (data as any)?.logo_url as string | null | undefined;
+      if (!path) return null;
+      return await getLogoSignedUrl(path);
+    },
+    enabled: !!profile?.organization_id,
+  });
+
   const sidebarContent = (
     <>
       <div className="p-6 pb-8 flex items-center justify-between">
