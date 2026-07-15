@@ -62,7 +62,8 @@ export default function VenueDashboardHome() {
       const { data } = await supabase.from("city_thresholds").select("city, marketplace_unlocked").in("city", uniqueCities);
       return data || [];
     },
-    enabled: uniqueCities.length > 1,
+    enabled: uniqueCities.length > 1 && marketplaceEnabled,
+
   });
 
   const donations = listings.filter((l) => l.listing_type === "donation");
