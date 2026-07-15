@@ -160,27 +160,23 @@ export default function VenueTaxReceipts() {
                 <TableHead>Date</TableHead>
                 <TableHead>Nonprofit</TableHead>
                 <TableHead>EIN</TableHead>
-                <TableHead>Food type</TableHead>
                 <TableHead className="text-right">Lbs</TableHead>
                 <TableHead className="text-right">FMV</TableHead>
-                <TableHead>Source</TableHead>
                 <TableHead className="text-right">Receipt</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-6">Loading…</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-6">Loading…</TableCell></TableRow>
               ) : filtered.length === 0 ? (
-                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-6">No receipts for this filter.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-6">No receipts for this filter.</TableCell></TableRow>
               ) : filtered.map((r) => (
                 <TableRow key={r.id}>
                   <TableCell>{r.food_listings?.created_at ? new Date(r.food_listings.created_at).toLocaleDateString() : "—"}</TableCell>
                   <TableCell>{r.nonprofits?.organization_name || "—"}</TableCell>
                   <TableCell className="font-mono text-xs">{r.nonprofits?.ein || "—"}</TableCell>
-                  <TableCell className="capitalize">{String(r.food_listings?.food_type || "").replace(/_/g, " ")}</TableCell>
                   <TableCell className="text-right">{Number(r.food_listings?.pounds || 0).toFixed(1)}</TableCell>
                   <TableCell className="text-right">${Number(r.food_listings?.estimated_donation_value || 0).toFixed(2)}</TableCell>
-                  <TableCell><Badge variant="secondary" className="capitalize">{r.receipt_type || "generated"}</Badge></TableCell>
                   <TableCell className="text-right">
                     <Button size="sm" variant="ghost" onClick={() => openReceiptPdf(r.pdf_path)}>
                       <FileText className="h-4 w-4 mr-1" /> View
@@ -188,6 +184,7 @@ export default function VenueTaxReceipts() {
                   </TableCell>
                 </TableRow>
               ))}
+
             </TableBody>
           </Table>
         </CardContent>
