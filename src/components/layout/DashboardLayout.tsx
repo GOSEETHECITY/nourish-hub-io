@@ -66,6 +66,11 @@ export default function DashboardLayout() {
     ? `${profile.first_name || ""} ${profile.last_name || ""}`.trim() || "User"
     : "User";
 
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  useEffect(() => {
+    getAvatarSignedUrl((profile as any)?.avatar_url).then(setAvatarUrl);
+  }, [(profile as any)?.avatar_url]);
+
   const toggleMenu = (path: string) => {
     setExpandedMenus((prev) =>
       prev.includes(path) ? prev.filter((p) => p !== path) : [...prev, path]
