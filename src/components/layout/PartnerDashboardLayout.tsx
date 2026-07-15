@@ -10,6 +10,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import logo from "@/assets/logo.png";
 import PartnerNotificationBell from "./PartnerNotificationBell";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getLogoSignedUrl } from "@/lib/orgProfile";
+
 
 function FranchiseNavItem({ role, organizationId, onClose }: { role: string | null; organizationId: string | null | undefined; onClose: () => void }) {
   const { data: hasChildren } = useQuery({
@@ -91,6 +93,21 @@ export default function PartnerDashboardLayout({
   const closeSidebar = () => { if (isMobile) setSidebarOpen(false); };
 
   const showSwitcher = switcherItems && switcherItems.length > 1;
+
+  const { data: orgLogoUrl } = useQuery({
+    queryKey: ["header-org-logo", profile?.organization_id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("organizations")
+        .select("logo_url")
+        .eq("id", profile!.organization_id!)
+        .maybeSingle();
+      const path = (data as any)?.logo_url as string | null | undefined;
+      if (!path) return null;
+      return await getLogoSignedUrl(path);
+    },
+    enabled: !!profile?.organization_id,
+  });
 
   const sidebarContent = (
     <>
@@ -193,7 +210,11 @@ export default function PartnerDashboardLayout({
           <div className="flex items-center gap-4 ml-auto">
             <PartnerNotificationBell />
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-accent text-accent-foreground flex items-center justify-center text-sm font-bold">{initials}</div>
+              {orgLogoUrl ? (
+                <img src={orgLogoUrl} alt={orgName || "Organization"} className="w-9 h-9 rounded-full object-cover bg-muted" />
+              ) : (
+                <div className="w-9 h-9 rounded-full bg-accent text-accent-foreground flex items-center justify-center text-sm font-bold">{initials}</div>
+              )}
               <div className="hidden md:block">
                 <p className="text-sm font-semibold text-foreground">{displayName}</p>
                 <p className="text-xs text-muted-foreground">{orgName || roleLabel}</p>
