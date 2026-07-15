@@ -164,8 +164,8 @@ export default function VenueDashboardHome() {
         </div>
       </div>
 
-      {/* Marketplace status */}
-      {venueCity && (
+      {/* Marketplace status — only for marketplace-enabled orgs */}
+      {marketplaceEnabled && venueCity && (
         <div className="bg-card rounded-xl border p-5 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <MapPin className="w-5 h-5 text-primary" />
@@ -182,6 +182,7 @@ export default function VenueDashboardHome() {
           </span>
         </div>
       )}
+
 
       {/* Recent Donations */}
       <div className="bg-card rounded-xl border">
