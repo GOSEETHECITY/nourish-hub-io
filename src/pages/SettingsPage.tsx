@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import PasswordInput from "@/components/ui/password-input";
+import AvatarUploader from "@/components/AvatarUploader";
 
 export default function SettingsPage() {
   const { profile, user } = useAuth();
