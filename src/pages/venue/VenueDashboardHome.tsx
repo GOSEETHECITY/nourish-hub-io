@@ -30,6 +30,16 @@ export default function VenueDashboardHome() {
     enabled: !!profile?.organization_id,
   });
 
+  const { data: org } = useQuery({
+    queryKey: ["venue-org-header", profile?.organization_id],
+    queryFn: async () => {
+      const { data } = await supabase.from("organizations").select("marketplace_enabled").eq("id", profile!.organization_id!).maybeSingle();
+      return data as { marketplace_enabled: boolean } | null;
+    },
+    enabled: !!profile?.organization_id,
+  });
+  const marketplaceEnabled = !!org?.marketplace_enabled;
+
   // Get the city from first location
   const venueCity = locations[0]?.city || null;
 
@@ -39,8 +49,9 @@ export default function VenueDashboardHome() {
       const { data } = await supabase.from("city_thresholds").select("*").ilike("city", venueCity!).maybeSingle();
       return data;
     },
-    enabled: !!venueCity,
+    enabled: !!venueCity && marketplaceEnabled,
   });
+
 
   // Per-city marketplace status (for multi-city orgs)
   const uniqueCities = Array.from(new Set(locations.map((l) => l.city).filter(Boolean))) as string[];
@@ -51,7 +62,8 @@ export default function VenueDashboardHome() {
       const { data } = await supabase.from("city_thresholds").select("city, marketplace_unlocked").in("city", uniqueCities);
       return data || [];
     },
-    enabled: uniqueCities.length > 1,
+    enabled: uniqueCities.length > 1 && marketplaceEnabled,
+
   });
 
   const donations = listings.filter((l) => l.listing_type === "donation");
@@ -102,7 +114,7 @@ export default function VenueDashboardHome() {
             <div><p className="text-xs text-muted-foreground">Pounds</p><p className="text-2xl font-bold">{yearPounds.toLocaleString()}</p></div>
             <div><p className="text-xs text-muted-foreground">CO₂ (lbs)</p><p className="text-2xl font-bold">{yearCo2.toLocaleString()}</p></div>
           </div>
-          {cityStatuses.length > 0 && (
+          {marketplaceEnabled && cityStatuses.length > 0 && (
             <div className="flex flex-wrap gap-2 pt-2 border-t">
               {cityStatuses.map((c: any) => (
                 <span key={c.city} className={`px-2.5 py-1 rounded-full text-xs font-semibold ${c.marketplace_unlocked ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>
@@ -111,6 +123,7 @@ export default function VenueDashboardHome() {
               ))}
             </div>
           )}
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-2">
             {perLocation.map((loc) => (
               <a key={loc.id} href={`/venue/locations`} className="block bg-card border rounded-lg p-3 hover:border-primary transition-colors">
@@ -151,8 +164,8 @@ export default function VenueDashboardHome() {
         </div>
       </div>
 
-      {/* Marketplace status */}
-      {venueCity && (
+      {/* Marketplace status — only for marketplace-enabled orgs */}
+      {marketplaceEnabled && venueCity && (
         <div className="bg-card rounded-xl border p-5 flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <MapPin className="w-5 h-5 text-primary" />
@@ -169,6 +182,7 @@ export default function VenueDashboardHome() {
           </span>
         </div>
       )}
+
 
       {/* Recent Donations */}
       <div className="bg-card rounded-xl border">

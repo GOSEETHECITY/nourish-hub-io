@@ -81,7 +81,8 @@ Deno.serve(async (req) => {
     // Dark header bar
     page.drawRectangle({ x: 0, y: 732, width: 612, height: 60, color: dark });
     page.drawText("Hariet.AI", { x: 40, y: 758, size: 22, font: bold, color: gold });
-    page.drawText("Tax Donation Receipt", { x: 40, y: 742, size: 10, font, color: rgb(1, 1, 1) });
+    page.drawText("Donation Summary", { x: 40, y: 742, size: 10, font, color: rgb(1, 1, 1) });
+
     // Gold accent line
     page.drawRectangle({ x: 0, y: 728, width: 612, height: 4, color: gold });
 
@@ -126,23 +127,20 @@ Deno.serve(async (req) => {
     if (lineItems && lineItems.length > 0) {
       section("Itemized breakdown");
       page.drawText("Description", { x: 40, y, size: 9, font: bold, color: muted });
-      page.drawText("Food type", { x: 220, y, size: 9, font: bold, color: muted });
-      page.drawText("Lbs", { x: 330, y, size: 9, font: bold, color: muted });
-      page.drawText("Qty", { x: 380, y, size: 9, font: bold, color: muted });
-      page.drawText("Unit $", { x: 425, y, size: 9, font: bold, color: muted });
-      page.drawText("Total $", { x: 490, y, size: 9, font: bold, color: muted });
+      page.drawText("Food type", { x: 240, y, size: 9, font: bold, color: muted });
+      page.drawText("Lbs", { x: 380, y, size: 9, font: bold, color: muted });
+      page.drawText("FMV", { x: 490, y, size: 9, font: bold, color: muted });
       y -= 14;
       for (const li of lineItems as any[]) {
         if (y < 160) break;
-        page.drawText(String(li.description || "").slice(0, 28), { x: 40, y, size: 10, font, color: dark });
-        page.drawText(String(li.food_type || "—").replace(/_/g, " ").slice(0, 16), { x: 220, y, size: 10, font, color: dark });
-        page.drawText(li.pounds != null ? String(li.pounds) : "—", { x: 330, y, size: 10, font, color: dark });
-        page.drawText(String(li.quantity), { x: 380, y, size: 10, font, color: dark });
-        page.drawText(`$${Number(li.unit_value).toFixed(2)}`, { x: 425, y, size: 10, font, color: dark });
-        page.drawText(`$${Number(li.total_value).toFixed(2)}`, { x: 490, y, size: 10, font, color: dark });
+        page.drawText(String(li.description || "").slice(0, 32), { x: 40, y, size: 10, font, color: dark });
+        page.drawText(String(li.food_type || "—").replace(/_/g, " ").slice(0, 18), { x: 240, y, size: 10, font, color: dark });
+        page.drawText(li.pounds != null ? String(li.pounds) : "—", { x: 380, y, size: 10, font, color: dark });
+        page.drawText(`$${Number(li.total_value ?? li.unit_value ?? 0).toFixed(2)}`, { x: 490, y, size: 10, font, color: dark });
         y -= 14;
       }
     }
+
 
     // IRS language + signature block
     y = Math.min(y, 200);
