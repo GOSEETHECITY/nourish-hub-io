@@ -4,11 +4,12 @@ import {
   Store, BarChart3, Users, CreditCard, Headphones, Settings, LogOut,
   Search, MapPin, ChevronDown, ChevronRight, Menu, X, FileText,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import logo from "@/assets/logo.png";
 import NotificationBell from "./NotificationBell";
+import { getAvatarSignedUrl } from "@/lib/avatars";
 
 const mainNav = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
