@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import PasswordInput from "@/components/ui/password-input";
+import AvatarUploader from "@/components/AvatarUploader";
 import type { Organization } from "@/types/database";
 
 export default function GovernmentSettings() {
