@@ -174,11 +174,15 @@ export default function DashboardLayout() {
           <div className="flex items-center gap-4 ml-auto">
             <NotificationBell />
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-accent text-accent-foreground flex items-center justify-center text-sm font-bold">{initials}</div>
-              <div className="hidden md:block">
-                <p className="text-sm font-semibold text-foreground">{displayName}</p>
-                <p className="text-xs text-muted-foreground">Admin</p>
-              </div>
+              <button onClick={() => navigate("/admin/profile")} className="flex items-center gap-3 rounded-full hover:bg-muted/60 p-1 pr-3 transition">
+                <div className="w-9 h-9 rounded-full bg-accent text-accent-foreground flex items-center justify-center text-sm font-bold overflow-hidden">
+                  {avatarUrl ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" /> : initials}
+                </div>
+                <div className="hidden md:block text-left">
+                  <p className="text-sm font-semibold text-foreground">{displayName}</p>
+                  <p className="text-xs text-muted-foreground">Admin</p>
+                </div>
+              </button>
             </div>
           </div>
         </header>
