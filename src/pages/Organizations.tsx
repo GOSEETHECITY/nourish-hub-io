@@ -269,7 +269,7 @@ export default function Organizations() {
             <SelectTrigger className="w-[200px]"><Filter className="w-3 h-3 mr-2" /><SelectValue placeholder="Type" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Types</SelectItem>
-              {ORG_CATEGORIES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+              {ORG_CATEGORIES.filter((t) => t.value !== "nonprofit_organization").map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
