@@ -81,7 +81,8 @@ Deno.serve(async (req) => {
     // Dark header bar
     page.drawRectangle({ x: 0, y: 732, width: 612, height: 60, color: dark });
     page.drawText("Hariet.AI", { x: 40, y: 758, size: 22, font: bold, color: gold });
-    page.drawText("Tax Donation Receipt", { x: 40, y: 742, size: 10, font, color: rgb(1, 1, 1) });
+    page.drawText("Donation Summary", { x: 40, y: 742, size: 10, font, color: rgb(1, 1, 1) });
+
     // Gold accent line
     page.drawRectangle({ x: 0, y: 728, width: 612, height: 4, color: gold });
 
