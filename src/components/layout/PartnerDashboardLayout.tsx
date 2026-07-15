@@ -10,6 +10,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import logo from "@/assets/logo.png";
 import PartnerNotificationBell from "./PartnerNotificationBell";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getLogoSignedUrl } from "@/lib/orgProfile";
+import { useEffect, useState as useStateReact } from "react";
 
 function FranchiseNavItem({ role, organizationId, onClose }: { role: string | null; organizationId: string | null | undefined; onClose: () => void }) {
   const { data: hasChildren } = useQuery({
