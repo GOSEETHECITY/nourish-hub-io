@@ -115,8 +115,9 @@ export default function VenueTaxReceipts() {
         </div>
         <Button onClick={downloadYearEnd} disabled={downloading || !orgId}>
           <Download className="h-4 w-4 mr-2" />
-          {downloading ? "Generating…" : `Year-End Letter (${year})`}
+          {downloading ? "Generating…" : `Year-End Summary (${year})`}
         </Button>
+
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
