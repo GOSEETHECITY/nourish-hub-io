@@ -61,6 +61,18 @@ export default function VenueDonations() {
     const v = Number(li.unit_value) || 0;
     return sum + q * v;
   }, 0);
+  const lineItemsPounds = lineItems.reduce((s, li) => s + (Number(li.pounds) || 0), 0);
+
+  const { data: org } = useQuery({
+    queryKey: ["venue-org", profile?.organization_id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("organizations").select("type, marketplace_enabled").eq("id", profile!.organization_id!).maybeSingle();
+      if (error) throw error;
+      return data as { type: string; marketplace_enabled: boolean } | null;
+    },
+    enabled: !!profile?.organization_id,
+  });
+  const canFlash = !!(org?.marketplace_enabled && FLASH_ELIGIBLE_TYPES.has(org.type));
 
   const { data: locations = [] } = useQuery({
     queryKey: ["venue-locations", profile?.organization_id],
