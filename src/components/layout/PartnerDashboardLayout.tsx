@@ -111,11 +111,8 @@ export default function PartnerDashboardLayout({
               </NavLink>
             );
           })}
-          {(role as string) === "franchise_partner" && (
-            <NavLink to="/franchise" onClick={closeSidebar} className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all ${isActive ? "bg-accent text-accent-foreground" : "text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/5"}`}>
-              <Building2 className="w-[18px] h-[18px]" />Franchise
-            </NavLink>
-          )}
+          <FranchiseNavItem role={role as string} organizationId={profile?.organization_id} onClose={closeSidebar} />
+
         </div>
 
         <div className="my-6 border-t border-primary-foreground/10" />
