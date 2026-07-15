@@ -114,7 +114,7 @@ export default function VenueDashboardHome() {
             <div><p className="text-xs text-muted-foreground">Pounds</p><p className="text-2xl font-bold">{yearPounds.toLocaleString()}</p></div>
             <div><p className="text-xs text-muted-foreground">CO₂ (lbs)</p><p className="text-2xl font-bold">{yearCo2.toLocaleString()}</p></div>
           </div>
-          {cityStatuses.length > 0 && (
+          {marketplaceEnabled && cityStatuses.length > 0 && (
             <div className="flex flex-wrap gap-2 pt-2 border-t">
               {cityStatuses.map((c: any) => (
                 <span key={c.city} className={`px-2.5 py-1 rounded-full text-xs font-semibold ${c.marketplace_unlocked ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>
@@ -123,6 +123,7 @@ export default function VenueDashboardHome() {
               ))}
             </div>
           )}
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-2">
             {perLocation.map((loc) => (
               <a key={loc.id} href={`/venue/locations`} className="block bg-card border rounded-lg p-3 hover:border-primary transition-colors">
