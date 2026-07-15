@@ -11,7 +11,7 @@ export default function DonationLineItems({ listingId }: { listingId: string }) 
     queryFn: async () => {
       const { data, error } = await supabase
         .from("donation_line_items")
-        .select("id, description, food_type, pounds, quantity, unit_value, total_value")
+        .select("id, description, food_type, pounds, unit_value, total_value")
         .eq("food_listing_id", listingId)
         .order("created_at", { ascending: true });
       if (error) throw error;
@@ -23,7 +23,7 @@ export default function DonationLineItems({ listingId }: { listingId: string }) 
   if (isLoading || items.length === 0) return null;
 
   const totalPounds = items.reduce((s, i: any) => s + Number(i.pounds || 0), 0);
-  const totalValue = items.reduce((s, i: any) => s + Number(i.total_value || 0), 0);
+  const totalValue = items.reduce((s, i: any) => s + Number(i.total_value || i.unit_value || 0), 0);
 
   return (
     <div className="bg-card rounded-xl border p-6">
@@ -34,9 +34,7 @@ export default function DonationLineItems({ listingId }: { listingId: string }) 
             <TableHead>Description</TableHead>
             <TableHead>Food Type</TableHead>
             <TableHead className="text-right">Weight (lbs)</TableHead>
-            <TableHead className="text-right">Qty</TableHead>
-            <TableHead className="text-right">Unit $</TableHead>
-            <TableHead className="text-right">Total $</TableHead>
+            <TableHead className="text-right">Value</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -45,16 +43,12 @@ export default function DonationLineItems({ listingId }: { listingId: string }) 
               <TableCell className="font-medium">{it.description}</TableCell>
               <TableCell>{formatFoodType(it.food_type)}</TableCell>
               <TableCell className="text-right">{it.pounds ?? "—"}</TableCell>
-              <TableCell className="text-right">{it.quantity}</TableCell>
-              <TableCell className="text-right">${Number(it.unit_value || 0).toFixed(2)}</TableCell>
-              <TableCell className="text-right">${Number(it.total_value || 0).toFixed(2)}</TableCell>
+              <TableCell className="text-right">${Number(it.total_value || it.unit_value || 0).toFixed(2)}</TableCell>
             </TableRow>
           ))}
           <TableRow className="font-semibold bg-muted/30">
             <TableCell colSpan={2}>Total</TableCell>
             <TableCell className="text-right">{totalPounds}</TableCell>
-            <TableCell />
-            <TableCell />
             <TableCell className="text-right">${totalValue.toFixed(2)}</TableCell>
           </TableRow>
         </TableBody>
@@ -62,3 +56,4 @@ export default function DonationLineItems({ listingId }: { listingId: string }) 
     </div>
   );
 }
+
