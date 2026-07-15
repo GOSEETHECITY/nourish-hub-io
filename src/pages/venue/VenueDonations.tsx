@@ -139,13 +139,30 @@ export default function VenueDonations() {
       // If itemized, validate at least one non-empty line with a value.
       let validItems: LineItem[] = [];
       if (itemized) {
-        validItems = lineItems.filter((li) => li.description.trim() && Number(li.quantity) > 0 && Number(li.unit_value) >= 0);
-        if (validItems.length === 0) throw new Error("Add at least one itemized line with a description and quantity");
+        validItems = lineItems.filter((li) =>
+          li.description.trim() &&
+          Number(li.quantity) > 0 &&
+          Number(li.unit_value) >= 0 &&
+          Number(li.pounds) >= 0
+        );
+        if (validItems.length === 0) throw new Error("Add at least one itemized line with a description, weight, and quantity");
       }
 
       const initialValue = itemized
         ? validItems.reduce((s, li) => s + Number(li.quantity) * Number(li.unit_value), 0)
         : (form.estimated_donation_value ? Number(form.estimated_donation_value) : null);
+
+      // In itemized mode: sum pounds from line items, and if items span multiple food types the listing is "mixed".
+      let finalPounds: number | null;
+      let finalFoodType: FoodType;
+      if (itemized) {
+        finalPounds = validItems.reduce((s, li) => s + (Number(li.pounds) || 0), 0);
+        const uniqueTypes = Array.from(new Set(validItems.map((li) => li.food_type)));
+        finalFoodType = uniqueTypes.length > 1 ? ("mixed" as FoodType) : uniqueTypes[0];
+      } else {
+        finalPounds = form.pounds ? Number(form.pounds) : null;
+        finalFoodType = form.food_type;
+      }
 
       const flashPriceCents = isFlash && !form.is_free_to_public && form.flash_price
         ? Math.round(Number(form.flash_price) * 100)
@@ -153,8 +170,8 @@ export default function VenueDonations() {
 
       const { data: inserted, error } = await supabase.from("food_listings").insert({
         location_id: locId, organization_id: profile.organization_id,
-        listing_type: "donation" as const, food_type: form.food_type,
-        pounds: form.pounds ? Number(form.pounds) : null,
+        listing_type: "donation" as const, food_type: finalFoodType,
+        pounds: finalPounds,
         estimated_donation_value: initialValue,
         pickup_address: form.pickup_address || loc?.pickup_address || null,
         pickup_window_start: form.pickup_window_start || null,
@@ -170,6 +187,8 @@ export default function VenueDonations() {
         const rows = validItems.map((li) => ({
           food_listing_id: inserted.id,
           description: li.description.trim(),
+          food_type: li.food_type,
+          pounds: Number(li.pounds) || 0,
           quantity: Number(li.quantity),
           unit_value: Number(li.unit_value),
         }));
