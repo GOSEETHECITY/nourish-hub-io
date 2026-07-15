@@ -30,6 +30,16 @@ export default function VenueDashboardHome() {
     enabled: !!profile?.organization_id,
   });
 
+  const { data: org } = useQuery({
+    queryKey: ["venue-org-header", profile?.organization_id],
+    queryFn: async () => {
+      const { data } = await supabase.from("organizations").select("marketplace_enabled").eq("id", profile!.organization_id!).maybeSingle();
+      return data as { marketplace_enabled: boolean } | null;
+    },
+    enabled: !!profile?.organization_id,
+  });
+  const marketplaceEnabled = !!org?.marketplace_enabled;
+
   // Get the city from first location
   const venueCity = locations[0]?.city || null;
 
@@ -39,8 +49,9 @@ export default function VenueDashboardHome() {
       const { data } = await supabase.from("city_thresholds").select("*").ilike("city", venueCity!).maybeSingle();
       return data;
     },
-    enabled: !!venueCity,
+    enabled: !!venueCity && marketplaceEnabled,
   });
+
 
   // Per-city marketplace status (for multi-city orgs)
   const uniqueCities = Array.from(new Set(locations.map((l) => l.city).filter(Boolean))) as string[];
