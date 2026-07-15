@@ -306,35 +306,37 @@ export default function VenueDonations() {
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader><DialogTitle>{isFlash ? "Post Flash Rescue" : "Post a Donation"}</DialogTitle></DialogHeader>
           <div className="space-y-4 pt-4">
-            <div className="rounded-lg border p-3 bg-muted/30">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-sm">Flash rescue (consumer pickup)</Label>
-                  <p className="text-xs text-muted-foreground">Open to nearby consumers, first-come first-served, no nonprofit needed.</p>
-                </div>
-                <Switch checked={isFlash} onCheckedChange={setIsFlash} />
-              </div>
-              {isFlash && (
-                <div className="mt-3 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-sm">Free to public</Label>
-                    <Switch
-                      checked={form.is_free_to_public}
-                      onCheckedChange={(v) => setForm({ ...form, is_free_to_public: v })}
-                    />
+            {canFlash && (
+              <div className="rounded-lg border p-3 bg-muted/30">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm">Flash rescue (consumer pickup)</Label>
+                    <p className="text-xs text-muted-foreground">Open to nearby consumers, first-come first-served, no nonprofit needed.</p>
                   </div>
-                  {!form.is_free_to_public && (
-                    <div>
-                      <Label>Consumer price ($) *</Label>
-                      <Input type="number" min="0" step="0.01" value={form.flash_price}
-                        onChange={(e) => setForm({ ...form, flash_price: e.target.value })}
-                        placeholder="e.g. 4.99" />
-                      <p className="text-xs text-muted-foreground mt-1">Platform keeps 10%. Pickup window above is the flash window.</p>
-                    </div>
-                  )}
+                  <Switch checked={isFlash} onCheckedChange={setIsFlash} />
                 </div>
-              )}
-            </div>
+                {isFlash && (
+                  <div className="mt-3 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm">Free to public</Label>
+                      <Switch
+                        checked={form.is_free_to_public}
+                        onCheckedChange={(v) => setForm({ ...form, is_free_to_public: v })}
+                      />
+                    </div>
+                    {!form.is_free_to_public && (
+                      <div>
+                        <Label>Consumer price ($) *</Label>
+                        <Input type="number" min="0" step="0.01" value={form.flash_price}
+                          onChange={(e) => setForm({ ...form, flash_price: e.target.value })}
+                          placeholder="e.g. 4.99" />
+                        <p className="text-xs text-muted-foreground mt-1">Platform keeps 10%. Pickup window above is the flash window.</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
             {locations.length > 1 && (
               <div>
@@ -345,14 +347,23 @@ export default function VenueDonations() {
                 </Select>
               </div>
             )}
+            {!itemized && (
+              <div>
+                <Label>Food Type *</Label>
+                <Select value={form.food_type} onValueChange={(v) => setForm({ ...form, food_type: v as FoodType })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>{FOOD_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+            )}
             <div>
-              <Label>Food Type *</Label>
-              <Select value={form.food_type} onValueChange={(v) => setForm({ ...form, food_type: v as FoodType })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>{FOOD_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
-              </Select>
+              <Label>{itemized ? "Total Weight (lbs)" : "Estimated Pounds *"}</Label>
+              {itemized ? (
+                <Input type="number" value={lineItemsPounds || ""} readOnly className="bg-muted/40" placeholder="Auto-calculated from items" />
+              ) : (
+                <Input type="number" value={form.pounds} onChange={(e) => setForm({ ...form, pounds: e.target.value })} placeholder="e.g. 50" />
+              )}
             </div>
-            <div><Label>Estimated Pounds *</Label><Input type="number" value={form.pounds} onChange={(e) => setForm({ ...form, pounds: e.target.value })} placeholder="e.g. 50" /></div>
             <div className="grid grid-cols-2 gap-4">
               <div><Label>Pickup Start *</Label><Input type="datetime-local" value={form.pickup_window_start} onChange={(e) => setForm({ ...form, pickup_window_start: e.target.value })} /></div>
               <div><Label>Pickup End *</Label><Input type="datetime-local" value={form.pickup_window_end} onChange={(e) => setForm({ ...form, pickup_window_end: e.target.value })} /></div>
@@ -360,8 +371,8 @@ export default function VenueDonations() {
             <div className="rounded-lg border p-3 space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <Label className="text-sm">Itemize value</Label>
-                  <p className="text-xs text-muted-foreground">Track each item separately for tax receipts.</p>
+                  <Label className="text-sm">Itemize donation</Label>
+                  <p className="text-xs text-muted-foreground">Track each item's food type, weight, and value separately.</p>
                 </div>
                 <Switch checked={itemized} onCheckedChange={setItemized} />
               </div>
@@ -371,36 +382,53 @@ export default function VenueDonations() {
                   <Input type="number" step="0.01" min="0" value={form.estimated_donation_value} onChange={(e) => setForm({ ...form, estimated_donation_value: e.target.value })} />
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {lineItems.map((li, idx) => (
-                    <div key={idx} className="grid grid-cols-[1fr_70px_90px_auto] gap-2 items-end">
-                      <div>
-                        {idx === 0 && <Label className="text-xs">Description</Label>}
-                        <Input placeholder="e.g. Turkey sandwich" value={li.description}
+                    <div key={idx} className="grid grid-cols-12 gap-2 items-end pb-2 border-b last:border-b-0">
+                      <div className="col-span-12">
+                        <Label className="text-xs">Description</Label>
+                        <Input placeholder="e.g. Turkey sandwich trays" value={li.description}
                           onChange={(e) => setLineItems(lineItems.map((x, i) => i === idx ? { ...x, description: e.target.value } : x))} />
                       </div>
-                      <div>
-                        {idx === 0 && <Label className="text-xs">Qty</Label>}
+                      <div className="col-span-5">
+                        <Label className="text-xs">Food type</Label>
+                        <Select value={li.food_type} onValueChange={(v) => setLineItems(lineItems.map((x, i) => i === idx ? { ...x, food_type: v as FoodType } : x))}>
+                          <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                          <SelectContent>{FOOD_TYPES.map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
+                      <div className="col-span-3">
+                        <Label className="text-xs">Weight (lbs)</Label>
+                        <Input type="number" min="0" step="0.01" value={li.pounds}
+                          onChange={(e) => setLineItems(lineItems.map((x, i) => i === idx ? { ...x, pounds: e.target.value } : x))} />
+                      </div>
+                      <div className="col-span-1">
+                        <Label className="text-xs">Qty</Label>
                         <Input type="number" min="0" step="1" value={li.quantity}
                           onChange={(e) => setLineItems(lineItems.map((x, i) => i === idx ? { ...x, quantity: e.target.value } : x))} />
                       </div>
-                      <div>
-                        {idx === 0 && <Label className="text-xs">Unit $</Label>}
+                      <div className="col-span-2">
+                        <Label className="text-xs">Unit $</Label>
                         <Input type="number" min="0" step="0.01" value={li.unit_value}
                           onChange={(e) => setLineItems(lineItems.map((x, i) => i === idx ? { ...x, unit_value: e.target.value } : x))} />
                       </div>
-                      <Button type="button" variant="ghost" size="icon"
-                        onClick={() => setLineItems(lineItems.length === 1 ? [emptyLine()] : lineItems.filter((_, i) => i !== idx))}
-                        aria-label="Remove line">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      <div className="col-span-1 flex justify-end">
+                        <Button type="button" variant="ghost" size="icon"
+                          onClick={() => setLineItems(lineItems.length === 1 ? [emptyLine()] : lineItems.filter((_, i) => i !== idx))}
+                          aria-label="Remove line">
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                   <div className="flex items-center justify-between pt-1">
                     <Button type="button" variant="outline" size="sm" onClick={() => setLineItems([...lineItems, emptyLine()])}>
                       <Plus className="w-3.5 h-3.5 mr-1" /> Add item
                     </Button>
-                    <div className="text-sm font-semibold">Total: ${lineItemsTotal.toFixed(2)}</div>
+                    <div className="text-sm font-semibold">
+                      <span className="text-muted-foreground font-normal mr-3">Total: {lineItemsPounds || 0} lbs</span>
+                      ${lineItemsTotal.toFixed(2)}
+                    </div>
                   </div>
                 </div>
               )}
