@@ -56,7 +56,8 @@ export type FoodType =
   | "meat_protein"
   | "baked_goods"
   | "shelf_stable"
-  | "frozen";
+  | "frozen"
+  | "mixed";
 
 export interface Profile {
   id: string;

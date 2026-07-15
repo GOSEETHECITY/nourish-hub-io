@@ -50,6 +50,15 @@ export default function OnboardingChecklist() {
     enabled: !!profile?.organization_id,
   });
 
+  const { data: org } = useQuery({
+    queryKey: ["onboard-org", profile?.organization_id],
+    queryFn: async () => {
+      const { data } = await supabase.from("organizations").select("marketplace_enabled").eq("id", profile!.organization_id!).maybeSingle();
+      return data;
+    },
+    enabled: !!profile?.organization_id,
+  });
+
   const { data: stripeLocations = [] } = useQuery({
     queryKey: ["onboard-stripe", profile?.organization_id],
     queryFn: async () => {
@@ -65,7 +74,9 @@ export default function OnboardingChecklist() {
     { id: "baseline", label: "Complete sustainability baseline", icon: Leaf, done: baselines.length > 0, route: "/venue/baseline" },
     { id: "location", label: "Add your first location", icon: MapPin, done: locations.length > 0, route: "/venue/locations" },
     { id: "donation", label: "Post your first donation", icon: Package, done: donations.length > 0, route: "/venue/donations" },
-    { id: "stripe", label: "Connect Stripe for marketplace", icon: CreditCard, done: stripeLocations.length > 0, route: "/venue/marketplace" },
+    ...(org?.marketplace_enabled
+      ? [{ id: "stripe", label: "Connect Stripe for marketplace", icon: CreditCard, done: stripeLocations.length > 0, route: "/venue/marketplace" } as ChecklistItem]
+      : []),
   ];
 
   const allDone = items.every((i) => i.done);
