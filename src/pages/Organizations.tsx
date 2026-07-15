@@ -270,9 +270,6 @@ export default function Organizations() {
             <SelectContent>
               <SelectItem value="all">All Types</SelectItem>
               {ORG_CATEGORIES.filter((t) => t.value !== "nonprofit_organization").map((t) => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
-              {["hospitality_group_alt","food_beverage_group_alt","venue_events_group_alt","stadium","arena","convention_center","resort","event","hotel","farm","grocery_store","school","festival","corporate_campus","restaurant_independent","restaurant_multi_location","franchise"]
-                .filter((v) => !ORG_CATEGORIES.some((c) => c.value === v))
-                .map((v) => <SelectItem key={v} value={v}>{v.split("_").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ")}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
