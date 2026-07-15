@@ -210,7 +210,11 @@ export default function PartnerDashboardLayout({
           <div className="flex items-center gap-4 ml-auto">
             <PartnerNotificationBell />
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-accent text-accent-foreground flex items-center justify-center text-sm font-bold">{initials}</div>
+              {orgLogoUrl ? (
+                <img src={orgLogoUrl} alt={orgName || "Organization"} className="w-9 h-9 rounded-full object-cover bg-muted" />
+              ) : (
+                <div className="w-9 h-9 rounded-full bg-accent text-accent-foreground flex items-center justify-center text-sm font-bold">{initials}</div>
+              )}
               <div className="hidden md:block">
                 <p className="text-sm font-semibold text-foreground">{displayName}</p>
                 <p className="text-xs text-muted-foreground">{orgName || roleLabel}</p>
