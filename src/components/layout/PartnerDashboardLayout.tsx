@@ -3,11 +3,34 @@ import {
   ChevronRight, Menu, X, LogOut, Search, Bell, Building2,
 } from "lucide-react";
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import logo from "@/assets/logo.png";
 import PartnerNotificationBell from "./PartnerNotificationBell";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+function FranchiseNavItem({ role, organizationId, onClose }: { role: string | null; organizationId: string | null | undefined; onClose: () => void }) {
+  const { data: hasChildren } = useQuery({
+    queryKey: ["franchise-children", organizationId],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("organizations")
+        .select("id", { count: "exact", head: true })
+        .eq("parent_organization_id", organizationId!);
+      return (count || 0) > 0;
+    },
+    enabled: !!organizationId && role === "venue_partner",
+  });
+  if (!hasChildren) return null;
+  return (
+    <NavLink to="/franchise" onClick={onClose} className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all ${isActive ? "bg-accent text-accent-foreground" : "text-primary-foreground/60 hover:text-primary-foreground hover:bg-primary-foreground/5"}`}>
+      <Building2 className="w-[18px] h-[18px]" />Franchise
+    </NavLink>
+  );
+}
+
 
 export interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
