@@ -13,6 +13,8 @@ const ConsumerEvents = () => {
   const navigate = useNavigate();
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
   const { city, state, ready } = useLocation();
 
@@ -28,6 +30,7 @@ const ConsumerEvents = () => {
   useEffect(() => {
     if (!ready) return;
     setLoading(true);
+    setError(false);
     const today = new Date().toISOString().split("T")[0];
     supabase
       .from("events")
@@ -36,11 +39,16 @@ const ConsumerEvents = () => {
       .eq("city", city)
       .gte("event_date", today)
       .order("event_date", { ascending: true })
-      .then(({ data }) => {
-        setEvents(data || []);
+      .then(({ data, error: err }) => {
+        if (err) {
+          setError(true);
+          setEvents([]);
+        } else {
+          setEvents(data || []);
+        }
         setLoading(false);
       });
-  }, [city, state, ready]);
+  }, [city, state, ready, reloadKey]);
 
   const handleShare = async (e: React.MouseEvent, ev: any) => {
     e.stopPropagation();
