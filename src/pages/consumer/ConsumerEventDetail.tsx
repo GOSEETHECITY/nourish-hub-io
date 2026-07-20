@@ -153,10 +153,27 @@ const ConsumerEventDetail = () => {
     a.click();
   };
 
+  if (loading)
+    return (
+      <ConsumerMobileLayout>
+        <div className="p-8 text-center text-gray-500">Loading...</div>
+      </ConsumerMobileLayout>
+    );
+
   if (!event)
     return (
       <ConsumerMobileLayout>
-        <div className="p-8 text-center">Loading...</div>
+        <div className="p-8 flex flex-col items-center justify-center gap-4 min-h-[60vh]">
+          <p className="text-center text-[#1B2A4A] font-semibold">
+            This event is no longer available
+          </p>
+          <button
+            onClick={() => navigate("/app/events")}
+            className="px-5 py-2.5 rounded-full bg-[#F97316] text-white font-semibold"
+          >
+            Back to Events
+          </button>
+        </div>
       </ConsumerMobileLayout>
     );
 
