@@ -28,18 +28,23 @@ const ConsumerEventDetail = () => {
   const navigate = useNavigate();
   const { user } = useConsumerAuth();
   const [event, setEvent] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [checkingIn, setCheckingIn] = useState(false);
   const [checkinMsg, setCheckinMsg] = useState<string | null>(null);
   const [alreadyCheckedIn, setAlreadyCheckedIn] = useState(false);
 
   useEffect(() => {
-    if (id)
-      supabase
-        .from("events")
-        .select("*")
-        .eq("id", id)
-        .maybeSingle()
-        .then(({ data }) => setEvent(data));
+    if (!id) { setLoading(false); return; }
+    setLoading(true);
+    supabase
+      .from("events")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle()
+      .then(({ data }) => {
+        setEvent(data);
+        setLoading(false);
+      });
   }, [id]);
 
   // Check if user already checked in today
@@ -148,10 +153,27 @@ const ConsumerEventDetail = () => {
     a.click();
   };
 
+  if (loading)
+    return (
+      <ConsumerMobileLayout>
+        <div className="p-8 text-center text-gray-500">Loading...</div>
+      </ConsumerMobileLayout>
+    );
+
   if (!event)
     return (
       <ConsumerMobileLayout>
-        <div className="p-8 text-center">Loading...</div>
+        <div className="p-8 flex flex-col items-center justify-center gap-4 min-h-[60vh]">
+          <p className="text-center text-[#1B2A4A] font-semibold">
+            This event is no longer available
+          </p>
+          <button
+            onClick={() => navigate("/app/events")}
+            className="px-5 py-2.5 rounded-full bg-[#F97316] text-white font-semibold"
+          >
+            Back to Events
+          </button>
+        </div>
       </ConsumerMobileLayout>
     );
 

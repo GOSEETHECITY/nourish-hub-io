@@ -13,6 +13,8 @@ const ConsumerEvents = () => {
   const navigate = useNavigate();
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
   const { city, state, ready } = useLocation();
 
@@ -28,6 +30,7 @@ const ConsumerEvents = () => {
   useEffect(() => {
     if (!ready) return;
     setLoading(true);
+    setError(false);
     const today = new Date().toISOString().split("T")[0];
     supabase
       .from("events")
@@ -36,11 +39,16 @@ const ConsumerEvents = () => {
       .eq("city", city)
       .gte("event_date", today)
       .order("event_date", { ascending: true })
-      .then(({ data }) => {
-        setEvents(data || []);
+      .then(({ data, error: err }) => {
+        if (err) {
+          setError(true);
+          setEvents([]);
+        } else {
+          setEvents(data || []);
+        }
         setLoading(false);
       });
-  }, [city, state, ready]);
+  }, [city, state, ready, reloadKey]);
 
   const handleShare = async (e: React.MouseEvent, ev: any) => {
     e.stopPropagation();
@@ -60,7 +68,33 @@ const ConsumerEvents = () => {
       <div className="px-4 pb-24">
         <h2 className="text-lg font-bold text-[#1B2A4A] my-3">Events in {city}</h2>
         <div className="flex flex-col gap-4">
-          {events.map((ev) => {
+          {loading && (
+            <>
+              {[0, 1, 2].map((i) => (
+                <div key={i} className="bg-white rounded-2xl shadow-md overflow-hidden animate-pulse">
+                  <div className="w-full h-40 bg-gray-200" />
+                  <div className="p-3 space-y-2">
+                    <div className="h-4 bg-gray-200 rounded w-2/3" />
+                    <div className="h-3 bg-gray-100 rounded w-1/2" />
+                    <div className="h-3 bg-gray-100 rounded w-1/3" />
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+          {!loading && error && (
+            <div className="text-center py-12">
+              <p className="text-gray-700 font-medium">Check your connection</p>
+              <p className="text-gray-400 text-sm mt-1">We couldn't load events right now.</p>
+              <button
+                onClick={() => setReloadKey((k) => k + 1)}
+                className="mt-4 px-5 py-2 rounded-full bg-[#F97316] text-white font-semibold text-sm"
+              >
+                Retry
+              </button>
+            </div>
+          )}
+          {!loading && !error && events.map((ev) => {
             const image = ev.image_url || ev.flyer_url;
             const distance =
               userCoords && ev.latitude != null && ev.longitude != null
@@ -130,7 +164,7 @@ const ConsumerEvents = () => {
               </button>
             );
           })}
-          {!loading && events.length === 0 && (
+          {!loading && !error && events.length === 0 && (
             <div className="text-center py-12">
               <p className="text-gray-500 font-medium">No events in {city} yet</p>
               <p className="text-gray-400 text-sm mt-1">Check back soon for grand openings and pop-ups near you.</p>

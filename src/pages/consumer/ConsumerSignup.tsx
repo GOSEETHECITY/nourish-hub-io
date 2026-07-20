@@ -88,10 +88,16 @@ const ConsumerSignup = () => {
     await refreshConsumer();
 
     // If the user was invited by a friend, record the referral and award the referrer's badge.
+    // Try both the optional friend referral code and the invite code itself — the invite code
+    // may be a friend's personal referral code, or a general campaign code (e.g. GOSEE2026)
+    // in which case apply_referral finds no matching referrer and no-ops.
     const referralCode = sessionStorage.getItem("referral_code");
     if (referralCode) {
       try { await supabase.rpc("apply_referral" as any, { p_code: referralCode }); } catch (_) {}
       sessionStorage.removeItem("referral_code");
+    }
+    if (inviteCode) {
+      try { await supabase.rpc("apply_referral" as any, { p_code: inviteCode }); } catch (_) {}
     }
 
     sessionStorage.removeItem("phone_verified");
