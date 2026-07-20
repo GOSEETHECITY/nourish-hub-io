@@ -28,18 +28,23 @@ const ConsumerEventDetail = () => {
   const navigate = useNavigate();
   const { user } = useConsumerAuth();
   const [event, setEvent] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [checkingIn, setCheckingIn] = useState(false);
   const [checkinMsg, setCheckinMsg] = useState<string | null>(null);
   const [alreadyCheckedIn, setAlreadyCheckedIn] = useState(false);
 
   useEffect(() => {
-    if (id)
-      supabase
-        .from("events")
-        .select("*")
-        .eq("id", id)
-        .maybeSingle()
-        .then(({ data }) => setEvent(data));
+    if (!id) { setLoading(false); return; }
+    setLoading(true);
+    supabase
+      .from("events")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle()
+      .then(({ data }) => {
+        setEvent(data);
+        setLoading(false);
+      });
   }, [id]);
 
   // Check if user already checked in today
