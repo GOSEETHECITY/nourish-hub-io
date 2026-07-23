@@ -28,6 +28,7 @@ import Dashboard from "./pages/Index";
 import Organizations from "./pages/Organizations";
 import LeadsInbox from "./pages/admin/LeadsInbox";
 import BulkImportOrganizations from "./pages/admin/BulkImportOrganizations";
+import GrandOpeningsImport from "./pages/admin/GrandOpeningsImport";
 import SendInvites from "./pages/admin/SendInvites";
 import PendingApprovals from "./pages/admin/PendingApprovals";
 import AccountsList from "./pages/admin/AccountsList";
