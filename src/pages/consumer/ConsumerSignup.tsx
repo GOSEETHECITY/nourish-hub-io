@@ -68,8 +68,10 @@ const ConsumerSignup = () => {
       return;
     }
 
-    const { error: insertErr } = await supabase.from("consumers").insert({
-      user_id: updated.user.id,
+    // A DB trigger auto-creates an empty consumers row on phone verification,
+    // so check for an existing row first and UPDATE it; only INSERT if none
+    // exists. Matches the pattern in ConsumerProfileEdit handleSave.
+    const consumerPayload = {
       first_name: form.firstName,
       last_name: form.lastName,
       email: form.email.trim(),
@@ -77,14 +79,34 @@ const ConsumerSignup = () => {
       zip_code: form.zip,
       city: form.city,
       date_of_birth: form.dob || null,
-      invite_code_used: inviteCode,
-    });
+    };
+
+    const { data: existingConsumer } = await supabase
+      .from("consumers")
+      .select("id")
+      .eq("user_id", updated.user.id)
+      .maybeSingle();
+
+    let insertErr;
+    if (existingConsumer?.id) {
+      ({ error: insertErr } = await supabase
+        .from("consumers")
+        .update(consumerPayload)
+        .eq("id", existingConsumer.id));
+    } else {
+      ({ error: insertErr } = await supabase.from("consumers").insert({
+        ...consumerPayload,
+        user_id: updated.user.id,
+        invite_code_used: inviteCode,
+      }));
+    }
 
     if (insertErr) {
       setError(insertErr.message);
       setLoading(false);
       return;
     }
+
 
     await refreshConsumer();
 

@@ -40,6 +40,30 @@ const ConsumerVerification = () => {
     const code = digits.join("");
     if (code.length !== digits.length) return;
     setVerifying(true);
+
+    // TEMPORARY: coordinator SMS bypass while Twilio toll-free is pending
+    // carrier approval. The edge function decides server-side whether the
+    // submitted code is the bypass code; if so it mints a real session.
+    try {
+      const { data: bypassData } = await supabase.functions.invoke(
+        "verify-coordinator-otp",
+        { body: { phone: phoneE164, code } },
+      );
+      if (bypassData?.bypass && bypassData.access_token && bypassData.refresh_token) {
+        const { error: setErr } = await supabase.auth.setSession({
+          access_token: bypassData.access_token,
+          refresh_token: bypassData.refresh_token,
+        });
+        if (setErr) throw setErr;
+        sessionStorage.setItem("phone_verified", phoneE164);
+        setVerifying(false);
+        navigate("/app/signup");
+        return;
+      }
+    } catch (_) {
+      // fall through to standard Twilio verifyOtp
+    }
+
     const { error } = await supabase.auth.verifyOtp({
       phone: phoneE164,
       token: code,
@@ -55,6 +79,7 @@ const ConsumerVerification = () => {
     sessionStorage.setItem("phone_verified", phoneE164);
     navigate("/app/signup");
   };
+
 
   const handleResend = async () => {
     if (!phoneE164) return;
