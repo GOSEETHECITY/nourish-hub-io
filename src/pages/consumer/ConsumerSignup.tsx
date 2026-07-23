@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useConsumerAuth } from "@/contexts/ConsumerAuthContext";
 import ConsumerMobileLayout from "@/components/consumer/ConsumerMobileLayout";
