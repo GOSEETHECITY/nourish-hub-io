@@ -127,6 +127,7 @@ const ConsumerSignup = () => {
 
     sessionStorage.removeItem("phone_verified");
     sessionStorage.removeItem("signup_phone_e164");
+    submittedRef.current = true;
     setLoading(false);
     navigate("/app/home");
   };
