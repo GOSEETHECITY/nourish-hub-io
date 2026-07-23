@@ -225,6 +225,7 @@ const App = () => (
               <Route path="/admin/leads" element={<LeadsInbox />} />
               <Route path="/admin/organizations-bulk-import" element={<BulkImportOrganizations />} />
               <Route path="/admin/send-invites" element={<SendInvites />} />
+              <Route path="/admin/grand-openings-import" element={<GrandOpeningsImport />} />
               <Route path="/admin/organizations-pending" element={<PendingApprovals />} />
               <Route path="/admin/accounts" element={<AccountsList />} />
               <Route path="/organizations/:id" element={<OrganizationDetail />} />
