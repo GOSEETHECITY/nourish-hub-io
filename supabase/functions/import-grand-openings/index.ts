@@ -46,6 +46,19 @@ const isUuid = (s: string) =>
 const isDateYmd = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s);
 const isHm = (s: string) => /^\d{1,2}:\d{2}$/.test(s);
 
+async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(address)}`,
+      { headers: { "User-Agent": "GoSeeTheCity-Import/1.0 (hello@goseethecity.com)" } }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data?.[0]) return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+  } catch (_) {}
+  return null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
@@ -142,6 +155,14 @@ Deno.serve(async (req) => {
       if (!isFinite(lng) || lng < -180 || lng > 180) { fail("longitude out of range"); continue; }
       latitude = lat; longitude = lng;
     }
+
+    // ITEM 3: server-side fallback geocode when coords are missing but address exists.
+    const addrParts = [(r.address || "").trim(), (r.city || "").trim(), (r.state || "").trim(), (r.zip || "").trim()].filter(Boolean);
+    if ((latitude === null || longitude === null) && addrParts.length) {
+      const coords = await geocodeAddress(addrParts.join(", "));
+      if (coords) { latitude = coords.lat; longitude = coords.lng; }
+    }
+
 
     const foodItems = (r.food_items || "").trim();
     const estValue = (r.estimated_value || "").trim();

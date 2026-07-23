@@ -1,11 +1,12 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Pencil, UserCog, Search, Users, MapPin, Unlock } from "lucide-react";
+import { Plus, Pencil, UserCog, Search, Users, MapPin, Unlock, Award, Ticket, Users2, Calendar as CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -16,9 +17,10 @@ import { US_STATE_CODES } from "@/lib/constants";
 import StatusChip from "@/components/admin/StatusChip";
 import ActionsMenu from "@/components/admin/ActionsMenu";
 
+type RoleFilter = "all" | "consumer" | "nonprofit_partner" | "venue_partner" | "admin";
+
 export default function UsersPage() {
   const queryClient = useQueryClient();
-  // Invitation codes state
   const [codeDialogOpen, setCodeDialogOpen] = useState(false);
   const [editingCode, setEditingCode] = useState<InvitationCode | null>(null);
   const [codeFilterCity, setCodeFilterCity] = useState("all");
@@ -26,13 +28,15 @@ export default function UsersPage() {
   const [codeForm, setCodeForm] = useState({ code: "", label: "", city: "", state: "", role_type: "Consumer", max_uses: 100, expiration_date: "", status: "active" as InvitationCodeStatus });
   const [codeSearch, setCodeSearch] = useState("");
 
-  // User management state
   const [editUserOpen, setEditUserOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<(Profile & { role?: AppRole }) | null>(null);
   const [userEditForm, setUserEditForm] = useState({ first_name: "", last_name: "", email: "", phone: "", organization_id: "", location_id: "", nonprofit_id: "", nonprofit_location_id: "" });
   const [userSearch, setUserSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
 
-  // All platform users (not just consumers)
+  // ITEM 7 — activity drawer
+  const [drawerUser, setDrawerUser] = useState<Profile | null>(null);
+
   const { data: allUsers = [], isLoading: usersLoading } = useQuery({
     queryKey: ["all-platform-users"],
     queryFn: async () => {
@@ -85,12 +89,14 @@ export default function UsersPage() {
   }, [userRoles]);
 
   const filteredUsers = useMemo(() => {
-    if (!userSearch.trim()) return allUsers;
-    const q = userSearch.toLowerCase();
-    return allUsers.filter((u) =>
-      [u.first_name, u.last_name, u.email].filter(Boolean).some((f) => f!.toLowerCase().includes(q))
-    );
-  }, [allUsers, userSearch]);
+    const q = userSearch.trim().toLowerCase();
+    return allUsers.filter((u) => {
+      const role = roleMap.get(u.id) ?? "consumer";
+      if (roleFilter !== "all" && role !== roleFilter) return false;
+      if (!q) return true;
+      return [u.first_name, u.last_name, u.email].filter(Boolean).some((f) => f!.toLowerCase().includes(q));
+    });
+  }, [allUsers, userSearch, roleFilter, roleMap]);
 
   const updateUser = useMutation({
     mutationFn: async () => {
@@ -164,14 +170,6 @@ export default function UsersPage() {
     onError: (e) => toast.error(e.message),
   });
 
-  const deactivateCode = useMutation({
-    mutationFn: async (codeId: string) => {
-      const { error } = await supabase.from("invitation_codes").update({ status: "inactive" as InvitationCodeStatus }).eq("id", codeId);
-      if (error) throw error;
-    },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["invitation-codes"] }); toast.success("Code deactivated"); },
-  });
-
   const closeCodeDialog = () => { setCodeDialogOpen(false); setEditingCode(null); setCodeForm({ code: "", label: "", city: "", state: "", role_type: "Consumer", max_uses: 100, expiration_date: "", status: "active" }); };
 
   const openEditCode = (c: InvitationCode) => {
@@ -193,10 +191,7 @@ export default function UsersPage() {
     });
   }, [codes, codeFilterCity, codeFilterStatus, codeSearch]);
 
-  const getEffectiveStatus = (c: InvitationCode) => {
-    if (c.times_used >= c.max_uses) return "expired";
-    return c.status;
-  };
+  const getEffectiveStatus = (c: InvitationCode) => (c.times_used >= c.max_uses ? "expired" : c.status);
 
   const getRoleBadge = (userId: string) => {
     const role = roleMap.get(userId);
@@ -242,12 +237,26 @@ export default function UsersPage() {
           <TabsTrigger value="codes">Invitation Codes</TabsTrigger>
         </TabsList>
 
-        <ConsumersTab />
+        <ConsumersTab onOpenUser={(profile) => setDrawerUser(profile)} />
 
         <TabsContent value="users" className="space-y-4 mt-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input className="pl-9" placeholder="Search by name or email..." value={userSearch} onChange={(e) => setUserSearch(e.target.value)} />
+          <div className="flex flex-wrap gap-3 items-center">
+            <div className="relative flex-1 min-w-[240px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input className="pl-9" placeholder="Search by name or email..." value={userSearch} onChange={(e) => setUserSearch(e.target.value)} />
+            </div>
+            <div className="w-[180px]">
+              <Select value={roleFilter} onValueChange={(v) => setRoleFilter(v as RoleFilter)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All roles</SelectItem>
+                  <SelectItem value="consumer">Consumers</SelectItem>
+                  <SelectItem value="nonprofit_partner">Nonprofits</SelectItem>
+                  <SelectItem value="venue_partner">Venues</SelectItem>
+                  <SelectItem value="admin">Admins</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <div className="bg-card rounded-xl border">
             <Table>
@@ -268,14 +277,14 @@ export default function UsersPage() {
                 ) : filteredUsers.length === 0 ? (
                   <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground">No users found</TableCell></TableRow>
                 ) : filteredUsers.map((u) => (
-                  <TableRow key={u.id}>
+                  <TableRow key={u.id} className="cursor-pointer hover:bg-muted/40" onClick={() => setDrawerUser(u)}>
                     <TableCell className="font-medium">{[u.first_name, u.last_name].filter(Boolean).join(" ") || "—"}</TableCell>
                     <TableCell>{u.email || "—"}</TableCell>
                     <TableCell>{getRoleBadge(u.id)}</TableCell>
                     <TableCell className="text-sm">{getAssociation(u)}</TableCell>
                     <TableCell className="text-sm">{getLevel(u)}</TableCell>
                     <TableCell>{new Date(u.created_at).toLocaleDateString()}</TableCell>
-                    <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       <Button size="sm" variant="ghost" onClick={() => openEditUser(u)}><UserCog className="w-3 h-3" /></Button>
                     </TableCell>
                   </TableRow>
@@ -435,21 +444,58 @@ export default function UsersPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* ITEM 7 — activity drawer */}
+      <UserActivityDrawer
+        user={drawerUser}
+        onClose={() => setDrawerUser(null)}
+        onEdit={(u) => { setDrawerUser(null); openEditUser(u); }}
+        roleLabel={drawerUser ? (roleMap.get(drawerUser.id) ?? "consumer") : ""}
+      />
     </div>
   );
 }
 
-function ConsumersTab() {
+// ---------------------------------------------------------------------------
+// Consumers tab with detailed table + search (ITEM 6b)
+// ---------------------------------------------------------------------------
+function ConsumersTab({ onOpenUser }: { onOpenUser: (p: Profile) => void }) {
   const queryClient = useQueryClient();
   const [editThreshold, setEditThreshold] = useState<CityThreshold | null>(null);
   const [newThreshold, setNewThreshold] = useState("");
+  const [search, setSearch] = useState("");
 
   const { data: consumers = [] } = useQuery({
-    queryKey: ["all-consumers"],
+    queryKey: ["all-consumers-detailed"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("consumers").select("id, city");
+      const { data, error } = await supabase
+        .from("consumers")
+        .select("id, user_id, first_name, last_name, email, city, zip_code, created_at")
+        .order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+      return data as any[];
+    },
+  });
+
+  const { data: badgeCounts = new Map<string, number>() } = useQuery({
+    queryKey: ["consumer-badge-counts"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("consumer_badges").select("consumer_id");
+      if (error) throw error;
+      const m = new Map<string, number>();
+      (data ?? []).forEach((b: any) => m.set(b.consumer_id, (m.get(b.consumer_id) ?? 0) + 1));
+      return m;
+    },
+  });
+
+  const { data: profilesByUserId = new Map<string, Profile>() } = useQuery({
+    queryKey: ["consumer-profile-lookup"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("profiles").select("*");
+      if (error) throw error;
+      const m = new Map<string, Profile>();
+      (data as Profile[]).forEach((p) => m.set(p.id, p));
+      return m;
     },
   });
 
@@ -477,8 +523,16 @@ function ConsumersTab() {
   });
 
   const totalConsumers = consumers.length;
-  const citiesWithConsumers = new Set(consumers.map((c) => c.city).filter(Boolean)).size;
+  const citiesWithConsumers = new Set(consumers.map((c: any) => c.city).filter(Boolean)).size;
   const unlockedCities = cityThresholds.filter((c) => c.marketplace_unlocked).length;
+
+  const filteredConsumers = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return consumers;
+    return consumers.filter((c: any) =>
+      [c.first_name, c.last_name, c.email].filter(Boolean).some((f: string) => f.toLowerCase().includes(q))
+    );
+  }, [consumers, search]);
 
   return (
     <>
@@ -538,6 +592,50 @@ function ConsumersTab() {
             </TableBody>
           </Table>
         </div>
+
+        {/* ITEM 6b — consumers table with search */}
+        <div className="bg-card rounded-xl border">
+          <div className="p-4 border-b flex items-center justify-between gap-3">
+            <h2 className="text-lg font-bold text-foreground">Consumers</h2>
+            <div className="relative max-w-xs w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input className="pl-9" placeholder="Search name or email..." value={search} onChange={(e) => setSearch(e.target.value)} />
+            </div>
+          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>City</TableHead>
+                <TableHead>Zip</TableHead>
+                <TableHead>Joined</TableHead>
+                <TableHead>Badges</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredConsumers.length === 0 ? (
+                <TableRow><TableCell colSpan={6} className="text-center py-12 text-muted-foreground">No consumers found</TableCell></TableRow>
+              ) : filteredConsumers.map((c: any) => {
+                const profile = profilesByUserId.get(c.user_id);
+                return (
+                  <TableRow
+                    key={c.id}
+                    className={profile ? "cursor-pointer hover:bg-muted/40" : ""}
+                    onClick={() => profile && onOpenUser(profile)}
+                  >
+                    <TableCell className="font-medium">{[c.first_name, c.last_name].filter(Boolean).join(" ") || "—"}</TableCell>
+                    <TableCell>{c.email || "—"}</TableCell>
+                    <TableCell>{c.city || "—"}</TableCell>
+                    <TableCell>{c.zip_code || "—"}</TableCell>
+                    <TableCell>{c.created_at ? new Date(c.created_at).toLocaleDateString() : "—"}</TableCell>
+                    <TableCell><span className="inline-flex items-center gap-1 text-sm"><Award className="w-3.5 h-3.5 text-amber-500" />{badgeCounts.get(c.id) ?? 0}</span></TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
       </TabsContent>
 
       <Dialog open={!!editThreshold} onOpenChange={(open) => { if (!open) setEditThreshold(null); }}>
@@ -553,4 +651,173 @@ function ConsumersTab() {
       </Dialog>
     </>
   );
+}
+
+// ---------------------------------------------------------------------------
+// ITEM 7 — activity drawer
+// ---------------------------------------------------------------------------
+function UserActivityDrawer({
+  user, roleLabel, onClose, onEdit,
+}: {
+  user: Profile | null;
+  roleLabel: string;
+  onClose: () => void;
+  onEdit: (u: Profile) => void;
+}) {
+  const open = !!user;
+
+  const { data: consumer } = useQuery({
+    queryKey: ["drawer-consumer", user?.id],
+    enabled: open,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("consumers")
+        .select("id, city, zip_code, referral_code")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      return data as any;
+    },
+  });
+
+  const { data: checkins = [] } = useQuery({
+    queryKey: ["drawer-checkins", user?.id],
+    enabled: open,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("event_checkins")
+        .select("id, checked_in_at, events(title, event_date)")
+        .eq("user_id", user!.id)
+        .order("checked_in_at", { ascending: false })
+        .limit(50);
+      if (error) return [];
+      return data as any[];
+    },
+  });
+
+  const { data: badges = [] } = useQuery({
+    queryKey: ["drawer-badges", consumer?.id],
+    enabled: open && !!consumer?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("consumer_badges")
+        .select("badge_name, badge_icon, earned_at")
+        .eq("consumer_id", consumer.id)
+        .order("earned_at", { ascending: false });
+      return (data ?? []) as any[];
+    },
+  });
+
+  const { data: orders = [] } = useQuery({
+    queryKey: ["drawer-orders", consumer?.id],
+    enabled: open && !!consumer?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("consumer_orders")
+        .select("id, quantity, status, created_at, coupons(title)")
+        .eq("consumer_id", consumer.id)
+        .order("created_at", { ascending: false })
+        .limit(50);
+      return (data ?? []) as any[];
+    },
+  });
+
+  const { data: referrals = [] } = useQuery({
+    queryKey: ["drawer-referrals", consumer?.id],
+    enabled: open && !!consumer?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("referrals")
+        .select("id, created_at, referee:consumers!referrals_referee_consumer_id_fkey(first_name, last_name, email)")
+        .eq("referrer_consumer_id", consumer.id)
+        .order("created_at", { ascending: false });
+      return (data ?? []) as any[];
+    },
+  });
+
+  return (
+    <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
+      <SheetContent side="right" className="w-full sm:max-w-xl overflow-y-auto">
+        <SheetHeader>
+          <SheetTitle>{user ? ([user.first_name, user.last_name].filter(Boolean).join(" ") || user.email || "User") : ""}</SheetTitle>
+        </SheetHeader>
+        {user && (
+          <div className="space-y-6 pt-4">
+            <div className="bg-muted/40 rounded-xl border p-4 space-y-1 text-sm">
+              <div><span className="text-muted-foreground">Email:</span> {user.email || "—"}</div>
+              <div><span className="text-muted-foreground">Phone:</span> {user.phone || "—"}</div>
+              <div><span className="text-muted-foreground">Role:</span> <span className="capitalize">{roleLabel.replace(/_/g, " ") || "consumer"}</span></div>
+              {consumer?.city && <div><span className="text-muted-foreground">City:</span> {consumer.city}{consumer.zip_code ? ` (${consumer.zip_code})` : ""}</div>}
+              {consumer?.referral_code && <div><span className="text-muted-foreground">Referral code:</span> <span className="font-mono">{consumer.referral_code}</span></div>}
+              <div><span className="text-muted-foreground">Joined:</span> {new Date(user.created_at).toLocaleDateString()}</div>
+              <div className="pt-2">
+                <Button size="sm" variant="outline" onClick={() => onEdit(user)}><Pencil className="w-3.5 h-3.5 mr-2" />Edit</Button>
+              </div>
+            </div>
+
+            <ActivitySection title="Check-ins" icon={<CalendarIcon className="w-4 h-4" />} count={checkins.length}>
+              {checkins.length === 0 ? (
+                <EmptyRow>No event check-ins yet.</EmptyRow>
+              ) : checkins.map((c: any) => (
+                <div key={c.id} className="flex justify-between text-sm py-2 border-b last:border-none">
+                  <span className="font-medium">{c.events?.title ?? "Event"}</span>
+                  <span className="text-muted-foreground">{c.checked_in_at ? new Date(c.checked_in_at).toLocaleDateString() : "—"}</span>
+                </div>
+              ))}
+            </ActivitySection>
+
+            <ActivitySection title="Badges earned" icon={<Award className="w-4 h-4" />} count={badges.length}>
+              {badges.length === 0 ? (
+                <EmptyRow>No badges earned yet.</EmptyRow>
+              ) : badges.map((b: any, i) => (
+                <div key={i} className="flex justify-between text-sm py-2 border-b last:border-none">
+                  <span className="font-medium">{b.badge_icon} {b.badge_name}</span>
+                  <span className="text-muted-foreground">{b.earned_at ? new Date(b.earned_at).toLocaleDateString() : "—"}</span>
+                </div>
+              ))}
+            </ActivitySection>
+
+            <ActivitySection title="Orders" icon={<Ticket className="w-4 h-4" />} count={orders.length}>
+              {orders.length === 0 ? (
+                <EmptyRow>No orders yet.</EmptyRow>
+              ) : orders.map((o: any) => (
+                <div key={o.id} className="flex justify-between text-sm py-2 border-b last:border-none">
+                  <span className="font-medium">{o.coupons?.title ?? "Coupon"} × {o.quantity}</span>
+                  <span className="text-muted-foreground capitalize">{o.status} · {new Date(o.created_at).toLocaleDateString()}</span>
+                </div>
+              ))}
+            </ActivitySection>
+
+            <ActivitySection title="Referrals" icon={<Users2 className="w-4 h-4" />} count={referrals.length}>
+              {referrals.length === 0 ? (
+                <EmptyRow>No referrals yet.</EmptyRow>
+              ) : referrals.map((r: any) => (
+                <div key={r.id} className="flex justify-between text-sm py-2 border-b last:border-none">
+                  <span className="font-medium">
+                    {[r.referee?.first_name, r.referee?.last_name].filter(Boolean).join(" ") || r.referee?.email || "Someone"}
+                  </span>
+                  <span className="text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</span>
+                </div>
+              ))}
+            </ActivitySection>
+          </div>
+        )}
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+function ActivitySection({ title, icon, count, children }: { title: string; icon: React.ReactNode; count: number; children: React.ReactNode }) {
+  return (
+    <div className="bg-card rounded-xl border">
+      <div className="flex items-center justify-between px-4 py-3 border-b">
+        <div className="flex items-center gap-2 font-semibold text-sm">{icon}{title}</div>
+        <span className="text-xs text-muted-foreground">{count} total</span>
+      </div>
+      <div className="px-4">{children}</div>
+    </div>
+  );
+}
+
+function EmptyRow({ children }: { children: React.ReactNode }) {
+  return <div className="text-sm text-muted-foreground py-4 text-center">{children}</div>;
 }

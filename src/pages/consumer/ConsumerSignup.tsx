@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useConsumerAuth } from "@/contexts/ConsumerAuthContext";
 import ConsumerMobileLayout from "@/components/consumer/ConsumerMobileLayout";
@@ -107,9 +108,15 @@ const ConsumerSignup = () => {
   };
 
   return (
-    <ConsumerMobileLayout className="flex flex-col px-6 py-8">
-      <h1 className="text-2xl font-bold mb-6 text-[#1B2A4A]">Create your account</h1>
-      <div className="flex flex-col gap-3">
+    <ConsumerMobileLayout className="flex flex-col">
+      <header className="flex items-center gap-3 px-4 py-4">
+        <button onClick={() => navigate(-1)} aria-label="Back">
+          <ArrowLeft className="w-6 h-6 text-[#1B2A4A]" />
+        </button>
+        <h1 className="text-lg font-bold text-[#1B2A4A]">Create your account</h1>
+      </header>
+      <div className="px-6 pb-8">
+        <div className="flex flex-col gap-3">
         <input
           placeholder="First name"
           value={form.firstName}
@@ -155,6 +162,7 @@ const ConsumerSignup = () => {
         >
           {loading ? "Creating..." : "Sign up"}
         </button>
+        </div>
       </div>
     </ConsumerMobileLayout>
   );
