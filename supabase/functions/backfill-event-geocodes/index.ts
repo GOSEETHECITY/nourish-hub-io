@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
 
   const { data: events, error } = await sb
     .from("events")
-    .select("id, address, city, state, zip, latitude, longitude, status")
+    .select("id, address, city, state, latitude, longitude, status")
     .eq("status", "published")
     .or("latitude.is.null,longitude.is.null")
     .limit(500);
@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
   const details: Array<{ id: string; result: string }> = [];
 
   for (const evt of events ?? []) {
-    const parts = [evt.address, evt.city, evt.state, (evt as any).zip].filter(Boolean);
+    const parts = [evt.address, evt.city, evt.state].filter(Boolean);
     if (!parts.length) { skipped++; details.push({ id: evt.id, result: "no address" }); continue; }
     const coords = await geocode(parts.join(", "));
     if (!coords) { failed++; details.push({ id: evt.id, result: "geocode failed" }); continue; }
