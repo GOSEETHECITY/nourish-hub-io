@@ -140,7 +140,26 @@ Deno.serve(async (req) => {
     const user = payload.user ?? {};
     const d = payload.email_data ?? {};
     const action: Action = d.email_action_type ?? "signup";
-    const email = user.email ?? d.new_email ?? "";
+    
+    // Resolve email from all possible payload locations for phone OTP users
+    let email = user.email ?? d.new_email ?? d.user_email ?? payload.email ?? user.user_metadata?.email ?? "";
+    
+    // For email_change actions, determine which email to send to
+    if (action === "email_change_current") {
+      email = user.email ?? ""; // current email
+    } else if (action === "email_change" || action === "email_change_new") {
+      email = d.new_email ?? user.email ?? ""; // new email, fallback to current
+    }
+    
+    // Skip if no valid recipient found (don't fail the auth operation)
+    if (!email || !email.trim()) {
+      console.warn("auth-email-hook skipped: no email found in payload for action", action);
+      return new Response(JSON.stringify({ skipped: true }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    
     const confirmUrl = d.redirect_to
       ? `${d.site_url ?? "https://hariet.ai"}/auth/callback?token_hash=${d.token_hash}&type=${action}&next=${encodeURIComponent(d.redirect_to)}`
       : `${d.site_url ?? "https://hariet.ai"}/auth/callback?token_hash=${d.token_hash}&type=${action}`;
