@@ -162,6 +162,7 @@ const ConsumerSignup = () => {
         >
           {loading ? "Creating..." : "Sign up"}
         </button>
+        </div>
       </div>
     </ConsumerMobileLayout>
   );
