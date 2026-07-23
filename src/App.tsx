@@ -28,6 +28,7 @@ import Dashboard from "./pages/Index";
 import Organizations from "./pages/Organizations";
 import LeadsInbox from "./pages/admin/LeadsInbox";
 import BulkImportOrganizations from "./pages/admin/BulkImportOrganizations";
+import GrandOpeningsImport from "./pages/admin/GrandOpeningsImport";
 import SendInvites from "./pages/admin/SendInvites";
 import PendingApprovals from "./pages/admin/PendingApprovals";
 import AccountsList from "./pages/admin/AccountsList";
@@ -224,6 +225,7 @@ const App = () => (
               <Route path="/admin/leads" element={<LeadsInbox />} />
               <Route path="/admin/organizations-bulk-import" element={<BulkImportOrganizations />} />
               <Route path="/admin/send-invites" element={<SendInvites />} />
+              <Route path="/admin/grand-openings-import" element={<GrandOpeningsImport />} />
               <Route path="/admin/organizations-pending" element={<PendingApprovals />} />
               <Route path="/admin/accounts" element={<AccountsList />} />
               <Route path="/organizations/:id" element={<OrganizationDetail />} />
