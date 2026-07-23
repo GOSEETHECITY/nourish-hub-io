@@ -156,6 +156,14 @@ Deno.serve(async (req) => {
       latitude = lat; longitude = lng;
     }
 
+    // ITEM 3: server-side fallback geocode when coords are missing but address exists.
+    const addrParts = [(r.address || "").trim(), (r.city || "").trim(), (r.state || "").trim(), (r.zip || "").trim()].filter(Boolean);
+    if ((latitude === null || longitude === null) && addrParts.length) {
+      const coords = await geocodeAddress(addrParts.join(", "));
+      if (coords) { latitude = coords.lat; longitude = coords.lng; }
+    }
+
+
     const foodItems = (r.food_items || "").trim();
     const estValue = (r.estimated_value || "").trim();
     const baseDesc = (r.description || "").trim();
