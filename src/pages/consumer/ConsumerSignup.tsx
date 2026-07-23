@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,17 +13,19 @@ const ConsumerSignup = () => {
   const phoneE164 = sessionStorage.getItem("signup_phone_e164") || "";
   const phoneVerified = sessionStorage.getItem("phone_verified") || "";
   const inviteCode = sessionStorage.getItem("invite_code") || "";
+  const submittedRef = useRef(false);
 
   // Hard gate: signup is only reachable after a verified phone OTP and a
   // captured invite code. The DB also enforces the invite-code requirement,
   // but blocking client-side avoids a noisy round-trip.
   useEffect(() => {
+    if (submittedRef.current) return;
     if (!inviteCode) {
       navigate("/app/invite", { replace: true });
       return;
     }
     if (!phoneVerified || phoneVerified !== phoneE164) {
-      navigate("/app/phone", { replace: true });
+      navigate("/app/phone-entry", { replace: true });
     }
   }, [inviteCode, phoneVerified, phoneE164, navigate]);
 
