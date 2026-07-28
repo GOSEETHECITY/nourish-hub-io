@@ -2,7 +2,7 @@ import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Building2, UtensilsCrossed, Heart, CalendarDays,
   Store, BarChart3, Users, CreditCard, Headphones, Settings, LogOut,
-  Search, MapPin, ChevronDown, ChevronRight, Menu, X, FileText,
+  Search, MapPin, ChevronDown, ChevronRight, Menu, X, FileText, Package,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";

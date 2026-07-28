@@ -255,16 +255,16 @@ function EditDonationDialog({
         track("pounds", donation.pounds, totalPounds);
       }
 
-      const patch: Record<string, unknown> = {
-        status,
+      const patch = {
+        status: status as DonationRow["status"],
         nonprofit_claimed_id: newNonprofit,
         pickup_window_start: startIso,
         pickup_window_end: endIso,
         notes: notes || null,
+        ...(items ? { pounds: totalPounds || null } : {}),
       };
-      if (items) patch.pounds = totalPounds || null;
 
-      const { error } = await supabase.from("food_listings").update(patch).eq("id", donation.id);
+      const { error } = await supabase.from("food_listings").update(patch as never).eq("id", donation.id);
       if (error) throw error;
 
       if (audit.length) await supabase.from("admin_audit_log").insert(audit);
