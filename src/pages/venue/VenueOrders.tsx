@@ -98,7 +98,7 @@ export default function VenueOrders() {
           {loading ? <div className="text-muted-foreground">Loading…</div> : orders.length === 0 ? (
             <div className="text-muted-foreground">No orders yet.</div>
           ) : (
-            <Table>
+            <div className="overflow-x-auto"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Date</TableHead>
@@ -126,7 +126,7 @@ export default function VenueOrders() {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           )}
         </CardContent>
       </Card>

@@ -154,7 +154,7 @@ export default function VenueTaxReceipts() {
 
       <Card>
         <CardContent className="p-0">
-          <Table>
+          <div className="overflow-x-auto"><Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Date</TableHead>
@@ -186,7 +186,7 @@ export default function VenueTaxReceipts() {
               ))}
 
             </TableBody>
-          </Table>
+          </Table></div>
         </CardContent>
       </Card>
     </div>

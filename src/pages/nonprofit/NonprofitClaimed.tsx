@@ -174,7 +174,7 @@ export default function NonprofitClaimed() {
       </div>
 
       <div className="bg-card rounded-xl border">
-        <Table>
+        <div className="overflow-x-auto"><Table>
           <TableHeader>
             <TableRow>
               <TableHead>Organization</TableHead>
@@ -189,7 +189,7 @@ export default function NonprofitClaimed() {
             {claimed.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-12 text-muted-foreground">
-                  You haven't claimed any donations yet.
+                  No claimed donations yet. Browse Available Donations to claim your first pickup.
                 </TableCell>
               </TableRow>
             ) : claimed.map((d) => {
@@ -274,7 +274,7 @@ export default function NonprofitClaimed() {
               );
             })}
           </TableBody>
-        </Table>
+        </Table></div>
       </div>
 
       <Dialog open={!!reportListing} onOpenChange={(open) => !open && setReportListing(null)}>

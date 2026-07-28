@@ -222,7 +222,7 @@ export default function NonprofitImpactReports() {
 
         <TabsContent value="history">
           <div className="bg-card border rounded-xl overflow-hidden">
-            <Table>
+            <div className="overflow-x-auto"><Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Date</TableHead>
@@ -255,7 +255,7 @@ export default function NonprofitImpactReports() {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+            </Table></div>
           </div>
         </TabsContent>
 

@@ -76,7 +76,7 @@ export default function NonprofitAvailable() {
       </div>
 
       <div className="bg-card rounded-xl border">
-        <Table>
+        <div className="overflow-x-auto"><Table>
           <TableHeader>
             <TableRow>
               <TableHead>Organization</TableHead>
@@ -103,7 +103,7 @@ export default function NonprofitAvailable() {
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+        </Table></div>
       </div>
     </div>
   );

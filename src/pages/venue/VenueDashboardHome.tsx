@@ -201,7 +201,7 @@ export default function VenueDashboardHome() {
           <h2 className="text-lg font-bold text-foreground">Recent Donations</h2>
         </div>
         <div className="overflow-x-auto">
-        <Table>
+        <div className="overflow-x-auto"><Table>
           <TableHeader>
             <TableRow>
               <TableHead>Location</TableHead>
@@ -226,7 +226,7 @@ export default function VenueDashboardHome() {
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+        </Table></div>
         </div>
       </div>
     </div>

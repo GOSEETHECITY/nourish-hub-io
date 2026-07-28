@@ -69,7 +69,7 @@ export default function VenueImpact() {
       <div className="bg-card rounded-xl border p-6">
         <h2 className="text-lg font-bold text-foreground mb-4">Impact Reports</h2>
         {reports.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No impact reports submitted by nonprofits for your donations yet.</p>
+          <p className="text-sm text-muted-foreground">No impact reports yet. Once a nonprofit distributes your donation, their report appears here.</p>
         ) : (
           <div className="space-y-3">
             {reports.map((r) => (

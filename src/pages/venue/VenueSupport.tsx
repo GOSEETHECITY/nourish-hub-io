@@ -76,7 +76,7 @@ export default function VenueSupport() {
 
       <section className="bg-card rounded-xl border">
         <div className="p-4 border-b"><h2 className="text-lg font-bold text-foreground">Your Requests</h2></div>
-        <Table>
+        <div className="overflow-x-auto"><Table>
           <TableHeader><TableRow><TableHead>Subject</TableHead><TableHead>Status</TableHead><TableHead>Date</TableHead></TableRow></TableHeader>
           <TableBody>
             {requests.length === 0 ? (
@@ -89,7 +89,7 @@ export default function VenueSupport() {
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+        </Table></div>
       </section>
     </div>
   );

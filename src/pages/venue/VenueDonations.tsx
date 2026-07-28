@@ -272,7 +272,7 @@ export default function VenueDonations() {
       </div>
 
       <div className="bg-card rounded-xl border">
-        <Table>
+        <div className="overflow-x-auto"><Table>
           <TableHeader>
             <TableRow>
               <TableHead>Location</TableHead>
@@ -307,7 +307,7 @@ export default function VenueDonations() {
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+        </Table></div>
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

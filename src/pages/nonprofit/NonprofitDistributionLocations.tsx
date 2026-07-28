@@ -63,7 +63,7 @@ export default function NonprofitDistributionLocations() {
       </div>
 
       <div className="bg-card rounded-xl border">
-        <Table>
+        <div className="overflow-x-auto"><Table>
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
@@ -86,7 +86,7 @@ export default function NonprofitDistributionLocations() {
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+        </Table></div>
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
