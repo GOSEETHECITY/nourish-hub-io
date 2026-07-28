@@ -99,6 +99,7 @@ Deno.serve(async (req) => {
 
     return json({ processed: pending.length, reminders, overdue });
   } catch (e) {
+    await alertFatalError("enforce-receipt-deadline", e);
     return json({ error: (e as Error).message }, 500);
   }
 });

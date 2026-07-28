@@ -4,6 +4,7 @@
 // Respects per-user notification_preferences. Uses Resend for email and Twilio
 // (gateway) for SMS. Only sends SMS when { urgent: true }.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.98.0";
+import { alertFatalError } from "../_shared/ops.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -88,6 +89,7 @@ Deno.serve(async (req) => {
 
     return json({ recipients: recipients.length, email_sent, email_failed, sms_sent, sms_failed });
   } catch (e: any) {
+    await alertFatalError("send-alert", e);
     return json({ error: e?.message || String(e) }, 500);
   }
 });
