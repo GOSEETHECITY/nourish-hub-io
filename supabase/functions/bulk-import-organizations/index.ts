@@ -187,9 +187,6 @@ Deno.serve(async (req) => {
             primary_contact_email: email,
             primary_contact_phone: nullify(r.contact_phone),
             user_id: userId,
-
-            logo_url: nullify(r.logo_url),
-
             logo_url: nullify(r.logo_url),
             organization_bio: nullify(r.business_bio),
             website_url: nullify(r.website_url),
