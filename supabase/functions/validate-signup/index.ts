@@ -1,4 +1,8 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.98.0";
+import { makeRateLimiter, clientIp } from "../_shared/ops.ts";
+
+// Rate limit: 10 validation attempts per IP per minute (parity with
+// validate_and_use_invite_code throttling).
+const limiter = makeRateLimiter(10, 60_000);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -70,6 +74,13 @@ const VALID_FOOD_TYPES = [
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  if (limiter(clientIp(req))) {
+    return new Response(
+      JSON.stringify({ valid: false, error: "Too many attempts. Please try again in a minute." }),
+      { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 
   try {
