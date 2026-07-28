@@ -11,6 +11,7 @@ import logo from "@/assets/logo.png";
 import PartnerNotificationBell from "./PartnerNotificationBell";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getLogoSignedUrl } from "@/lib/orgProfile";
+import SupportRequestButton from "@/components/support/SupportRequestButton";
 
 
 function FranchiseNavItem({ role, organizationId, onClose }: { role: string | null; organizationId: string | null | undefined; onClose: () => void }) {
@@ -195,7 +196,7 @@ export default function PartnerDashboardLayout({
 
           {showSwitcher && (
             <Select value={selectedSwitcherId} onValueChange={onSwitcherChange}>
-              <SelectTrigger className="w-[220px]">
+              <SelectTrigger className="w-[150px] sm:w-[220px]">
                 <SelectValue placeholder="Select location" />
               </SelectTrigger>
               <SelectContent>
@@ -207,9 +208,11 @@ export default function PartnerDashboardLayout({
             </Select>
           )}
 
-          <div className="flex items-center gap-4 ml-auto">
+          <div className="flex items-center gap-3 md:gap-4 ml-auto">
+            <SupportRequestButton organizationName={orgName} className="hidden sm:inline-flex" />
             <PartnerNotificationBell />
             <div className="flex items-center gap-3">
+
               {orgLogoUrl ? (
                 <img src={orgLogoUrl} alt={orgName || "Organization"} className="w-9 h-9 rounded-full object-cover bg-muted" />
               ) : (
