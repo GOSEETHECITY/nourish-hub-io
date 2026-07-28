@@ -1,15 +1,12 @@
 // Admin-only bulk organization import. Creates org + join code + auth user with a
-// canned temp password. Sends NO emails — send-partner-credentials is a separate
-// admin-triggered step.
+// UNIQUE random temp password stored in the admin-only partner_credentials table.
+// Sends NO emails — send-partner-credentials is a separate admin-triggered step.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.98.0";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { restrictedCors, alertFatalError, generateTempPassword } from "../_shared/ops.ts";
 
 const CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const genJoinCode = () => Array.from({ length: 8 }, () => CHARS[Math.floor(Math.random() * CHARS.length)]).join("");
+
 
 interface Row {
   organization_name: string;
