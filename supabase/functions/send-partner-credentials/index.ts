@@ -2,7 +2,7 @@
 // organization or nonprofit via Resend from noreply@hariet.ai. Marks
 // credentials_sent_at on the entity so nothing is double-sent.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.98.0";
-import { restrictedCors, alertFatalError } from "../_shared/ops.ts";
+import { restrictedCors, alertFatalError, generateTempPassword } from "../_shared/ops.ts";
 
 Deno.serve(async (req) => {
   const corsHeaders = restrictedCors(req);
@@ -91,6 +91,7 @@ Deno.serve(async (req) => {
     }
     return json({ results });
   } catch (e: any) {
+    await alertFatalError("send-partner-credentials", e);
     return json({ error: e?.message || String(e) }, 500);
   }
 });
