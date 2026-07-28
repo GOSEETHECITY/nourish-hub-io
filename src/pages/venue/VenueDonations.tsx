@@ -286,7 +286,7 @@ export default function VenueDonations() {
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground">No donations posted yet — click "Post Donation" to get started.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground">No donations yet. Click Post Donation above to log your first surplus pickup.</TableCell></TableRow>
             ) : filtered.map((d) => (
               <TableRow key={d.id}>
                 <TableCell className="font-medium">{locMap[d.location_id] || "—"}</TableCell>
