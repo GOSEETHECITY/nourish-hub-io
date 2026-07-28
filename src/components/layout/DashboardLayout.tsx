@@ -12,7 +12,7 @@ import NotificationBell from "./NotificationBell";
 import { getAvatarSignedUrl } from "@/lib/avatars";
 
 const mainNav = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/" },
+  { icon: LayoutDashboard, label: "Dashboard", path: "/admin/dashboard" },
   { icon: Building2, label: "Organizations", path: "/organizations" },
   {
     icon: UtensilsCrossed, label: "Food Listings", path: "/food-listings",
@@ -21,6 +21,7 @@ const mainNav = [
       { label: "Discounted Sale", path: "/food-listings/discounted-sale" },
     ],
   },
+  { icon: Package, label: "All Donations", path: "/admin/donations" },
   { icon: Heart, label: "Nonprofits", path: "/nonprofits" },
   { icon: CalendarDays, label: "Events", path: "/events" },
   { icon: MapPin, label: "Regions", path: "/regions" },
@@ -28,7 +29,7 @@ const mainNav = [
   { icon: BarChart3, label: "Impact", path: "/impact" },
   { icon: Users, label: "Users", path: "/users" },
   {
-    icon: Users, label: "Onboarding", path: "/admin/onboarding",
+    icon: Users, label: "Onboarding", path: "/admin/organizations-pending",
     children: [
       { label: "Pending Approvals", path: "/admin/organizations-pending" },
       { label: "New Leads", path: "/admin/leads" },
@@ -40,6 +41,7 @@ const mainNav = [
   { icon: CreditCard, label: "Billing", path: "/billing" },
   { icon: FileText, label: "Import Logs", path: "/import-logs" },
 ];
+
 
 const otherNav = [
   { icon: Headphones, label: "Support", path: "/support" },
