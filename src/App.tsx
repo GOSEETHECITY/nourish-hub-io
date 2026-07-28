@@ -27,6 +27,8 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import Dashboard from "./pages/Index";
 import Organizations from "./pages/Organizations";
 import LeadsInbox from "./pages/admin/LeadsInbox";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminDonations from "./pages/admin/AdminDonations";
 import BulkImportOrganizations from "./pages/admin/BulkImportOrganizations";
 import GrandOpeningsImport from "./pages/admin/GrandOpeningsImport";
 import SendInvites from "./pages/admin/SendInvites";
