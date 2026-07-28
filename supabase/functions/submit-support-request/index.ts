@@ -1,13 +1,18 @@
 // Partner support form. Authenticated partners submit a message; it is stored in
 // support_requests and emailed to hello@goseethecity.com.
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { restrictedCors, alertFatalError, escapeHtml, makeRateLimiter, clientIp } from "../_shared/ops.ts";
+import { alertFatalError, escapeHtml, makeRateLimiter, clientIp } from "../_shared/ops.ts";
+
+// Authenticated endpoint reachable from every partner dashboard origin.
+const cors = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
 const FN = "submit-support-request";
 const limiter = makeRateLimiter(5, 60_000);
 
 Deno.serve(async (req) => {
-  const cors = restrictedCors(req);
   const json = (b: unknown, s = 200) =>
     new Response(JSON.stringify(b), { status: s, headers: { ...cors, "Content-Type": "application/json" } });
 

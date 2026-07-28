@@ -76,7 +76,7 @@ export default function NonprofitAvailable() {
       </div>
 
       <div className="bg-card rounded-xl border">
-        <Table>
+        <div className="overflow-x-auto"><Table>
           <TableHeader>
             <TableRow>
               <TableHead>Organization</TableHead>
@@ -89,7 +89,7 @@ export default function NonprofitAvailable() {
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-12 text-muted-foreground">No available donations right now. Check back soon!</TableCell></TableRow>
+              <TableRow><TableCell colSpan={6} className="text-center py-12 text-muted-foreground">No available donations right now. New posts appear here as venues list surplus.</TableCell></TableRow>
             ) : filtered.map((d) => (
               <TableRow key={d.id}>
                 <TableCell className="font-medium">{orgMap[d.organization_id] || "—"}</TableCell>
@@ -103,7 +103,7 @@ export default function NonprofitAvailable() {
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+        </Table></div>
       </div>
     </div>
   );

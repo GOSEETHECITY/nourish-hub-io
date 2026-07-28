@@ -91,7 +91,7 @@ export default function VenueLocations() {
       </div>
 
       <div className="bg-card rounded-xl border">
-        <Table>
+        <div className="overflow-x-auto"><Table>
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
@@ -116,7 +116,7 @@ export default function VenueLocations() {
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+        </Table></div>
       </div>
 
       {/* Location Detail Dialog */}

@@ -27,6 +27,8 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import Dashboard from "./pages/Index";
 import Organizations from "./pages/Organizations";
 import LeadsInbox from "./pages/admin/LeadsInbox";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminDonations from "./pages/admin/AdminDonations";
 import BulkImportOrganizations from "./pages/admin/BulkImportOrganizations";
 import GrandOpeningsImport from "./pages/admin/GrandOpeningsImport";
 import SendInvites from "./pages/admin/SendInvites";
@@ -221,8 +223,11 @@ const App = () => (
               }
             >
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/admin/donations" element={<AdminDonations />} />
               <Route path="/organizations" element={<Organizations />} />
               <Route path="/admin/leads" element={<LeadsInbox />} />
+
               <Route path="/admin/organizations-bulk-import" element={<BulkImportOrganizations />} />
               <Route path="/admin/send-invites" element={<SendInvites />} />
               <Route path="/admin/grand-openings-import" element={<GrandOpeningsImport />} />
