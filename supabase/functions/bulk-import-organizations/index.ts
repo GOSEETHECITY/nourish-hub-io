@@ -127,7 +127,7 @@ Deno.serve(async (req) => {
         if (!orgName || !orgType) throw new Error("organization_name and organization_type required");
 
         const isNonprofit = orgType === "nonprofit";
-        const password = isNonprofit ? "HarietGive2026!" : "HarietVenue2026!";
+        const password = generateTempPassword();
         const email = r.contact_email ? String(r.contact_email).trim().toLowerCase() : null;
         const joinCode = genJoinCode();
 
@@ -186,8 +186,10 @@ Deno.serve(async (req) => {
             primary_contact_name: nullify(r.contact_name),
             primary_contact_email: email,
             primary_contact_phone: nullify(r.contact_phone),
-            temp_password_hint: email ? password : null,
             user_id: userId,
+
+            logo_url: nullify(r.logo_url),
+
             logo_url: nullify(r.logo_url),
             organization_bio: nullify(r.business_bio),
             website_url: nullify(r.website_url),
@@ -214,8 +216,9 @@ Deno.serve(async (req) => {
             primary_contact_name: nullify(r.contact_name),
             primary_contact_email: email,
             primary_contact_phone: nullify(r.contact_phone),
-            temp_password_hint: email ? password : null,
             logo_url: nullify(r.logo_url),
+            business_bio: nullify(r.business_bio),
+
             business_bio: nullify(r.business_bio),
             website_url: nullify(r.website_url),
             marketplace_enabled: toBool(r.marketplace_enabled) ?? false,
@@ -239,6 +242,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ total: rows.length, created, failed: rows.length - created, results }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e: any) {
+    await alertFatalError("bulk-import-organizations", e);
     return new Response(JSON.stringify({ error: e?.message || String(e) }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
