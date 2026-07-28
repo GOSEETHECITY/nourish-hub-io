@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          admin_user_id: string
+          created_at: string
+          donation_id: string | null
+          field_name: string
+          id: string
+          new_value: string | null
+          old_value: string | null
+        }
+        Insert: {
+          admin_user_id: string
+          created_at?: string
+          donation_id?: string | null
+          field_name: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+        }
+        Update: {
+          admin_user_id?: string
+          created_at?: string
+          donation_id?: string | null
+          field_name?: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+        }
+        Relationships: []
+      }
       admin_notifications: {
         Row: {
           created_at: string
@@ -662,6 +692,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      donation_alerts: {
+        Row: {
+          alert_type: string
+          food_listing_id: string
+          id: string
+          sent_at: string
+        }
+        Insert: {
+          alert_type: string
+          food_listing_id: string
+          id?: string
+          sent_at?: string
+        }
+        Update: {
+          alert_type?: string
+          food_listing_id?: string
+          id?: string
+          sent_at?: string
+        }
+        Relationships: []
       }
       donation_line_items: {
         Row: {
@@ -1559,7 +1610,6 @@ export type Database = {
           signed_agreement_url: string | null
           social_handles: Json | null
           state: string | null
-          temp_password_hint: string | null
           user_id: string | null
           website: string | null
           website_url: string | null
@@ -1596,7 +1646,6 @@ export type Database = {
           signed_agreement_url?: string | null
           social_handles?: Json | null
           state?: string | null
-          temp_password_hint?: string | null
           user_id?: string | null
           website?: string | null
           website_url?: string | null
@@ -1633,7 +1682,6 @@ export type Database = {
           signed_agreement_url?: string | null
           social_handles?: Json | null
           state?: string | null
-          temp_password_hint?: string | null
           user_id?: string | null
           website?: string | null
           website_url?: string | null
@@ -1979,7 +2027,6 @@ export type Database = {
           stripe_charges_enabled: boolean
           stripe_details_submitted: boolean
           stripe_payouts_enabled: boolean
-          temp_password_hint: string | null
           type: Database["public"]["Enums"]["organization_type"]
           website_url: string | null
           zip: string | null
@@ -2011,7 +2058,6 @@ export type Database = {
           stripe_charges_enabled?: boolean
           stripe_details_submitted?: boolean
           stripe_payouts_enabled?: boolean
-          temp_password_hint?: string | null
           type: Database["public"]["Enums"]["organization_type"]
           website_url?: string | null
           zip?: string | null
@@ -2043,7 +2089,6 @@ export type Database = {
           stripe_charges_enabled?: boolean
           stripe_details_submitted?: boolean
           stripe_payouts_enabled?: boolean
-          temp_password_hint?: string | null
           type?: Database["public"]["Enums"]["organization_type"]
           website_url?: string | null
           zip?: string | null
@@ -2064,6 +2109,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      partner_credentials: {
+        Row: {
+          created_at: string
+          entity_id: string
+          entity_kind: string
+          id: string
+          temp_password: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          entity_id: string
+          entity_kind: string
+          id?: string
+          temp_password?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string
+          entity_kind?: string
+          id?: string
+          temp_password?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       partner_leads: {
         Row: {
@@ -2551,6 +2623,33 @@ export type Database = {
           },
         ]
       }
+      usage_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          role: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json
+          role?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+          role?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -3005,6 +3104,14 @@ export type Database = {
       }
       increment_attendee_count: { Args: { eid: string }; Returns: undefined }
       increment_share_count: { Args: { event_id: string }; Returns: undefined }
+      invoke_scheduled_function: {
+        Args: { p_body?: Json; p_name: string }
+        Returns: undefined
+      }
+      log_usage_event: {
+        Args: { p_event_type: string; p_metadata?: Json }
+        Returns: undefined
+      }
       my_referral_rank: {
         Args: { p_city: string }
         Returns: {
