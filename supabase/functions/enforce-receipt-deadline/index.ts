@@ -3,18 +3,17 @@
 // - After 72h, notifies the venue and admins that the receipt is overdue.
 // Idempotent: uses notifications.metadata.kind to avoid duplicates.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { internalCors as corsHeaders, requireCronSecret, alertFatalError } from "../_shared/ops.ts";
 
 const json = (b: unknown, s = 200) =>
   new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const denied = requireCronSecret(req);
+  if (denied) return denied;
   try {
+
     const url = Deno.env.get("SUPABASE_URL")!;
     const service = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const admin = createClient(url, service);
