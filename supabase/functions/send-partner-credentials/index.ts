@@ -2,13 +2,13 @@
 // organization or nonprofit via Resend from noreply@hariet.ai. Marks
 // credentials_sent_at on the entity so nothing is double-sent.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.98.0";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { restrictedCors, alertFatalError } from "../_shared/ops.ts";
 
 Deno.serve(async (req) => {
+  const corsHeaders = restrictedCors(req);
+  const json = (o: unknown, status = 200) =>
+    new Response(JSON.stringify(o), { status, headers: { "Content-Type": "application/json", ...corsHeaders } });
+
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
     const authHeader = req.headers.get("Authorization");
@@ -19,6 +19,7 @@ Deno.serve(async (req) => {
     const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const { data: isAdmin } = await admin.rpc("has_role", { _user_id: user.id, _role: "admin" });
     if (!isAdmin) return json({ error: "Forbidden" }, 403);
+
 
     const { targets } = await req.json() as { targets: Array<{ kind: "org" | "nonprofit"; id: string }> };
     if (!Array.isArray(targets) || !targets.length) return json({ error: "targets required" }, 400);
