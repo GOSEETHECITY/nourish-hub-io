@@ -194,6 +194,12 @@ Deno.serve(async (req) => {
           }).select("id").single();
           if (npErr) throw new Error(npErr.message);
 
+          if (email) {
+            await admin.from("partner_credentials").upsert(
+              { entity_kind: "nonprofit", entity_id: np.id, temp_password: password },
+              { onConflict: "entity_kind,entity_id" },
+            );
+          }
           if (userId) {
             await admin.from("profiles").upsert({ id: userId, email: email!, nonprofit_id: np.id, first_name: (r.contact_name || "").split(" ")[0] || "", last_name: (r.contact_name || "").split(" ").slice(1).join(" ") || "", phone: r.contact_phone || null });
             await admin.from("user_roles").upsert({ user_id: userId, role: "nonprofit_partner" }, { onConflict: "user_id,role" });
@@ -215,8 +221,6 @@ Deno.serve(async (req) => {
             primary_contact_phone: nullify(r.contact_phone),
             logo_url: nullify(r.logo_url),
             business_bio: nullify(r.business_bio),
-
-            business_bio: nullify(r.business_bio),
             website_url: nullify(r.website_url),
             marketplace_enabled: toBool(r.marketplace_enabled) ?? false,
             stripe_account_id: nullify(r.stripe_account_id),
@@ -224,6 +228,12 @@ Deno.serve(async (req) => {
           }).select("id").single();
           if (orgErr) throw new Error(`${orgErr.message} (valid types: restaurant, cafe, catering_company, event, hotel, convention_center, stadium, arena, farm, grocery_store, food_truck, airport, festival, resort, food_beverage_group, hospitality_group, venue_events_group, farm_grocery_group, franchise, municipal_government, county_government, state_government, government_entity, nonprofit_organization)`);
 
+          if (email) {
+            await admin.from("partner_credentials").upsert(
+              { entity_kind: "org", entity_id: org.id, temp_password: password },
+              { onConflict: "entity_kind,entity_id" },
+            );
+          }
           if (userId) {
             await admin.from("profiles").upsert({ id: userId, email: email!, organization_id: org.id, first_name: (r.contact_name || "").split(" ")[0] || "", last_name: (r.contact_name || "").split(" ").slice(1).join(" ") || "", phone: r.contact_phone || null });
             await admin.from("user_roles").upsert({ user_id: userId, role: "venue_partner" }, { onConflict: "user_id,role" });
