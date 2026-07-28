@@ -1,15 +1,18 @@
 // Refreshes the single-row public.impact_stats snapshot used by /impact.
-// Runs on cron (daily) and can also be invoked ad-hoc by an admin.
+// Runs on cron (daily). Requires the CRON_SECRET header.
 import { createClient } from "npm:@supabase/supabase-js@2";
-const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-internal-secret, stripe-signature" };
+import { internalCors as corsHeaders, requireCronSecret, alertFatalError } from "../_shared/ops.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const denied = requireCronSecret(req);
+  if (denied) return denied;
 
   const admin = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
+
 
   try {
     // ---- platform totals ---------------------------------------------------
@@ -89,6 +92,7 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("refresh-impact-snapshot failed", e);
+    await alertFatalError("refresh-impact-snapshot", e);
     return new Response(JSON.stringify({ error: String(e) }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
