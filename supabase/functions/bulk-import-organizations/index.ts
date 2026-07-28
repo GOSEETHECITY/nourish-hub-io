@@ -1,15 +1,12 @@
 // Admin-only bulk organization import. Creates org + join code + auth user with a
-// canned temp password. Sends NO emails — send-partner-credentials is a separate
-// admin-triggered step.
+// UNIQUE random temp password stored in the admin-only partner_credentials table.
+// Sends NO emails — send-partner-credentials is a separate admin-triggered step.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.98.0";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { restrictedCors, alertFatalError, generateTempPassword } from "../_shared/ops.ts";
 
 const CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const genJoinCode = () => Array.from({ length: 8 }, () => CHARS[Math.floor(Math.random() * CHARS.length)]).join("");
+
 
 interface Row {
   organization_name: string;
@@ -85,8 +82,10 @@ function parseCSV(text: string): Row[] {
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = restrictedCors(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
+
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -128,7 +127,7 @@ Deno.serve(async (req) => {
         if (!orgName || !orgType) throw new Error("organization_name and organization_type required");
 
         const isNonprofit = orgType === "nonprofit";
-        const password = isNonprofit ? "HarietGive2026!" : "HarietVenue2026!";
+        const password = generateTempPassword();
         const email = r.contact_email ? String(r.contact_email).trim().toLowerCase() : null;
         const joinCode = genJoinCode();
 
@@ -187,7 +186,6 @@ Deno.serve(async (req) => {
             primary_contact_name: nullify(r.contact_name),
             primary_contact_email: email,
             primary_contact_phone: nullify(r.contact_phone),
-            temp_password_hint: email ? password : null,
             user_id: userId,
             logo_url: nullify(r.logo_url),
             organization_bio: nullify(r.business_bio),
@@ -196,6 +194,12 @@ Deno.serve(async (req) => {
           }).select("id").single();
           if (npErr) throw new Error(npErr.message);
 
+          if (email) {
+            await admin.from("partner_credentials").upsert(
+              { entity_kind: "nonprofit", entity_id: np.id, temp_password: password },
+              { onConflict: "entity_kind,entity_id" },
+            );
+          }
           if (userId) {
             await admin.from("profiles").upsert({ id: userId, email: email!, nonprofit_id: np.id, first_name: (r.contact_name || "").split(" ")[0] || "", last_name: (r.contact_name || "").split(" ").slice(1).join(" ") || "", phone: r.contact_phone || null });
             await admin.from("user_roles").upsert({ user_id: userId, role: "nonprofit_partner" }, { onConflict: "user_id,role" });
@@ -215,7 +219,6 @@ Deno.serve(async (req) => {
             primary_contact_name: nullify(r.contact_name),
             primary_contact_email: email,
             primary_contact_phone: nullify(r.contact_phone),
-            temp_password_hint: email ? password : null,
             logo_url: nullify(r.logo_url),
             business_bio: nullify(r.business_bio),
             website_url: nullify(r.website_url),
@@ -225,6 +228,12 @@ Deno.serve(async (req) => {
           }).select("id").single();
           if (orgErr) throw new Error(`${orgErr.message} (valid types: restaurant, cafe, catering_company, event, hotel, convention_center, stadium, arena, farm, grocery_store, food_truck, airport, festival, resort, food_beverage_group, hospitality_group, venue_events_group, farm_grocery_group, franchise, municipal_government, county_government, state_government, government_entity, nonprofit_organization)`);
 
+          if (email) {
+            await admin.from("partner_credentials").upsert(
+              { entity_kind: "org", entity_id: org.id, temp_password: password },
+              { onConflict: "entity_kind,entity_id" },
+            );
+          }
           if (userId) {
             await admin.from("profiles").upsert({ id: userId, email: email!, organization_id: org.id, first_name: (r.contact_name || "").split(" ")[0] || "", last_name: (r.contact_name || "").split(" ").slice(1).join(" ") || "", phone: r.contact_phone || null });
             await admin.from("user_roles").upsert({ user_id: userId, role: "venue_partner" }, { onConflict: "user_id,role" });
@@ -240,6 +249,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ total: rows.length, created, failed: rows.length - created, results }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e: any) {
+    await alertFatalError("bulk-import-organizations", e);
     return new Response(JSON.stringify({ error: e?.message || String(e) }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

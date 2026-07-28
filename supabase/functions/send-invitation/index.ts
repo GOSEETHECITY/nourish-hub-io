@@ -1,10 +1,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.98.0";
+import { restrictedCors, alertFatalError } from "../_shared/ops.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+const corsHeaders = restrictedCors();
+
 
 interface InvitationPayload {
   email: string;
@@ -163,6 +161,7 @@ Deno.serve(async (req) => {
     );
   } catch (error: unknown) {
     console.error("send-invitation error:", error);
+    await alertFatalError("send-invitation", error);
     const message = error instanceof Error ? error.message : "Unknown error";
     return new Response(
       JSON.stringify({ error: message }),

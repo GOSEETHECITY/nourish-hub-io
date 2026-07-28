@@ -2,13 +2,13 @@
 // organization or nonprofit via Resend from noreply@hariet.ai. Marks
 // credentials_sent_at on the entity so nothing is double-sent.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.98.0";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { restrictedCors, alertFatalError, generateTempPassword } from "../_shared/ops.ts";
 
 Deno.serve(async (req) => {
+  const corsHeaders = restrictedCors(req);
+  const json = (o: unknown, status = 200) =>
+    new Response(JSON.stringify(o), { status, headers: { "Content-Type": "application/json", ...corsHeaders } });
+
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
     const authHeader = req.headers.get("Authorization");
@@ -19,6 +19,7 @@ Deno.serve(async (req) => {
     const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const { data: isAdmin } = await admin.rpc("has_role", { _user_id: user.id, _role: "admin" });
     if (!isAdmin) return json({ error: "Forbidden" }, 403);
+
 
     const { targets } = await req.json() as { targets: Array<{ kind: "org" | "nonprofit"; id: string }> };
     if (!Array.isArray(targets) || !targets.length) return json({ error: "targets required" }, 400);
@@ -33,16 +34,37 @@ Deno.serve(async (req) => {
         const table = t.kind === "nonprofit" ? "nonprofits" : "organizations";
         const nameCol = t.kind === "nonprofit" ? "organization_name" : "name";
         const { data: row } = await admin.from(table)
-          .select(`id, ${nameCol}, join_code, primary_contact_email, primary_contact_name, temp_password_hint, credentials_sent_at`)
+          .select(`id, ${nameCol}, join_code, primary_contact_email, primary_contact_name, credentials_sent_at`)
           .eq("id", t.id).maybeSingle();
         if (!row) { results.push({ id: t.id, status: "failed", reason: "not found" }); continue; }
-        if (row.credentials_sent_at) { results.push({ id: t.id, status: "skipped", reason: "already sent" }); continue; }
+        if ((row as any).credentials_sent_at) { results.push({ id: t.id, status: "skipped", reason: "already sent" }); continue; }
         const email = (row as any).primary_contact_email;
-        const password = (row as any).temp_password_hint;
         const orgName = (row as any)[nameCol];
         const joinCode = (row as any).join_code;
         const contactName = (row as any).primary_contact_name || "there";
-        if (!email || !password) { results.push({ id: t.id, status: "failed", reason: "missing email or temp password" }); continue; }
+        if (!email) { results.push({ id: t.id, status: "failed", reason: "missing contact email" }); continue; }
+
+        // Each organization gets its own random temp password.
+        const { data: cred } = await admin.from("partner_credentials")
+          .select("temp_password").eq("entity_kind", t.kind).eq("entity_id", t.id).maybeSingle();
+        let password: string | null = cred?.temp_password ?? null;
+        if (!password) {
+          password = generateTempPassword();
+          const { data: prof } = await admin.from("profiles").select("id").eq("email", email).maybeSingle();
+          if (prof?.id) {
+            await admin.auth.admin.updateUserById(prof.id, { password });
+          } else {
+            const { error: createErr } = await admin.auth.admin.createUser({ email, password, email_confirm: true });
+            if (createErr && !/already/i.test(createErr.message)) {
+              results.push({ id: t.id, status: "failed", reason: createErr.message }); continue;
+            }
+          }
+          await admin.from("partner_credentials").upsert(
+            { entity_kind: t.kind, entity_id: t.id, temp_password: password },
+            { onConflict: "entity_kind,entity_id" },
+          );
+        }
+
 
         const dashboardUrl = t.kind === "nonprofit"
           ? "https://hariet.ai/nonprofit"
@@ -69,6 +91,7 @@ Deno.serve(async (req) => {
     }
     return json({ results });
   } catch (e: any) {
+    await alertFatalError("send-partner-credentials", e);
     return json({ error: e?.message || String(e) }, 500);
   }
 });

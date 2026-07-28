@@ -4,6 +4,7 @@
 // claimed the donation (or an admin).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { PDFDocument, StandardFonts, rgb } from "https://esm.sh/pdf-lib@1.17.1";
+import { alertFatalError } from "../_shared/ops.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -190,6 +191,7 @@ Deno.serve(async (req) => {
 
     return json({ id: inserted.id, pdf_path: path });
   } catch (e) {
+    await alertFatalError("generate-tax-receipt", e);
     return json({ error: (e as Error).message || "unknown error" }, 500);
   }
 });

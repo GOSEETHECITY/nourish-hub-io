@@ -41,3 +41,16 @@ verify_jwt = false
 
 [functions.verify-coordinator-otp]
 verify_jwt = false
+
+[functions.donation-unclaimed-alerts]
+verify_jwt = false
+
+[functions.donation-posted-sms]
+verify_jwt = false
+
+[functions.submit-support-request]
+verify_jwt = false
+
+[functions.verify-ein-nightly]
+verify_jwt = false
+

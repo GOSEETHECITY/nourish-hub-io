@@ -1,11 +1,16 @@
 // Nightly job: download IRS Pub 78 dataset and upsert into irs_pub78_orgs.
-// Requires no auth — pg_cron invokes it. Run manually the first time by curling
-// this endpoint with the anon key.
+// Requires the CRON_SECRET header — pg_cron supplies it via invoke_scheduled_function.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.98.0";
+import { requireCronSecret, alertFatalError, internalCors } from "../_shared/ops.ts";
 
-Deno.serve(async () => {
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: internalCors });
+  const denied = requireCronSecret(req);
+  if (denied) return denied;
+
   const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
   try {
+
     // Pub 78 is published as a pipe-delimited text file inside a zip.
     // Direct text mirror maintained by the IRS Business Master File team:
     //   https://apps.irs.gov/pub/epostcard/data-download-pub78.zip
@@ -46,6 +51,7 @@ Deno.serve(async () => {
     }
     return new Response(JSON.stringify({ ok: true, processed }));
   } catch (e: any) {
+    await alertFatalError("verify-ein-nightly", e);
     return new Response(JSON.stringify({ ok: false, error: e?.message || String(e) }), { status: 500 });
   }
 });

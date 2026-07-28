@@ -1,15 +1,18 @@
 // Releases flash reservations whose expires_at has passed and status is still
 // 'reserved' (no pickup confirmed). Runs on a 5-minute cron.
 import { createClient } from "npm:@supabase/supabase-js@2";
-const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-internal-secret, stripe-signature" };
+import { internalCors as corsHeaders, requireCronSecret, alertFatalError } from "../_shared/ops.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const denied = requireCronSecret(req);
+  if (denied) return denied;
 
   const admin = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
+
 
   try {
     const { data, error } = await admin
@@ -45,6 +48,7 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("release-expired-flash-reservations failed", e);
+    await alertFatalError("release-expired-flash-reservations", e);
     return new Response(JSON.stringify({ error: String(e) }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
