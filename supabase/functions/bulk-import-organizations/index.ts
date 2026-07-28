@@ -82,8 +82,10 @@ function parseCSV(text: string): Row[] {
 }
 
 Deno.serve(async (req) => {
+  const corsHeaders = restrictedCors(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
+
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
