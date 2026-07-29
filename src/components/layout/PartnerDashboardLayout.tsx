@@ -209,7 +209,7 @@ export default function PartnerDashboardLayout({
           )}
 
           <div className="flex items-center gap-3 md:gap-4 ml-auto">
-            <SupportRequestButton organizationName={orgName} className="hidden sm:inline-flex" />
+            <SupportRequestButton organizationName={orgName} />
             <PartnerNotificationBell />
             <div className="flex items-center gap-3">
 
