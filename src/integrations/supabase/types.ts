@@ -2451,41 +2451,94 @@ export type Database = {
         }
         Relationships: []
       }
+      support_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          is_system: boolean
+          sender_name: string | null
+          sender_role: string
+          sender_user_id: string | null
+          support_request_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          is_system?: boolean
+          sender_name?: string | null
+          sender_role?: string
+          sender_user_id?: string | null
+          support_request_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          is_system?: boolean
+          sender_name?: string | null
+          sender_role?: string
+          sender_user_id?: string | null
+          support_request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_support_request_id_fkey"
+            columns: ["support_request_id"]
+            isOneToOne: false
+            referencedRelation: "support_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_requests: {
         Row: {
+          admin_last_viewed_at: string | null
           created_at: string
           email: string | null
           id: string
+          last_message_at: string | null
+          last_message_role: string | null
           message: string
           organization_name: string | null
           phone: string | null
           status: Database["public"]["Enums"]["support_status"]
           subject: string
           user_id: string | null
+          user_last_viewed_at: string | null
           user_name: string | null
         }
         Insert: {
+          admin_last_viewed_at?: string | null
           created_at?: string
           email?: string | null
           id?: string
+          last_message_at?: string | null
+          last_message_role?: string | null
           message: string
           organization_name?: string | null
           phone?: string | null
           status?: Database["public"]["Enums"]["support_status"]
           subject: string
           user_id?: string | null
+          user_last_viewed_at?: string | null
           user_name?: string | null
         }
         Update: {
+          admin_last_viewed_at?: string | null
           created_at?: string
           email?: string | null
           id?: string
+          last_message_at?: string | null
+          last_message_role?: string | null
           message?: string
           organization_name?: string | null
           phone?: string | null
           status?: Database["public"]["Enums"]["support_status"]
           subject?: string
           user_id?: string | null
+          user_last_viewed_at?: string | null
           user_name?: string | null
         }
         Relationships: []
@@ -3110,6 +3163,10 @@ export type Database = {
       }
       log_usage_event: {
         Args: { p_event_type: string; p_metadata?: Json }
+        Returns: undefined
+      }
+      mark_support_thread_viewed: {
+        Args: { p_request_id: string }
         Returns: undefined
       }
       my_referral_rank: {
