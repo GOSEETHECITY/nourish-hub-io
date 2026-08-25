@@ -3192,6 +3192,11 @@ export type Database = {
         Returns: undefined
       }
       reserve_flash_listing: { Args: { p_listing_id: string }; Returns: string }
+      set_own_location: { Args: { p_location_id: string }; Returns: undefined }
+      set_own_nonprofit_location: {
+        Args: { p_location_id: string }
+        Returns: undefined
+      }
       submit_impact_survey: {
         Args: {
           p_condition_comment: string
