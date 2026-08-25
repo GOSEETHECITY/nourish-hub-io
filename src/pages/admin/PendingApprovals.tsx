@@ -20,7 +20,36 @@ export default function PendingApprovals() {
   useEffect(() => { load(); }, []);
 
   const approve = async (s: any) => {
-    // Verify EIN for nonprofits, then create the org via bulk-import
+    // Self-serve signups already created the organization / nonprofit row.
+    // Approving those just flips the status; only legacy submissions with no
+    // linked entity need to be created through bulk-import.
+    if (s.created_organization_id || s.created_nonprofit_id) {
+      const isNonprofit = !!s.created_nonprofit_id;
+      const { error } = isNonprofit
+        ? await supabase.from("nonprofits").update({ approval_status: "approved" }).eq("id", s.created_nonprofit_id)
+        : await supabase.from("organizations").update({ approval_status: "approved" }).eq("id", s.created_organization_id);
+      if (error) {
+        toast({ title: "Approve failed", description: error.message, variant: "destructive" }); return;
+      }
+      if (!isNonprofit) {
+        await supabase.from("locations").update({ approval_status: "approved" }).eq("organization_id", s.created_organization_id);
+      } else {
+        await supabase.from("nonprofit_locations").update({ approval_status: "approved" }).eq("nonprofit_id", s.created_nonprofit_id);
+      }
+      await supabase.from("onboarding_submissions").update({ status: "approved", reviewed_at: new Date().toISOString() }).eq("id", s.id);
+      await supabase.functions.invoke("send-alert", {
+        body: {
+          to_email: s.contact_email, category: "onboarding_approved", urgent: false,
+          subject: "Your HarietAI application has been approved",
+          text: `Hi ${s.contact_name}, ${s.organization_name} has been approved. You can now sign in with the account you created during signup.`,
+        },
+      });
+      toast({ title: "Approved", description: `${s.organization_name} is now active.` });
+      load();
+      return;
+    }
+
+    // Legacy path: no entity yet, create it via bulk-import.
     const rows = [{
       organization_name: s.organization_name, organization_type: s.organization_type,
       address: s.address, city: s.city, state: s.state, zip_code: s.zip_code,
@@ -47,6 +76,7 @@ export default function PendingApprovals() {
     toast({ title: "Approved & emailed", description: `${s.organization_name} created with join code ${created.join_code}.` });
     load();
   };
+
 
   const doReject = async () => {
     if (!rejectFor || !reason.trim()) return;
