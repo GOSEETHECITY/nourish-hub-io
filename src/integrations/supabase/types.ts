@@ -3294,6 +3294,8 @@ export type Database = {
         | "government_entity"
         | "nonprofit_organization"
         | "franchise"
+        | "food_manufacturer"
+        | "food_distributor"
       override_billing_cycle: "monthly" | "annual"
       override_status: "active" | "expired" | "scheduled"
       payment_status: "paid" | "unpaid" | "free"
@@ -3506,6 +3508,8 @@ export const Constants = {
         "government_entity",
         "nonprofit_organization",
         "franchise",
+        "food_manufacturer",
+        "food_distributor",
       ],
       override_billing_cycle: ["monthly", "annual"],
       override_status: ["active", "expired", "scheduled"],

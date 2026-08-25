@@ -8,14 +8,43 @@ export const ORG_CATEGORIES = [
   { value: "nonprofit_organization", label: "Nonprofit Organization" },
 ] as const;
 
-// Mapping from signup category to org type
+// Mapping from signup category to default backend organization type
 export const SIGNUP_CATEGORY_TO_ORG_TYPE: Record<string, string> = {
-  restaurant: "food_beverage_group",
-  hospitality: "hospitality_group",
-  venue_events: "venue_events_group",
-  farm_grocery: "farm_grocery_group",
-  government: "government_entity",
+  restaurant: "restaurant",
+  hospitality: "hotel",
+  venue_events: "event",
+  farm_grocery: "farm",
+  food_suppliers: "food_distributor",
+  government: "municipal_government",
   nonprofit: "nonprofit_organization",
+};
+
+export const CATEGORY_TO_ORG_TYPES: Record<string, Array<{ value: string; label: string }>> = {
+  restaurant: [
+    { value: "restaurant", label: "Restaurant" },
+    { value: "catering_company", label: "Catering Company" },
+    { value: "food_truck", label: "Food Truck" },
+    { value: "cafe", label: "Cafe" },
+  ],
+  hospitality: [
+    { value: "hotel", label: "Hotel" },
+    { value: "resort", label: "Resort" },
+    { value: "convention_center", label: "Convention Center" },
+  ],
+  venue_events: [
+    { value: "stadium", label: "Stadium" },
+    { value: "arena", label: "Arena" },
+    { value: "airport", label: "Airport" },
+    { value: "event", label: "Event Venue" },
+    { value: "festival", label: "Festival" },
+  ],
+  farm_grocery: [
+    { value: "farm", label: "Farm" },
+  ],
+  food_suppliers: [
+    { value: "food_distributor", label: "Food Distributor" },
+    { value: "food_manufacturer", label: "Food Manufacturer" },
+  ],
 };
 
 // ─── Location Type Options ───

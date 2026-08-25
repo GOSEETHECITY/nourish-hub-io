@@ -64,7 +64,7 @@ const VALID_ORG_TYPES = [
   "restaurant", "catering_company", "event", "hotel", "convention_center",
   "stadium", "arena", "farm", "grocery_store", "food_truck",
   "airport", "festival", "municipal_government", "county_government",
-  "state_government", "resort", "cafe",
+  "state_government", "resort", "cafe", "food_manufacturer", "food_distributor",
 ];
 
 const VALID_FOOD_TYPES = [
