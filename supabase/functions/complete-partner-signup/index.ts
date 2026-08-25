@@ -1,9 +1,14 @@
-// Completes venue / nonprofit partner signup with the service role.
+// Completes venue / nonprofit / government partner signup with the service role.
 //
 // Client-side signup cannot do this work: RLS forbids a role-less user from
-// updating `organizations`, and the `profiles` UPDATE policy explicitly blocks
-// changing organization_id / nonprofit_id / location_id. Rather than widening
-// those policies, all linking writes happen here behind a verified JWT.
+// creating an organization, and the `profiles` UPDATE policy blocks changing
+// organization_id / nonprofit_id. All linking writes happen here behind a
+// verified JWT. The account itself is created client-side first (supabase
+// auth.signUp), so a signed-out visitor can complete the whole flow.
+//
+// Only the account, the org (or nonprofit) row, the profile link and the role
+// are created. Address, locations, pickup details and the sustainability
+// baseline are collected later, after approval.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.98.0";
 import { z } from "https://esm.sh/zod@3.23.8";
 import { alertFatalError } from "../_shared/ops.ts";
@@ -17,8 +22,6 @@ const ALLOWED_ORIGINS = [
 
 function cors(req: Request): Record<string, string> {
   const origin = req.headers.get("origin") ?? "";
-  // Lovable preview / published origins and local dev are allowed so the flow
-  // is testable before it reaches production.
   const allowed =
     ALLOWED_ORIGINS.includes(origin) ||
     /^https:\/\/[a-z0-9-]+\.lovable\.app$/.test(origin) ||
@@ -46,41 +49,7 @@ const VenueSchema = z.object({
   org: z.object({
     name: z.string().trim().min(1).max(255),
     type: z.string().trim().min(1).max(64),
-    address: z.string().max(255).optional().nullable(),
-    city: z.string().max(120).optional().nullable(),
-    state: z.string().max(64).optional().nullable(),
-    zip: z.string().max(20).optional().nullable(),
-    county: z.string().max(120).optional().nullable(),
-    contactName: z.string().max(255).optional().nullable(),
-    contactEmail: z.string().max(255).optional().nullable(),
-    contactPhone: z.string().max(40).optional().nullable(),
-    billingContact: z.string().max(255).optional().nullable(),
-    joinCode: z.string().max(32).optional().nullable(),
   }),
-  loc: z.object({
-    name: z.string().trim().min(1).max(255),
-    locationType: z.string().max(120).optional().nullable(),
-    address: z.string().max(255).optional().nullable(),
-    city: z.string().max(120).optional().nullable(),
-    state: z.string().max(64).optional().nullable(),
-    zip: z.string().max(20).optional().nullable(),
-    county: z.string().max(120).optional().nullable(),
-    pickupAddress: z.string().max(255).optional().nullable(),
-    pickupInstructions: z.string().max(2000).optional().nullable(),
-    hours: z.string().max(500).optional().nullable(),
-    surplusFrequency: z.string().max(120).optional().nullable(),
-  }),
-  baseline: z
-    .object({
-      generates_surplus: z.boolean().optional().nullable(),
-      estimated_daily_surplus: z.string().max(120).optional().nullable(),
-      surplus_types: z.array(z.string().max(120)).optional().nullable(),
-      current_handling: z.string().max(500).optional().nullable(),
-      donation_frequency: z.string().max(120).optional().nullable(),
-      priority_outcomes: z.array(z.string().max(255)).optional().nullable(),
-    })
-    .optional()
-    .nullable(),
 });
 
 const NonprofitSchema = z.object({
@@ -88,45 +57,36 @@ const NonprofitSchema = z.object({
   account: AccountSchema,
   org: z.object({
     name: z.string().trim().min(1).max(255),
-    ein: z.string().max(20).optional().nullable(),
-    website: z.string().max(255).optional().nullable(),
-    socialHandles: z.string().max(500).optional().nullable(),
-    contactName: z.string().max(255).optional().nullable(),
-    contactEmail: z.string().max(255).optional().nullable(),
-    contactPhone: z.string().max(40).optional().nullable(),
-    address: z.string().max(255).optional().nullable(),
-    city: z.string().max(120).optional().nullable(),
-    state: z.string().max(64).optional().nullable(),
-    zip: z.string().max(20).optional().nullable(),
-    county: z.string().max(120).optional().nullable(),
-    operatingHours: z.string().max(500).optional().nullable(),
-    joinCode: z.string().max(32).optional().nullable(),
-  }),
-  loc: z.object({
-    name: z.string().trim().min(1).max(255),
-    address: z.string().max(255).optional().nullable(),
-    city: z.string().max(120).optional().nullable(),
-    state: z.string().max(64).optional().nullable(),
-    zip: z.string().max(20).optional().nullable(),
-    county: z.string().max(120).optional().nullable(),
-    operatingHours: z.string().max(500).optional().nullable(),
-    pickupDropoff: z.string().max(2000).optional().nullable(),
-  }),
-  capacity: z.object({
-    coldStorage: z.boolean(),
-    refrigeration: z.boolean(),
-    cabinetry: z.boolean(),
-    foodTypes: z.array(z.string().max(64)),
-    weeklyServed: z.string().max(20).optional().nullable(),
-    populations: z.array(z.string().max(120)),
-  }),
-  documents: z.object({
-    proofOfInsurancePath: z.string().max(500).optional().nullable(),
-    signedAgreementPath: z.string().max(500).optional().nullable(),
   }),
 });
 
-const BodySchema = z.discriminatedUnion("pathway", [VenueSchema, NonprofitSchema]);
+const GovernmentSchema = z.object({
+  pathway: z.literal("government"),
+  account: AccountSchema,
+  invitationCode: z.string().trim().min(1).max(64),
+  org: z.object({
+    name: z.string().trim().min(1).max(255),
+    type: z.enum(["municipal_government", "county_government", "state_government"]),
+  }),
+});
+
+const BodySchema = z.discriminatedUnion("pathway", [VenueSchema, NonprofitSchema, GovernmentSchema]);
+
+const VENUE_ORG_TYPES = new Set([
+  "restaurant", "catering_company", "event", "hotel", "convention_center",
+  "stadium", "arena", "farm", "grocery_store", "food_truck", "airport",
+  "festival", "resort", "cafe", "food_manufacturer", "food_distributor",
+  "food_beverage_group", "hospitality_group", "venue_events_group",
+  "farm_grocery_group", "franchise",
+]);
+
+function joinCode(prefix: string): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const bytes = crypto.getRandomValues(new Uint8Array(8));
+  let out = "";
+  for (const b of bytes) out += chars[b % chars.length];
+  return `${prefix}-${out}`;
+}
 
 const nn = (v: unknown) => {
   const s = typeof v === "string" ? v.trim() : v;
@@ -140,71 +100,93 @@ Deno.serve(async (req) => {
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const admin = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-  // Rows created in this call, newest first, so a failure can unwind cleanly.
+  // Rows created in this call, so a failure can unwind cleanly and the
+  // applicant can retry with the same email.
   const undo: Array<{ table: string; id: string }> = [];
+  let linkedUserId: string | null = null;
   const rollback = async () => {
-    for (const row of undo.reverse()) {
+    if (linkedUserId) {
+      await admin.from("user_roles").delete().eq("user_id", linkedUserId);
+      await admin.from("profiles").update({
+        organization_id: null, nonprofit_id: null, location_id: null, nonprofit_location_id: null,
+      }).eq("id", linkedUserId);
+    }
+    for (const row of [...undo].reverse()) {
       await admin.from(row.table).delete().eq("id", row.id);
     }
   };
 
+  const fail = (message: string, status: number) =>
+    new Response(JSON.stringify({ error: message }), { status, headers });
+
   try {
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: "Missing authorization header" }), { status: 401, headers });
-    }
+    if (!authHeader) return fail("You must be signed in to complete signup.", 401);
 
     const userClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
       global: { headers: { Authorization: authHeader } },
     });
     const { data: { user }, error: userError } = await userClient.auth.getUser();
-    if (userError || !user) {
-      return new Response(JSON.stringify({ error: "Invalid authentication" }), { status: 401, headers });
-    }
+    if (userError || !user) return fail("Invalid authentication", 401);
 
     const parsed = BodySchema.safeParse(await req.json().catch(() => null));
     if (!parsed.success) {
-      return new Response(JSON.stringify({ error: "Invalid request", details: parsed.error.flatten() }), {
-        status: 400,
-        headers,
-      });
+      return new Response(
+        JSON.stringify({ error: "Please check the form and try again.", details: parsed.error.flatten() }),
+        { status: 400, headers },
+      );
     }
     const body = parsed.data;
+    const account = body.account;
 
     // A user may only complete partner signup once.
     const { data: existingRoles } = await admin.from("user_roles").select("role").eq("user_id", user.id);
     if (existingRoles && existingRoles.length > 0) {
-      return new Response(JSON.stringify({ error: "This account already has a partner role assigned." }), {
-        status: 409,
-        headers,
-      });
+      return fail("An account with this email already exists.", 409);
+    }
+    const { data: existingProfile } = await admin
+      .from("profiles").select("organization_id, nonprofit_id").eq("id", user.id).maybeSingle();
+    if (existingProfile?.organization_id || existingProfile?.nonprofit_id) {
+      return fail("An account with this email already exists.", 409);
     }
 
-    const account = body.account;
-    let submissionType: string;
     let organizationId: string | null = null;
     let nonprofitId: string | null = null;
+    let submissionType: string;
+    let contactName = `${account.firstName} ${account.lastName}`.trim();
+    const contactEmail = user.email ?? "";
 
-    if (body.pathway === "venue") {
-      const { org, loc, baseline } = body;
-      submissionType = org.type;
+    if (body.pathway === "government") {
+      // The role is issued by the existing invitation-gated function, called
+      // with the applicant's own JWT exactly as before.
+      const roleRes = await fetch(`${supabaseUrl}/functions/v1/assign-government-role`, {
+        method: "POST",
+        headers: { Authorization: authHeader, "Content-Type": "application/json" },
+        body: JSON.stringify({ invitationCode: body.invitationCode }),
+      });
+      const roleBody = await roleRes.json().catch(() => ({}));
+      if (!roleRes.ok || roleBody?.error) {
+        return fail(roleBody?.error || "Invalid or expired invitation code.", 403);
+      }
+      linkedUserId = user.id;
+    }
+
+    if (body.pathway === "venue" || body.pathway === "government") {
+      const isGov = body.pathway === "government";
+      const type = isGov ? body.org.type : body.org.type;
+      if (!isGov && !VENUE_ORG_TYPES.has(type)) return fail("Please choose a valid organization type.", 400);
+      submissionType = type;
 
       const { data: orgRow, error: orgError } = await admin
         .from("organizations")
         .insert({
-          name: org.name,
-          type: org.type,
-          primary_contact_name: nn(org.contactName),
-          primary_contact_email: nn(org.contactEmail),
-          primary_contact_phone: nn(org.contactPhone),
-          billing_contact: nn(org.billingContact),
-          address: nn(org.address),
-          city: nn(org.city),
-          state: nn(org.state),
-          zip: nn(org.zip),
-          county: nn(org.county),
+          name: body.org.name,
+          type,
+          primary_contact_name: contactName,
+          primary_contact_email: contactEmail,
+          primary_contact_phone: nn(account.phone),
           approval_status: "pending",
-          join_code: nn(org.joinCode),
+          join_code: joinCode(isGov ? "GOV" : "HAR"),
         })
         .select("id")
         .single();
@@ -212,92 +194,39 @@ Deno.serve(async (req) => {
       organizationId = orgRow.id;
       undo.push({ table: "organizations", id: orgRow.id });
 
-      const { data: locRow, error: locError } = await admin
-        .from("locations")
-        .insert({
-          organization_id: organizationId,
-          name: loc.name,
-          location_type: nn(loc.locationType),
-          address: nn(loc.address),
-          city: nn(loc.city),
-          state: nn(loc.state),
-          zip: nn(loc.zip),
-          county: nn(loc.county),
-          pickup_address: nn(loc.pickupAddress) ?? nn(loc.address),
-          pickup_instructions: nn(loc.pickupInstructions),
-          hours_of_operation: nn(loc.hours),
-          estimated_surplus_frequency: nn(loc.surplusFrequency),
-        })
-        .select("id")
-        .single();
-      if (locError) throw locError;
-      undo.push({ table: "locations", id: locRow.id });
-
-      if (baseline) {
-        const { data: baseRow, error: baseError } = await admin
-          .from("sustainability_baseline")
-          .insert({
-            location_id: locRow.id,
-            generates_surplus: baseline.generates_surplus ?? null,
-            estimated_daily_surplus: nn(baseline.estimated_daily_surplus),
-            surplus_types: baseline.surplus_types?.length ? baseline.surplus_types : null,
-            current_handling: nn(baseline.current_handling),
-            donation_frequency: nn(baseline.donation_frequency),
-            priority_outcomes: baseline.priority_outcomes?.length ? baseline.priority_outcomes : null,
-          })
-          .select("id")
-          .single();
-        if (baseError) throw baseError;
-        undo.push({ table: "sustainability_baseline", id: baseRow.id });
-      }
-
       const { error: profileError } = await admin
         .from("profiles")
         .update({
           first_name: account.firstName,
           last_name: account.lastName,
+          email: contactEmail,
           phone: nn(account.phone),
           organization_id: organizationId,
-          location_id: locRow.id,
         })
         .eq("id", user.id);
       if (profileError) throw profileError;
+      linkedUserId = user.id;
 
-      const { error: roleError } = await admin
-        .from("user_roles")
-        .insert({ user_id: user.id, role: "venue_partner" });
-      if (roleError) throw roleError;
+      if (!isGov) {
+        const { error: roleError } = await admin
+          .from("user_roles")
+          .insert({ user_id: user.id, role: "venue_partner" });
+        if (roleError) throw roleError;
+      }
     } else {
-      const { org, loc, capacity, documents } = body;
-      submissionType = "nonprofit";
+      submissionType = "nonprofit_organization";
 
       const { data: npRow, error: npError } = await admin
         .from("nonprofits")
         .insert({
           user_id: user.id,
-          organization_name: org.name,
-          ein: nn(org.ein),
-          website: nn(org.website),
-          social_handles: nn(org.socialHandles) ? { handles: org.socialHandles } : null,
-          primary_contact: nn(org.contactName),
-          primary_contact_email: nn(org.contactEmail),
-          primary_contact_phone: nn(org.contactPhone),
-          address: nn(org.address),
-          city: nn(org.city),
-          state: nn(org.state),
-          zip: nn(org.zip),
-          county: nn(org.county),
-          operating_hours: nn(org.operatingHours),
-          cold_storage: capacity.coldStorage,
-          refrigeration: capacity.refrigeration,
-          cabinetry: capacity.cabinetry,
-          food_types_accepted: capacity.foodTypes.length ? capacity.foodTypes : null,
-          estimated_weekly_served: capacity.weeklyServed ? parseInt(capacity.weeklyServed, 10) || null : null,
-          population_served: capacity.populations.length ? capacity.populations.join(", ") : null,
-          proof_of_insurance_url: nn(documents.proofOfInsurancePath),
-          signed_agreement_url: nn(documents.signedAgreementPath),
+          organization_name: body.org.name,
+          primary_contact: contactName,
+          primary_contact_name: contactName,
+          primary_contact_email: contactEmail,
+          primary_contact_phone: nn(account.phone),
           approval_status: "pending",
-          join_code: nn(org.joinCode),
+          join_code: joinCode("NP"),
         })
         .select("id")
         .single();
@@ -305,42 +234,18 @@ Deno.serve(async (req) => {
       nonprofitId = npRow.id;
       undo.push({ table: "nonprofits", id: npRow.id });
 
-      const { data: npLocRow, error: npLocError } = await admin
-        .from("nonprofit_locations")
-        .insert({
-          nonprofit_id: nonprofitId,
-          name: loc.name,
-          address: nn(loc.address),
-          city: nn(loc.city),
-          state: nn(loc.state),
-          zip: nn(loc.zip),
-          county: nn(loc.county),
-          operating_hours: nn(loc.operatingHours),
-          pickup_dropoff_instructions: nn(loc.pickupDropoff),
-          cold_storage: capacity.coldStorage,
-          refrigeration: capacity.refrigeration,
-          cabinetry: capacity.cabinetry,
-          food_types_accepted: capacity.foodTypes.length ? capacity.foodTypes : null,
-          estimated_weekly_served: capacity.weeklyServed ? parseInt(capacity.weeklyServed, 10) || null : null,
-          population_served: capacity.populations.length ? capacity.populations.join(", ") : null,
-          approval_status: "pending",
-        })
-        .select("id")
-        .single();
-      if (npLocError) throw npLocError;
-      undo.push({ table: "nonprofit_locations", id: npLocRow.id });
-
       const { error: profileError } = await admin
         .from("profiles")
         .update({
           first_name: account.firstName,
           last_name: account.lastName,
+          email: contactEmail,
           phone: nn(account.phone),
           nonprofit_id: nonprofitId,
-          nonprofit_location_id: npLocRow.id,
         })
         .eq("id", user.id);
       if (profileError) throw profileError;
+      linkedUserId = user.id;
 
       const { error: roleError } = await admin
         .from("user_roles")
@@ -349,23 +254,32 @@ Deno.serve(async (req) => {
     }
 
     // Surface the application in the existing admin approval queue.
-    const orgBlock = body.org as Record<string, unknown>;
     const { error: subError } = await admin.from("onboarding_submissions").insert({
       organization_name: body.org.name,
       organization_type: submissionType,
-      address: nn(orgBlock.address),
-      city: nn(orgBlock.city),
-      state: nn(orgBlock.state),
-      zip_code: nn(orgBlock.zip),
-      contact_name: nn(orgBlock.contactName) ?? `${account.firstName} ${account.lastName}`.trim(),
-      contact_email: nn(orgBlock.contactEmail) ?? user.email ?? "",
-      contact_phone: nn(orgBlock.contactPhone) ?? nn(account.phone),
-      ein: nn(orgBlock.ein),
+      contact_name: contactName,
+      contact_email: contactEmail,
+      contact_phone: nn(account.phone),
       status: "pending",
       created_organization_id: organizationId,
       created_nonprofit_id: nonprofitId,
     });
     if (subError) throw subError;
+
+    // Tell the admins an application is waiting. Never fail signup on this.
+    try {
+      await admin.functions.invoke("send-alert", {
+        body: {
+          to_email: "hello@goseethecity.com",
+          category: "new_partner_application",
+          urgent: false,
+          subject: `New partner application: ${body.org.name}`,
+          text: `A new ${submissionType.replace(/_/g, " ")} application is awaiting review.\n\n`
+            + `Organization: ${body.org.name}\nType: ${submissionType}\n`
+            + `Contact: ${contactName}\nEmail: ${contactEmail}`,
+        },
+      });
+    } catch (_) { /* alerting is best-effort */ }
 
     return new Response(
       JSON.stringify({ success: true, organization_id: organizationId, nonprofit_id: nonprofitId }),
@@ -374,7 +288,11 @@ Deno.serve(async (req) => {
   } catch (error: unknown) {
     await rollback().catch(() => {});
     await alertFatalError("complete-partner-signup", error);
-    const message = error instanceof Error ? error.message : "Signup could not be completed";
-    return new Response(JSON.stringify({ error: message }), { status: 500, headers });
+    const raw = error instanceof Error ? error.message : String(error);
+    console.error("complete-partner-signup failed:", raw);
+    if (/duplicate key|already exists/i.test(raw)) {
+      return fail("An account with this email already exists.", 409);
+    }
+    return fail("We could not complete your application. Please try again or contact hello@hariet.ai.", 500);
   }
 });
