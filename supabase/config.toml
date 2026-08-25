@@ -54,3 +54,7 @@ verify_jwt = false
 [functions.verify-ein-nightly]
 verify_jwt = false
 
+[functions.complete-partner-signup]
+verify_jwt = false
+
+
