@@ -72,6 +72,8 @@ import VenueLocations from "./pages/venue/VenueLocations";
 import VenueSettings from "./pages/venue/VenueSettings";
 import VenueSupport from "./pages/venue/VenueSupport";
 import VenueOnboarding from "./pages/venue/VenueOnboarding";
+import CompleteProfile from "./pages/partner/CompleteProfile";
+
 import VenueTaxReceipts from "./pages/venue/VenueTaxReceipts";
 import VenueCompliance from "./pages/venue/VenueCompliance";
 import VenueOrders from "./pages/venue/VenueOrders";
