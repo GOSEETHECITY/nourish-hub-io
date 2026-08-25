@@ -113,8 +113,8 @@ export default function GovernmentSignup({ onBack }: Props) {
             <div><Label>First Name *</Label><Input value={account.firstName} onChange={(e) => setAccount({ ...account, firstName: e.target.value })} /></div>
             <div><Label>Last Name *</Label><Input value={account.lastName} onChange={(e) => setAccount({ ...account, lastName: e.target.value })} /></div>
           </div>
-          <div><Label>Email *</Label><Input type="email" value={account.email} onChange={(e) => setAccount({ ...account, email: e.target.value })} /></div>
-          <div><Label>Phone</Label><Input type="tel" value={account.phone} onChange={(e) => setAccount({ ...account, phone: e.target.value })} /></div>
+          <div><Label>Email *</Label><Input type="email" autoComplete="off" value={account.email} onChange={(e) => setAccount({ ...account, email: e.target.value })} /></div>
+          <div><Label>Phone</Label><Input type="tel" autoComplete="off" value={account.phone} onChange={(e) => setAccount({ ...account, phone: e.target.value })} /></div>
           <div><Label>Password *</Label><PasswordInput value={account.password} onChange={(e) => setAccount({ ...account, password: e.target.value })} placeholder="••••••••" /></div>
           <div><Label>Confirm Password *</Label><PasswordInput value={account.confirmPassword} onChange={(e) => setAccount({ ...account, confirmPassword: e.target.value })} placeholder="••••••••" /></div>
           <Button className="w-full" onClick={() => setStep(2)} disabled={!invitationCode.trim() || !account.firstName || !account.lastName || !account.email || !account.password || !account.confirmPassword}>Continue</Button>
@@ -186,8 +186,8 @@ export default function GovernmentSignup({ onBack }: Props) {
 
           <div><Label>Primary Contact Name</Label><Input value={gov.contactName} onChange={(e) => setGov({ ...gov, contactName: e.target.value })} /></div>
           <div className="grid grid-cols-2 gap-4">
-            <div><Label>Primary Contact Email</Label><Input type="email" value={gov.contactEmail} onChange={(e) => setGov({ ...gov, contactEmail: e.target.value })} /></div>
-            <div><Label>Primary Contact Phone</Label><Input type="tel" value={gov.contactPhone} onChange={(e) => setGov({ ...gov, contactPhone: e.target.value })} /></div>
+            <div><Label>Primary Contact Email</Label><Input type="email" autoComplete="off" value={gov.contactEmail} onChange={(e) => setGov({ ...gov, contactEmail: e.target.value })} /></div>
+            <div><Label>Primary Contact Phone</Label><Input type="tel" autoComplete="off" value={gov.contactPhone} onChange={(e) => setGov({ ...gov, contactPhone: e.target.value })} /></div>
           </div>
           <div><Label>Address</Label><Input value={gov.address} onChange={(e) => setGov({ ...gov, address: e.target.value })} /></div>
           <div className="grid grid-cols-3 gap-4">

@@ -198,8 +198,8 @@ export default function NonprofitSignup({ onBack }: Props) {
             <div><Label>First Name *</Label><Input value={account.firstName} onChange={(e) => setAccount({ ...account, firstName: e.target.value })} /></div>
             <div><Label>Last Name *</Label><Input value={account.lastName} onChange={(e) => setAccount({ ...account, lastName: e.target.value })} /></div>
           </div>
-          <div><Label>Email *</Label><Input type="email" value={account.email} onChange={(e) => setAccount({ ...account, email: e.target.value })} /></div>
-          <div><Label>Phone</Label><Input type="tel" value={account.phone} onChange={(e) => setAccount({ ...account, phone: e.target.value })} /></div>
+          <div><Label>Email *</Label><Input type="email" autoComplete="off" value={account.email} onChange={(e) => setAccount({ ...account, email: e.target.value })} /></div>
+          <div><Label>Phone</Label><Input type="tel" autoComplete="off" value={account.phone} onChange={(e) => setAccount({ ...account, phone: e.target.value })} /></div>
           <div><Label>Password *</Label><PasswordInput value={account.password} onChange={(e) => setAccount({ ...account, password: e.target.value })} placeholder="••••••••" /></div>
           <div><Label>Confirm Password *</Label><PasswordInput value={account.confirmPassword} onChange={(e) => setAccount({ ...account, confirmPassword: e.target.value })} placeholder="••••••••" /></div>
           <Button className="w-full" onClick={() => setStep(2)} disabled={!account.firstName || !account.lastName || !account.email || !account.password || !account.confirmPassword}>
@@ -219,8 +219,8 @@ export default function NonprofitSignup({ onBack }: Props) {
           <div><Label>Social Handles</Label><Input value={org.socialHandles} onChange={(e) => setOrg({ ...org, socialHandles: e.target.value })} placeholder="@handle" /></div>
           <div><Label>Primary Contact Name</Label><Input value={org.contactName} onChange={(e) => setOrg({ ...org, contactName: e.target.value })} /></div>
           <div className="grid grid-cols-2 gap-4">
-            <div><Label>Primary Contact Email</Label><Input type="email" value={org.contactEmail} onChange={(e) => setOrg({ ...org, contactEmail: e.target.value })} /></div>
-            <div><Label>Primary Contact Phone</Label><Input type="tel" value={org.contactPhone} onChange={(e) => setOrg({ ...org, contactPhone: e.target.value })} /></div>
+            <div><Label>Primary Contact Email</Label><Input type="email" autoComplete="off" value={org.contactEmail} onChange={(e) => setOrg({ ...org, contactEmail: e.target.value })} /></div>
+            <div><Label>Primary Contact Phone</Label><Input type="tel" autoComplete="off" value={org.contactPhone} onChange={(e) => setOrg({ ...org, contactPhone: e.target.value })} /></div>
           </div>
           <div><Label>Address</Label><Input value={org.address} onChange={(e) => setOrg({ ...org, address: e.target.value })} /></div>
           <div className="grid grid-cols-3 gap-4">

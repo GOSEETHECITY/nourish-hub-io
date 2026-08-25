@@ -11,15 +11,17 @@ export type OrgCategory =
   | "hospitality"
   | "venue_events"
   | "farm_grocery"
+  | "food_suppliers"
   | "government"
   | "nonprofit"
   | "join_existing";
 
 const CATEGORIES: { id: OrgCategory; emoji: string; title: string; subtitle: string }[] = [
   { id: "restaurant", emoji: "🍽️", title: "Food & Beverage Group", subtitle: "Restaurants, food trucks, catering companies, cafes" },
-  { id: "hospitality", emoji: "🏨", title: "Hospitality Group", subtitle: "Hotels, resorts, bed and breakfasts" },
-  { id: "venue_events", emoji: "🏟️", title: "Venue & Events Group", subtitle: "Convention centers, stadiums, arenas, festivals, airports" },
-  { id: "farm_grocery", emoji: "🌱", title: "Farm & Grocery Group", subtitle: "Farms, grocery stores, food distributors" },
+  { id: "hospitality", emoji: "🏨", title: "Hospitality Group", subtitle: "Hotels, resorts, convention centers" },
+  { id: "venue_events", emoji: "🏟️", title: "Venue & Events Group", subtitle: "Stadiums, arenas, airports, festivals" },
+  { id: "farm_grocery", emoji: "🌱", title: "Farm & Grocery Group", subtitle: "Farms, farmers markets" },
+  { id: "food_suppliers", emoji: "📦", title: "Food Suppliers & Distributors", subtitle: "Food manufacturers, food distributors" },
   { id: "government", emoji: "🏛️", title: "Government Entity", subtitle: "Municipal, county, or state government" },
   { id: "nonprofit", emoji: "💚", title: "Nonprofit Organization", subtitle: "Nonprofit organizations that distribute food" },
   { id: "join_existing", emoji: "🔗", title: "Join Existing Organization", subtitle: "I have a Location Join Code" },
@@ -31,7 +33,7 @@ export default function Signup() {
   if (selected === "government") return <GovernmentSignup onBack={() => setSelected(null)} />;
   if (selected === "nonprofit") return <NonprofitSignup onBack={() => setSelected(null)} />;
   if (selected === "join_existing") return <JoinSignup onBack={() => setSelected(null)} />;
-  if (selected && ["restaurant", "hospitality", "venue_events", "farm_grocery"].includes(selected)) {
+  if (selected && ["restaurant", "hospitality", "venue_events", "farm_grocery", "food_suppliers"].includes(selected)) {
     return <VenueSignup category={selected} onBack={() => setSelected(null)} />;
   }
 
