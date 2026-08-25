@@ -51,7 +51,8 @@ const emptyDonation = {
 
 export default function VenueDonations() {
   const { profile } = useAuth();
-  const queryClient = useQueryClient();
+  const navigate = useNavigate();
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(emptyDonation);
   const [selectedLocationId, setSelectedLocationId] = useState<string>("");
