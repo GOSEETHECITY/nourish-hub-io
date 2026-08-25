@@ -117,7 +117,28 @@ export default function VenueDonations() {
   const receiptMap: Record<string, { pdf_path: string }> = {};
   for (const r of receipts) if (!receiptMap[r.food_listing_id]) receiptMap[r.food_listing_id] = r;
 
+  // The sustainability baseline is captured after approval, so a venue can
+  // reach this page without one. Posting is gated until it exists.
+  const locationIds = locations.map((l) => l.id);
+  const { data: baselineCount = 0 } = useQuery({
+    queryKey: ["venue-baseline-exists", locationIds],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("sustainability_baseline")
+        .select("id", { count: "exact", head: true })
+        .in("location_id", locationIds);
+      return count ?? 0;
+    },
+    enabled: locationIds.length > 0,
+  });
+  const hasBaseline = baselineCount > 0;
+
   const openDialog = () => {
+    if (!hasBaseline) {
+      toast.error("Complete your sustainability baseline before posting a donation.");
+      navigate("/venue/baseline");
+      return;
+    }
     setForm(emptyDonation);
     setIsFlash(false);
     setLineItems([emptyLine()]);
@@ -125,6 +146,7 @@ export default function VenueDonations() {
     setSelectedLocationId(locations[0]?.id || "");
     setDialogOpen(true);
   };
+
 
   const uploadPhotos = async (orgId: string, listingId: string): Promise<string[]> => {
     if (!photoFiles.length) return [];
