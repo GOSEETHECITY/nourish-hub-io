@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
@@ -12,15 +11,7 @@ import PasswordInput from "@/components/ui/password-input";
 import type { OrgCategory } from "../Signup";
 import SignupShell from "./SignupShell";
 import ConfirmationScreen from "./ConfirmationScreen";
-import SustainabilityBaselineForm, { emptySustainabilityBaseline, type SustainabilityBaselineData } from "@/components/forms/SustainabilityBaselineForm";
-import { LOCATION_TYPES, SIGNUP_CATEGORY_TO_ORG_TYPE, CATEGORY_TO_ORG_TYPES } from "@/lib/constants";
-
-function generateJoinCode(): string {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let code = "";
-  for (let i = 0; i < 4; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
-  return `HAR-${code}`;
-}
+import { SIGNUP_CATEGORY_TO_ORG_TYPE, CATEGORY_TO_ORG_TYPES } from "@/lib/constants";
 
 interface Props { category: OrgCategory; onBack: () => void; }
 
@@ -29,12 +20,10 @@ export default function VenueSignup({ category, onBack }: Props) {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
 
-  const defaultOrgType = SIGNUP_CATEGORY_TO_ORG_TYPE[category] || "food_beverage_group";
+  const defaultOrgType = SIGNUP_CATEGORY_TO_ORG_TYPE[category] || "restaurant";
 
   const [account, setAccount] = useState({ firstName: "", lastName: "", email: "", phone: "", password: "", confirmPassword: "" });
-  const [org, setOrg] = useState({ name: "", type: defaultOrgType, address: "", city: "", state: "", zip: "", county: "", contactName: "", contactEmail: "", contactPhone: "", billingContact: "" });
-  const [loc, setLoc] = useState({ name: "", locationType: "", address: "", city: "", state: "", zip: "", county: "", differentPickup: false, pickupAddress: "", pickupInstructions: "", hours: "", surplusFrequency: "" });
-  const [baseline, setBaseline] = useState<SustainabilityBaselineData>(emptySustainabilityBaseline);
+  const [org, setOrg] = useState({ name: "", type: defaultOrgType });
 
   const handleSubmit = async () => {
     if (account.password !== account.confirmPassword) { toast.error("Passwords do not match"); return; }
@@ -45,9 +34,9 @@ export default function VenueSignup({ category, onBack }: Props) {
       const { data: valResult, error: valError } = await supabase.functions.invoke("validate-signup", {
         body: {
           signup_type: "venue",
-          account: { firstName: account.firstName, lastName: account.lastName, email: account.email, phone: account.phone, password: account.password, confirmPassword: account.confirmPassword },
-          org: { name: org.name, type: org.type, contactEmail: org.contactEmail, contactPhone: org.contactPhone },
-          loc: { name: loc.name },
+          account: { ...account },
+          org: { name: org.name, type: org.type },
+          loc: { name: org.name },
         },
       });
       if (valError) throw valError;
@@ -59,51 +48,29 @@ export default function VenueSignup({ category, onBack }: Props) {
       });
       if (authError) throw authError;
       if (!authData.user) throw new Error("Signup failed");
+      if (!authData.session) throw new Error("An account with this email already exists.");
 
-      const joinCode = isIndependent ? null : generateJoinCode();
-      const outcomes = [...baseline.priority_outcomes];
-      if (baseline.priority_other && outcomes.includes("Other")) outcomes[outcomes.indexOf("Other")] = baseline.priority_other;
-
-      // All organization / location / profile / role writes happen server-side
-      // with the service role: RLS intentionally blocks them from the client.
+      // Organization / profile / role writes happen server-side with the
+      // service role: RLS intentionally blocks them from the client.
       const { data: result, error: fnError } = await supabase.functions.invoke("complete-partner-signup", {
         body: {
           pathway: "venue",
           account: { firstName: account.firstName, lastName: account.lastName, phone: account.phone },
-          org: {
-            name: org.name, type: org.type, address: org.address, city: org.city, state: org.state,
-            zip: org.zip, county: org.county, contactName: org.contactName, contactEmail: org.contactEmail,
-            contactPhone: org.contactPhone, billingContact: org.billingContact, joinCode,
-          },
-          loc: {
-            name: loc.name, locationType: loc.locationType, address: loc.address, city: loc.city,
-            state: loc.state, zip: loc.zip, county: loc.county,
-            pickupAddress: loc.differentPickup ? loc.pickupAddress : loc.address,
-            pickupInstructions: loc.pickupInstructions, hours: loc.hours, surplusFrequency: loc.surplusFrequency,
-          },
-          baseline: {
-            generates_surplus: baseline.generates_surplus,
-            estimated_daily_surplus: baseline.estimated_daily_surplus,
-            surplus_types: baseline.surplus_types,
-            current_handling: baseline.current_handling,
-            donation_frequency: baseline.donation_frequency,
-            priority_outcomes: outcomes,
-          },
+          org: { name: org.name, type: org.type },
         },
       });
       if (fnError) throw new Error((result as any)?.error || fnError.message);
       if (result?.error) throw new Error(result.error);
 
       await supabase.auth.signOut();
-      setStep(5);
-
+      setStep(3);
     } catch (e: any) { toast.error(e.message || "Signup failed"); } finally { setLoading(false); }
   };
 
-  if (step === 5) return <ConfirmationScreen message={isIndependent ? "Your account has been submitted and is pending approval." : "Your organization has been submitted and is pending approval."} />;
+  if (step === 3) return <ConfirmationScreen message="Your application has been submitted and is pending approval. We will email you once an admin has reviewed it, and you can sign in as soon as you are approved." />;
 
   return (
-    <SignupShell currentStep={step} totalSteps={5}>
+    <SignupShell currentStep={step} totalSteps={2}>
       {step === 1 && (
         <div className="space-y-4">
           <div className="flex items-center gap-2">
@@ -116,15 +83,15 @@ export default function VenueSignup({ category, onBack }: Props) {
           </div>
           <div><Label>Email *</Label><Input type="email" autoComplete="off" value={account.email} onChange={(e) => setAccount({ ...account, email: e.target.value })} /></div>
           <div><Label>Phone</Label><Input type="tel" autoComplete="off" value={account.phone} onChange={(e) => setAccount({ ...account, phone: e.target.value })} /></div>
-          <div><Label>Password *</Label><PasswordInput value={account.password} onChange={(e) => setAccount({ ...account, password: e.target.value })} placeholder="••••••••" /></div>
-          <div><Label>Confirm Password *</Label><PasswordInput value={account.confirmPassword} onChange={(e) => setAccount({ ...account, confirmPassword: e.target.value })} placeholder="••••••••" /></div>
+          <div><Label>Password *</Label><PasswordInput autoComplete="new-password" value={account.password} onChange={(e) => setAccount({ ...account, password: e.target.value })} placeholder="••••••••" /></div>
+          <div><Label>Confirm Password *</Label><PasswordInput autoComplete="new-password" value={account.confirmPassword} onChange={(e) => setAccount({ ...account, confirmPassword: e.target.value })} placeholder="••••••••" /></div>
           <Button className="w-full" onClick={() => setStep(2)} disabled={!account.firstName || !account.lastName || !account.email || !account.password || !account.confirmPassword}>Continue</Button>
         </div>
       )}
 
       {step === 2 && (
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-foreground">{isIndependent ? "Your Business" : "Organization Info"}</h2>
+          <h2 className="text-lg font-semibold text-foreground">{isIndependent ? "Your Business" : "Your Organization"}</h2>
           <div><Label>{isIndependent ? "Business Name *" : "Organization Name *"}</Label><Input value={org.name} onChange={(e) => setOrg({ ...org, name: e.target.value })} /></div>
           <div>
             <Label>Organization Type *</Label>
@@ -133,71 +100,12 @@ export default function VenueSignup({ category, onBack }: Props) {
               <SelectContent>{(CATEGORY_TO_ORG_TYPES[category] || []).map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
             </Select>
           </div>
-          <div><Label>Address</Label><Input value={org.address} onChange={(e) => setOrg({ ...org, address: e.target.value })} /></div>
-          <div className="grid grid-cols-3 gap-4">
-            <div><Label>City</Label><Input value={org.city} onChange={(e) => setOrg({ ...org, city: e.target.value })} /></div>
-            <div><Label>State</Label><Input value={org.state} onChange={(e) => setOrg({ ...org, state: e.target.value })} /></div>
-            <div><Label>ZIP</Label><Input value={org.zip} onChange={(e) => setOrg({ ...org, zip: e.target.value })} /></div>
-          </div>
-          <div><Label>County</Label><Input value={org.county} onChange={(e) => setOrg({ ...org, county: e.target.value })} /></div>
-          <div><Label>Primary Contact Name</Label><Input value={org.contactName} onChange={(e) => setOrg({ ...org, contactName: e.target.value })} /></div>
-          <div className="grid grid-cols-2 gap-4">
-            <div><Label>Primary Contact Email</Label><Input type="email" autoComplete="off" value={org.contactEmail} onChange={(e) => setOrg({ ...org, contactEmail: e.target.value })} /></div>
-            <div><Label>Primary Contact Phone</Label><Input type="tel" autoComplete="off" value={org.contactPhone} onChange={(e) => setOrg({ ...org, contactPhone: e.target.value })} /></div>
-          </div>
-          <div><Label>Billing Contact</Label><Input value={org.billingContact} onChange={(e) => setOrg({ ...org, billingContact: e.target.value })} /></div>
+          <p className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-3">
+            You will add your address, locations and pickup details once your application is approved.
+          </p>
           <div className="flex gap-3">
             <Button variant="outline" className="flex-1" onClick={() => setStep(1)}>Back</Button>
-            <Button className="flex-1" onClick={() => {
-              if (!isIndependent) setLoc((l) => ({ ...l, address: l.address || org.address, city: l.city || org.city, state: l.state || org.state, zip: l.zip || org.zip, county: l.county || org.county }));
-              setStep(3);
-            }} disabled={!org.name || !org.type}>Continue</Button>
-          </div>
-        </div>
-      )}
-
-      {step === 3 && (
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-foreground">{isIndependent ? "Your Location" : "First Location"}</h2>
-          <div><Label>Location Name *</Label><Input value={loc.name} onChange={(e) => setLoc({ ...loc, name: e.target.value })} placeholder="e.g. Main Kitchen" /></div>
-          <div>
-            <Label>Location Type *</Label>
-            <Select value={loc.locationType} onValueChange={(v) => setLoc({ ...loc, locationType: v })}>
-              <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
-              <SelectContent>{LOCATION_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
-            </Select>
-          </div>
-          <div><Label>Address</Label><Input value={loc.address} onChange={(e) => setLoc({ ...loc, address: e.target.value })} /></div>
-          <div className="grid grid-cols-3 gap-4">
-            <div><Label>City</Label><Input value={loc.city} onChange={(e) => setLoc({ ...loc, city: e.target.value })} /></div>
-            <div><Label>State</Label><Input value={loc.state} onChange={(e) => setLoc({ ...loc, state: e.target.value })} /></div>
-            <div><Label>ZIP</Label><Input value={loc.zip} onChange={(e) => setLoc({ ...loc, zip: e.target.value })} /></div>
-          </div>
-          <div><Label>County</Label><Input value={loc.county} onChange={(e) => setLoc({ ...loc, county: e.target.value })} /></div>
-          <label className="flex items-center gap-2 text-sm">
-            <Checkbox checked={loc.differentPickup} onCheckedChange={(v) => setLoc({ ...loc, differentPickup: !!v, pickupAddress: !!v ? loc.pickupAddress : "" })} />
-            My pickup address is different from my location address
-          </label>
-          {loc.differentPickup && <div><Label>Pickup Address</Label><Input value={loc.pickupAddress} onChange={(e) => setLoc({ ...loc, pickupAddress: e.target.value })} /></div>}
-          <div><Label>Pickup Instructions</Label><Input value={loc.pickupInstructions} onChange={(e) => setLoc({ ...loc, pickupInstructions: e.target.value })} /></div>
-          <div><Label>Hours of Operation</Label><Input value={loc.hours} onChange={(e) => setLoc({ ...loc, hours: e.target.value })} /></div>
-          <div><Label>Estimated Surplus Frequency</Label><Input value={loc.surplusFrequency} onChange={(e) => setLoc({ ...loc, surplusFrequency: e.target.value })} /></div>
-          {!isIndependent && <p className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-3">You can add more locations after your account is approved using your Location Join Code.</p>}
-          <div className="flex gap-3">
-            <Button variant="outline" className="flex-1" onClick={() => setStep(2)}>Back</Button>
-            <Button className="flex-1" onClick={() => setStep(4)} disabled={!loc.name || !loc.locationType}>Continue</Button>
-          </div>
-        </div>
-      )}
-
-      {step === 4 && (
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-foreground">Sustainability Baseline</h2>
-          <p className="text-sm text-muted-foreground">Help us understand your current surplus situation.</p>
-          <SustainabilityBaselineForm data={baseline} onChange={setBaseline} />
-          <div className="flex gap-3">
-            <Button variant="outline" className="flex-1" onClick={() => setStep(3)}>Back</Button>
-            <Button className="flex-1" onClick={handleSubmit} disabled={loading}>{loading ? "Submitting..." : "Submit Application"}</Button>
+            <Button className="flex-1" onClick={handleSubmit} disabled={loading || !org.name || !org.type}>{loading ? "Submitting..." : "Submit Application"}</Button>
           </div>
         </div>
       )}

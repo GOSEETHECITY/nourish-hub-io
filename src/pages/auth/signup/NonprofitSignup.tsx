@@ -4,34 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { ArrowLeft, Upload } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import PasswordInput from "@/components/ui/password-input";
 import SignupShell from "./SignupShell";
 import ConfirmationScreen from "./ConfirmationScreen";
-
-const FOOD_TYPES = [
-  { value: "prepared_meals", label: "Prepared Meals / Cooked Food" },
-  { value: "produce", label: "Produce / Fresh Fruits and Vegetables" },
-  { value: "dairy", label: "Dairy" },
-  { value: "meat_protein", label: "Meat / Protein" },
-  { value: "baked_goods", label: "Baked Goods" },
-  { value: "shelf_stable", label: "Shelf-Stable / Packaged / Non-Perishable" },
-  { value: "frozen", label: "Frozen" },
-];
-
-const POPULATIONS = [
-  "Children", "Seniors", "Families", "Homeless Individuals", "Veterans", "Low Income Individuals", "Other",
-];
-
-function generateJoinCode(): string {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let code = "";
-  for (let i = 0; i < 4; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
-  return `NP-${code}`;
-}
 
 interface Props {
   onBack: () => void;
@@ -41,46 +18,26 @@ export default function NonprofitSignup({ onBack }: Props) {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
 
-  // Step 1 — Account
   const [account, setAccount] = useState({ firstName: "", lastName: "", email: "", phone: "", password: "", confirmPassword: "" });
-  // Step 2 — Organization
-  const [org, setOrg] = useState({ name: "", ein: "", website: "", socialHandles: "", contactName: "", contactEmail: "", contactPhone: "", address: "", city: "", state: "", zip: "", county: "", operatingHours: "" });
-  // Step 3 — First Distribution Location
-  const [loc, setLoc] = useState({ name: "", address: "", city: "", state: "", zip: "", county: "", operatingHours: "", pickupDropoff: "" });
-  // Step 4 — Capacity
-  const [capacity, setCapacity] = useState({ coldStorage: false, refrigeration: false, cabinetry: false, foodTypes: [] as string[], weeklyServed: "", populations: [] as string[] });
-  // Step 5 — Documents
-  const [insuranceFile, setInsuranceFile] = useState<File | null>(null);
-  const [agreementFile, setAgreementFile] = useState<File | null>(null);
-
-  const toggleFoodType = (v: string) => {
-    setCapacity((c) => ({ ...c, foodTypes: c.foodTypes.includes(v) ? c.foodTypes.filter((t) => t !== v) : [...c.foodTypes, v] }));
-  };
-  const togglePopulation = (v: string) => {
-    setCapacity((c) => ({ ...c, populations: c.populations.includes(v) ? c.populations.filter((t) => t !== v) : [...c.populations, v] }));
-  };
+  const [org, setOrg] = useState({ name: "" });
 
   const handleSubmit = async () => {
     if (account.password !== account.confirmPassword) { toast.error("Passwords do not match"); return; }
     const pwError = validatePassword(account.password);
     if (pwError) { toast.error(pwError); return; }
-    if (!insuranceFile || !agreementFile) { toast.error("Please upload both required documents"); return; }
     setLoading(true);
     try {
-      // Server-side validation
       const { data: valResult, error: valError } = await supabase.functions.invoke("validate-signup", {
         body: {
           signup_type: "nonprofit",
-          account: { firstName: account.firstName, lastName: account.lastName, email: account.email, phone: account.phone, password: account.password, confirmPassword: account.confirmPassword },
-          org: { name: org.name, ein: org.ein, website: org.website, contactName: org.contactName, contactEmail: org.contactEmail, contactPhone: org.contactPhone },
-          loc: { name: loc.name },
-          capacity: { foodTypes: capacity.foodTypes, weeklyServed: capacity.weeklyServed },
+          account: { ...account },
+          org: { name: org.name },
+          loc: { name: org.name },
         },
       });
       if (valError) throw valError;
       if (valResult && !valResult.valid) {
-        const msgs = valResult.errors?.join("; ") || valResult.error || "Validation failed";
-        toast.error(msgs);
+        toast.error(valResult.errors?.join("; ") || valResult.error || "Validation failed");
         setLoading(false);
         return;
       }
@@ -92,52 +49,20 @@ export default function NonprofitSignup({ onBack }: Props) {
       });
       if (authError) throw authError;
       if (!authData.user) throw new Error("Signup failed");
-      const userId = authData.user.id;
+      if (!authData.session) throw new Error("An account with this email already exists.");
 
-      // Upload documents (must stay client-side: the files live in the browser)
-      const safeInsName = insuranceFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-      const safeAgrName = agreementFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-      const insurancePath = `nonprofits/${userId}/insurance_${safeInsName}`;
-      const agreementPath = `nonprofits/${userId}/agreement_${safeAgrName}`;
-      const [insUpload, agrUpload] = await Promise.all([
-        supabase.storage.from("nonprofit-documents").upload(insurancePath, insuranceFile),
-        supabase.storage.from("nonprofit-documents").upload(agreementPath, agreementFile),
-      ]);
-      if (insUpload.error) throw insUpload.error;
-      if (agrUpload.error) throw agrUpload.error;
-
-      const joinCode = generateJoinCode();
-
-      // Nonprofit / location / profile / role writes run server-side with the
-      // service role: RLS intentionally blocks them from the client.
       const { data: result, error: fnError } = await supabase.functions.invoke("complete-partner-signup", {
         body: {
           pathway: "nonprofit",
           account: { firstName: account.firstName, lastName: account.lastName, phone: account.phone },
-          org: {
-            name: org.name, ein: org.ein, website: org.website, socialHandles: org.socialHandles,
-            contactName: org.contactName, contactEmail: org.contactEmail, contactPhone: org.contactPhone,
-            address: org.address, city: org.city, state: org.state, zip: org.zip, county: org.county,
-            operatingHours: org.operatingHours, joinCode,
-          },
-          loc: {
-            name: loc.name, address: loc.address, city: loc.city, state: loc.state, zip: loc.zip,
-            county: loc.county, operatingHours: loc.operatingHours, pickupDropoff: loc.pickupDropoff,
-          },
-          capacity: {
-            coldStorage: capacity.coldStorage, refrigeration: capacity.refrigeration,
-            cabinetry: capacity.cabinetry, foodTypes: capacity.foodTypes,
-            weeklyServed: capacity.weeklyServed, populations: capacity.populations,
-          },
-          documents: { proofOfInsurancePath: insurancePath, signedAgreementPath: agreementPath },
+          org: { name: org.name },
         },
       });
       if (fnError) throw new Error((result as any)?.error || fnError.message);
       if (result?.error) throw new Error(result.error);
 
       await supabase.auth.signOut();
-      setStep(6);
-
+      setStep(3);
     } catch (e: any) {
       toast.error(e.message || "Signup failed");
     } finally {
@@ -145,14 +70,14 @@ export default function NonprofitSignup({ onBack }: Props) {
     }
   };
 
-  if (step === 6) {
+  if (step === 3) {
     return (
-      <ConfirmationScreen message="Your nonprofit application has been submitted and is pending approval. We will notify you once your application has been reviewed. Thank you for applying to the HarietAI network." />
+      <ConfirmationScreen message="Your nonprofit application has been submitted and is pending approval. We will email you once an admin has reviewed it, and you can sign in as soon as you are approved." />
     );
   }
 
   return (
-    <SignupShell currentStep={step} totalSteps={6}>
+    <SignupShell currentStep={step} totalSteps={2}>
       {step === 1 && (
         <div className="space-y-4">
           <div className="flex items-center gap-2">
@@ -165,8 +90,8 @@ export default function NonprofitSignup({ onBack }: Props) {
           </div>
           <div><Label>Email *</Label><Input type="email" autoComplete="off" value={account.email} onChange={(e) => setAccount({ ...account, email: e.target.value })} /></div>
           <div><Label>Phone</Label><Input type="tel" autoComplete="off" value={account.phone} onChange={(e) => setAccount({ ...account, phone: e.target.value })} /></div>
-          <div><Label>Password *</Label><PasswordInput value={account.password} onChange={(e) => setAccount({ ...account, password: e.target.value })} placeholder="••••••••" /></div>
-          <div><Label>Confirm Password *</Label><PasswordInput value={account.confirmPassword} onChange={(e) => setAccount({ ...account, confirmPassword: e.target.value })} placeholder="••••••••" /></div>
+          <div><Label>Password *</Label><PasswordInput autoComplete="new-password" value={account.password} onChange={(e) => setAccount({ ...account, password: e.target.value })} placeholder="••••••••" /></div>
+          <div><Label>Confirm Password *</Label><PasswordInput autoComplete="new-password" value={account.confirmPassword} onChange={(e) => setAccount({ ...account, confirmPassword: e.target.value })} placeholder="••••••••" /></div>
           <Button className="w-full" onClick={() => setStep(2)} disabled={!account.firstName || !account.lastName || !account.email || !account.password || !account.confirmPassword}>
             Continue
           </Button>
@@ -175,126 +100,14 @@ export default function NonprofitSignup({ onBack }: Props) {
 
       {step === 2 && (
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-foreground">Organization Info</h2>
-          <div><Label>Organization Name *</Label><Input value={org.name} onChange={(e) => setOrg({ ...org, name: e.target.value })} /></div>
-          <div className="grid grid-cols-2 gap-4">
-            <div><Label>EIN</Label><Input value={org.ein} onChange={(e) => setOrg({ ...org, ein: e.target.value })} placeholder="XX-XXXXXXX" /></div>
-            <div><Label>Website</Label><Input value={org.website} onChange={(e) => setOrg({ ...org, website: e.target.value })} /></div>
-          </div>
-          <div><Label>Social Handles</Label><Input value={org.socialHandles} onChange={(e) => setOrg({ ...org, socialHandles: e.target.value })} placeholder="@handle" /></div>
-          <div><Label>Primary Contact Name</Label><Input value={org.contactName} onChange={(e) => setOrg({ ...org, contactName: e.target.value })} /></div>
-          <div className="grid grid-cols-2 gap-4">
-            <div><Label>Primary Contact Email</Label><Input type="email" autoComplete="off" value={org.contactEmail} onChange={(e) => setOrg({ ...org, contactEmail: e.target.value })} /></div>
-            <div><Label>Primary Contact Phone</Label><Input type="tel" autoComplete="off" value={org.contactPhone} onChange={(e) => setOrg({ ...org, contactPhone: e.target.value })} /></div>
-          </div>
-          <div><Label>Address</Label><Input value={org.address} onChange={(e) => setOrg({ ...org, address: e.target.value })} /></div>
-          <div className="grid grid-cols-3 gap-4">
-            <div><Label>City</Label><Input value={org.city} onChange={(e) => setOrg({ ...org, city: e.target.value })} /></div>
-            <div><Label>State</Label><Input value={org.state} onChange={(e) => setOrg({ ...org, state: e.target.value })} /></div>
-            <div><Label>ZIP</Label><Input value={org.zip} onChange={(e) => setOrg({ ...org, zip: e.target.value })} /></div>
-          </div>
-          <div><Label>County</Label><Input value={org.county} onChange={(e) => setOrg({ ...org, county: e.target.value })} /></div>
-          <div><Label>Operating Hours</Label><Input value={org.operatingHours} onChange={(e) => setOrg({ ...org, operatingHours: e.target.value })} /></div>
-          <div className="flex gap-3">
-            <Button variant="outline" className="flex-1" onClick={() => setStep(1)}>Back</Button>
-            <Button className="flex-1" onClick={() => setStep(3)} disabled={!org.name}>Continue</Button>
-          </div>
-        </div>
-      )}
-
-      {step === 3 && (
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-foreground">First Distribution Location</h2>
-          <div><Label>Location Name *</Label><Input value={loc.name} onChange={(e) => setLoc({ ...loc, name: e.target.value })} placeholder="e.g. Downtown Distribution Center" /></div>
-          <div><Label>Address</Label><Input value={loc.address} onChange={(e) => setLoc({ ...loc, address: e.target.value })} /></div>
-          <div className="grid grid-cols-3 gap-4">
-            <div><Label>City</Label><Input value={loc.city} onChange={(e) => setLoc({ ...loc, city: e.target.value })} /></div>
-            <div><Label>State</Label><Input value={loc.state} onChange={(e) => setLoc({ ...loc, state: e.target.value })} /></div>
-            <div><Label>ZIP</Label><Input value={loc.zip} onChange={(e) => setLoc({ ...loc, zip: e.target.value })} /></div>
-          </div>
-          <div><Label>County</Label><Input value={loc.county} onChange={(e) => setLoc({ ...loc, county: e.target.value })} /></div>
-          <div><Label>Operating Hours for this location</Label><Input value={loc.operatingHours} onChange={(e) => setLoc({ ...loc, operatingHours: e.target.value })} /></div>
-          <div><Label>Pickup / Dropoff Instructions</Label><Input value={loc.pickupDropoff} onChange={(e) => setLoc({ ...loc, pickupDropoff: e.target.value })} /></div>
+          <h2 className="text-lg font-semibold text-foreground">Your Organization</h2>
+          <div><Label>Organization Name *</Label><Input value={org.name} onChange={(e) => setOrg({ name: e.target.value })} /></div>
           <p className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-3">
-            You can add more distribution locations after your account is approved using your Nonprofit Location Join Code.
+            EIN, facility details, distribution locations and your documents are collected once your application is approved.
           </p>
           <div className="flex gap-3">
-            <Button variant="outline" className="flex-1" onClick={() => setStep(2)}>Back</Button>
-            <Button className="flex-1" onClick={() => setStep(4)} disabled={!loc.name}>Continue</Button>
-          </div>
-        </div>
-      )}
-
-      {step === 4 && (
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-foreground">Capacity Info</h2>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-foreground">Cold Storage Capacity</span>
-              <Switch checked={capacity.coldStorage} onCheckedChange={(c) => setCapacity({ ...capacity, coldStorage: c })} />
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-foreground">Refrigeration Capacity</span>
-              <Switch checked={capacity.refrigeration} onCheckedChange={(c) => setCapacity({ ...capacity, refrigeration: c })} />
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-foreground">Cabinetry Capacity</span>
-              <Switch checked={capacity.cabinetry} onCheckedChange={(c) => setCapacity({ ...capacity, cabinetry: c })} />
-            </div>
-          </div>
-          <div>
-            <Label>Food Types Accepted</Label>
-            <div className="flex flex-wrap gap-3 mt-2">
-              {FOOD_TYPES.map((ft) => (
-                <label key={ft.value} className="flex items-center gap-2 text-sm">
-                  <Checkbox checked={capacity.foodTypes.includes(ft.value)} onCheckedChange={() => toggleFoodType(ft.value)} />
-                  {ft.label}
-                </label>
-              ))}
-            </div>
-          </div>
-          <div><Label>Estimated Number Served Weekly</Label><Input type="number" value={capacity.weeklyServed} onChange={(e) => setCapacity({ ...capacity, weeklyServed: e.target.value })} /></div>
-          <div>
-            <Label>Population Served</Label>
-            <div className="flex flex-wrap gap-3 mt-2">
-              {POPULATIONS.map((p) => (
-                <label key={p} className="flex items-center gap-2 text-sm">
-                  <Checkbox checked={capacity.populations.includes(p)} onCheckedChange={() => togglePopulation(p)} />
-                  {p}
-                </label>
-              ))}
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <Button variant="outline" className="flex-1" onClick={() => setStep(3)}>Back</Button>
-            <Button className="flex-1" onClick={() => setStep(5)}>Continue</Button>
-          </div>
-        </div>
-      )}
-
-      {step === 5 && (
-        <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-foreground">Document Uploads</h2>
-          <p className="text-sm text-muted-foreground">Both documents are required to submit your application.</p>
-          <div className="space-y-2">
-            <Label>Proof of Insurance *</Label>
-            <label className="flex items-center gap-2 px-4 py-3 border border-dashed border-border rounded-lg cursor-pointer hover:bg-muted transition-colors">
-              <Upload className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">{insuranceFile ? insuranceFile.name : "Choose file"}</span>
-              <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => setInsuranceFile(e.target.files?.[0] || null)} />
-            </label>
-          </div>
-          <div className="space-y-2">
-            <Label>Signed Agreement *</Label>
-            <label className="flex items-center gap-2 px-4 py-3 border border-dashed border-border rounded-lg cursor-pointer hover:bg-muted transition-colors">
-              <Upload className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">{agreementFile ? agreementFile.name : "Choose file"}</span>
-              <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => setAgreementFile(e.target.files?.[0] || null)} />
-            </label>
-          </div>
-          <div className="flex gap-3">
-            <Button variant="outline" className="flex-1" onClick={() => setStep(4)}>Back</Button>
-            <Button className="flex-1" onClick={handleSubmit} disabled={loading || !insuranceFile || !agreementFile}>
+            <Button variant="outline" className="flex-1" onClick={() => setStep(1)}>Back</Button>
+            <Button className="flex-1" onClick={handleSubmit} disabled={loading || !org.name}>
               {loading ? "Submitting..." : "Submit Application"}
             </Button>
           </div>
