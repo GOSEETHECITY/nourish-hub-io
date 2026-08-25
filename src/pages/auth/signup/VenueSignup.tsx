@@ -59,44 +59,44 @@ export default function VenueSignup({ category, onBack }: Props) {
       });
       if (authError) throw authError;
       if (!authData.user) throw new Error("Signup failed");
-      const userId = authData.user.id;
 
-      await supabase.from("user_roles").insert({ user_id: userId, role: "venue_partner" });
       const joinCode = isIndependent ? null : generateJoinCode();
-
-      const { data: orgData, error: orgError } = await supabase.from("organizations").insert({
-        name: org.name, type: org.type as any,
-        primary_contact_name: org.contactName || null, primary_contact_email: org.contactEmail || null,
-        primary_contact_phone: org.contactPhone || null, billing_contact: org.billingContact || null,
-        address: org.address || null, city: org.city || null, state: org.state || null,
-        zip: org.zip || null, county: org.county || null, approval_status: "pending", join_code: joinCode,
-      }).select().single();
-      if (orgError) throw orgError;
-
-      await supabase.from("profiles").update({ first_name: account.firstName, last_name: account.lastName, phone: account.phone || null, organization_id: orgData.id }).eq("id", userId);
-
-      const pickupAddr = loc.differentPickup ? loc.pickupAddress : loc.address;
-      const { data: locData, error: locError } = await supabase.from("locations").insert({
-        organization_id: orgData.id, name: loc.name, location_type: loc.locationType || null,
-        address: loc.address || null, city: loc.city || null, state: loc.state || null,
-        zip: loc.zip || null, county: loc.county || null, pickup_address: pickupAddr || null,
-        pickup_instructions: loc.pickupInstructions || null, hours_of_operation: loc.hours || null,
-        estimated_surplus_frequency: loc.surplusFrequency || null,
-      }).select().single();
-      if (locError) throw locError;
-
       const outcomes = [...baseline.priority_outcomes];
       if (baseline.priority_other && outcomes.includes("Other")) outcomes[outcomes.indexOf("Other")] = baseline.priority_other;
-      await supabase.from("sustainability_baseline").insert({
-        location_id: locData.id, generates_surplus: baseline.generates_surplus,
-        estimated_daily_surplus: baseline.estimated_daily_surplus || null,
-        surplus_types: baseline.surplus_types.length ? baseline.surplus_types : null,
-        current_handling: baseline.current_handling || null, donation_frequency: baseline.donation_frequency || null,
-        priority_outcomes: outcomes.length ? outcomes : null,
+
+      // All organization / location / profile / role writes happen server-side
+      // with the service role: RLS intentionally blocks them from the client.
+      const { data: result, error: fnError } = await supabase.functions.invoke("complete-partner-signup", {
+        body: {
+          pathway: "venue",
+          account: { firstName: account.firstName, lastName: account.lastName, phone: account.phone },
+          org: {
+            name: org.name, type: org.type, address: org.address, city: org.city, state: org.state,
+            zip: org.zip, county: org.county, contactName: org.contactName, contactEmail: org.contactEmail,
+            contactPhone: org.contactPhone, billingContact: org.billingContact, joinCode,
+          },
+          loc: {
+            name: loc.name, locationType: loc.locationType, address: loc.address, city: loc.city,
+            state: loc.state, zip: loc.zip, county: loc.county,
+            pickupAddress: loc.differentPickup ? loc.pickupAddress : loc.address,
+            pickupInstructions: loc.pickupInstructions, hours: loc.hours, surplusFrequency: loc.surplusFrequency,
+          },
+          baseline: {
+            generates_surplus: baseline.generates_surplus,
+            estimated_daily_surplus: baseline.estimated_daily_surplus,
+            surplus_types: baseline.surplus_types,
+            current_handling: baseline.current_handling,
+            donation_frequency: baseline.donation_frequency,
+            priority_outcomes: outcomes,
+          },
+        },
       });
+      if (fnError) throw new Error((result as any)?.error || fnError.message);
+      if (result?.error) throw new Error(result.error);
 
       await supabase.auth.signOut();
       setStep(5);
+
     } catch (e: any) { toast.error(e.message || "Signup failed"); } finally { setLoading(false); }
   };
 
