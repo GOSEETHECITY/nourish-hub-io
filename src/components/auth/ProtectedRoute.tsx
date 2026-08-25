@@ -1,4 +1,4 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,8 +12,10 @@ interface ProtectedRouteProps {
 
 export default function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
   const { session, user, profile, role, loading } = useAuth();
+  const { pathname } = useLocation();
   const requiresOrgApproval = role === "venue_partner" || role === "government_partner";
   const requiresNonprofitApproval = role === "nonprofit_partner";
+
 
   // Check approval status for venue/government partners (org-based)
   const {
@@ -90,8 +92,35 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
     retry: 2,
   });
 
-  if (loading || (requiresOrgApproval && orgLoading) || (requiresNonprofitApproval && nonprofitLoading)) {
+  // Address / locations / pickup details are no longer collected at signup, so
+  // an approved partner may still have an incomplete profile. Those partners
+  // are routed into the post-approval completion wizard.
+  const isPartner = requiresOrgApproval || requiresNonprofitApproval;
+  const onWizard = pathname.startsWith("/partner/complete-profile");
+  const { data: profileComplete, isLoading: completeLoading } = useQuery({
+    queryKey: ["partner-profile-complete", profile?.organization_id, profile?.nonprofit_id, role],
+    enabled: !!profile && isPartner && !onWizard,
+    queryFn: async () => {
+      if (requiresNonprofitApproval) {
+        if (!profile?.nonprofit_id) return true;
+        const [np, locs] = await Promise.all([
+          supabase.from("nonprofits").select("address").eq("id", profile.nonprofit_id).maybeSingle(),
+          supabase.from("nonprofit_locations").select("id").eq("nonprofit_id", profile.nonprofit_id).limit(1),
+        ]);
+        return !!np.data?.address && (locs.data?.length ?? 0) > 0;
+      }
+      if (!profile?.organization_id) return true;
+      const [org, locs] = await Promise.all([
+        supabase.from("organizations").select("address").eq("id", profile.organization_id).maybeSingle(),
+        supabase.from("locations").select("id").eq("organization_id", profile.organization_id).limit(1),
+      ]);
+      return !!org.data?.address && (locs.data?.length ?? 0) > 0;
+    },
+  });
+
+  if (loading || (requiresOrgApproval && orgLoading) || (requiresNonprofitApproval && nonprofitLoading) || (isPartner && !onWizard && completeLoading)) {
     return (
+
       <div className="flex items-center justify-center h-screen bg-background">
         <div className="text-center space-y-3">
           <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
@@ -126,6 +155,13 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
     if (orgStatus === "rejected" || orgStatus === "deactivated") return <PendingApproval status="rejected" type="government" />;
     if (orgStatus !== "approved") return <PendingApproval status="pending" type="government" />;
   }
+
+  // Approved but missing address / first location: finish the profile first.
+  if (isPartner && !onWizard && profileComplete === false) {
+    return <Navigate to="/partner/complete-profile" replace />;
+  }
+
+
 
   if (allowedRoles && !role) {
     return <Navigate to="/login" replace />;

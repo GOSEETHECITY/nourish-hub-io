@@ -1,5 +1,7 @@
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Plus, X, Upload } from "lucide-react";
@@ -49,7 +51,10 @@ const emptyDonation = {
 
 export default function VenueDonations() {
   const { profile } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
+
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(emptyDonation);
   const [selectedLocationId, setSelectedLocationId] = useState<string>("");
@@ -117,7 +122,28 @@ export default function VenueDonations() {
   const receiptMap: Record<string, { pdf_path: string }> = {};
   for (const r of receipts) if (!receiptMap[r.food_listing_id]) receiptMap[r.food_listing_id] = r;
 
+  // The sustainability baseline is captured after approval, so a venue can
+  // reach this page without one. Posting is gated until it exists.
+  const locationIds = locations.map((l) => l.id);
+  const { data: baselineCount = 0 } = useQuery({
+    queryKey: ["venue-baseline-exists", locationIds],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from("sustainability_baseline")
+        .select("id", { count: "exact", head: true })
+        .in("location_id", locationIds);
+      return count ?? 0;
+    },
+    enabled: locationIds.length > 0,
+  });
+  const hasBaseline = baselineCount > 0;
+
   const openDialog = () => {
+    if (!hasBaseline) {
+      toast.error("Complete your sustainability baseline before posting a donation.");
+      navigate("/venue/baseline");
+      return;
+    }
     setForm(emptyDonation);
     setIsFlash(false);
     setLineItems([emptyLine()]);
@@ -125,6 +151,7 @@ export default function VenueDonations() {
     setSelectedLocationId(locations[0]?.id || "");
     setDialogOpen(true);
   };
+
 
   const uploadPhotos = async (orgId: string, listingId: string): Promise<string[]> => {
     if (!photoFiles.length) return [];

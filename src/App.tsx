@@ -72,6 +72,8 @@ import VenueLocations from "./pages/venue/VenueLocations";
 import VenueSettings from "./pages/venue/VenueSettings";
 import VenueSupport from "./pages/venue/VenueSupport";
 import VenueOnboarding from "./pages/venue/VenueOnboarding";
+import CompleteProfile from "./pages/partner/CompleteProfile";
+
 import VenueTaxReceipts from "./pages/venue/VenueTaxReceipts";
 import VenueCompliance from "./pages/venue/VenueCompliance";
 import VenueOrders from "./pages/venue/VenueOrders";
@@ -255,8 +257,12 @@ const App = () => (
               <Route path="/admin/profile" element={<SettingsPage />} />
             </Route>
 
+            {/* Post-approval profile completion (all partner roles) */}
+            <Route path="/partner/complete-profile" element={<ProtectedRoute allowedRoles={["venue_partner", "nonprofit_partner", "government_partner"]}><CompleteProfile /></ProtectedRoute>} />
+
             {/* Venue Partner routes */}
             <Route path="/venue/onboarding" element={<ProtectedRoute allowedRoles={["venue_partner"]}><VenueOnboarding /></ProtectedRoute>} />
+
             <Route
               element={
                 <ProtectedRoute allowedRoles={["venue_partner"]}>
