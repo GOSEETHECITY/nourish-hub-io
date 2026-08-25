@@ -255,8 +255,12 @@ const App = () => (
               <Route path="/admin/profile" element={<SettingsPage />} />
             </Route>
 
+            {/* Post-approval profile completion (all partner roles) */}
+            <Route path="/partner/complete-profile" element={<ProtectedRoute allowedRoles={["venue_partner", "nonprofit_partner", "government_partner"]}><CompleteProfile /></ProtectedRoute>} />
+
             {/* Venue Partner routes */}
             <Route path="/venue/onboarding" element={<ProtectedRoute allowedRoles={["venue_partner"]}><VenueOnboarding /></ProtectedRoute>} />
+
             <Route
               element={
                 <ProtectedRoute allowedRoles={["venue_partner"]}>
