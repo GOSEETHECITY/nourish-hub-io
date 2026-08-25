@@ -1,4 +1,4 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,8 +12,10 @@ interface ProtectedRouteProps {
 
 export default function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
   const { session, user, profile, role, loading } = useAuth();
+  const { pathname } = useLocation();
   const requiresOrgApproval = role === "venue_partner" || role === "government_partner";
   const requiresNonprofitApproval = role === "nonprofit_partner";
+
 
   // Check approval status for venue/government partners (org-based)
   const {
