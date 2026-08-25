@@ -94,9 +94,7 @@ export default function NonprofitSignup({ onBack }: Props) {
       if (!authData.user) throw new Error("Signup failed");
       const userId = authData.user.id;
 
-      await supabase.from("user_roles").insert({ user_id: userId, role: "nonprofit_partner" });
-
-      // Upload documents
+      // Upload documents (must stay client-side: the files live in the browser)
       const safeInsName = insuranceFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
       const safeAgrName = agreementFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
       const insurancePath = `nonprofits/${userId}/insurance_${safeInsName}`;
@@ -107,72 +105,39 @@ export default function NonprofitSignup({ onBack }: Props) {
       ]);
       if (insUpload.error) throw insUpload.error;
       if (agrUpload.error) throw agrUpload.error;
-      // Store the storage paths (not public URLs) since bucket is now private
-      const insUrl = insurancePath;
-      const agrUrl = agreementPath;
-
-      let socialObj: Record<string, string> | null = null;
-      if (org.socialHandles) socialObj = { handles: org.socialHandles };
 
       const joinCode = generateJoinCode();
 
-      const { data: npData, error: npError } = await supabase.from("nonprofits").insert([{
-        organization_name: org.name,
-        ein: org.ein || null,
-        website: org.website || null,
-        social_handles: socialObj,
-        primary_contact: org.contactName || null,
-        primary_contact_email: org.contactEmail || null,
-        primary_contact_phone: org.contactPhone || null,
-        address: org.address || null,
-        city: org.city || null,
-        state: org.state || null,
-        zip: org.zip || null,
-        county: org.county || null,
-        operating_hours: org.operatingHours || null,
-        cold_storage: capacity.coldStorage,
-        refrigeration: capacity.refrigeration,
-        cabinetry: capacity.cabinetry,
-        food_types_accepted: capacity.foodTypes.length ? capacity.foodTypes as any : null,
-        estimated_weekly_served: capacity.weeklyServed ? parseInt(capacity.weeklyServed) : null,
-        population_served: capacity.populations.length ? capacity.populations.join(", ") : null,
-        proof_of_insurance_url: insUrl,
-        signed_agreement_url: agrUrl,
-        approval_status: "pending",
-        join_code: joinCode,
-      }]).select().single();
-      if (npError) throw npError;
-
-      // Create first distribution location
-      await supabase.from("nonprofit_locations").insert([{
-        nonprofit_id: npData.id,
-        name: loc.name,
-        address: loc.address || null,
-        city: loc.city || null,
-        state: loc.state || null,
-        zip: loc.zip || null,
-        county: loc.county || null,
-        operating_hours: loc.operatingHours || null,
-        pickup_dropoff_instructions: loc.pickupDropoff || null,
-        cold_storage: capacity.coldStorage,
-        refrigeration: capacity.refrigeration,
-        cabinetry: capacity.cabinetry,
-        food_types_accepted: capacity.foodTypes.length ? capacity.foodTypes as any : null,
-        estimated_weekly_served: capacity.weeklyServed ? parseInt(capacity.weeklyServed) : null,
-        population_served: capacity.populations.length ? capacity.populations.join(", ") : null,
-        approval_status: "pending",
-      }]);
-
-      // Update profile
-      await supabase.from("profiles").update({
-        first_name: account.firstName,
-        last_name: account.lastName,
-        phone: account.phone || null,
-        nonprofit_id: npData.id,
-      }).eq("id", userId);
+      // Nonprofit / location / profile / role writes run server-side with the
+      // service role: RLS intentionally blocks them from the client.
+      const { data: result, error: fnError } = await supabase.functions.invoke("complete-partner-signup", {
+        body: {
+          pathway: "nonprofit",
+          account: { firstName: account.firstName, lastName: account.lastName, phone: account.phone },
+          org: {
+            name: org.name, ein: org.ein, website: org.website, socialHandles: org.socialHandles,
+            contactName: org.contactName, contactEmail: org.contactEmail, contactPhone: org.contactPhone,
+            address: org.address, city: org.city, state: org.state, zip: org.zip, county: org.county,
+            operatingHours: org.operatingHours, joinCode,
+          },
+          loc: {
+            name: loc.name, address: loc.address, city: loc.city, state: loc.state, zip: loc.zip,
+            county: loc.county, operatingHours: loc.operatingHours, pickupDropoff: loc.pickupDropoff,
+          },
+          capacity: {
+            coldStorage: capacity.coldStorage, refrigeration: capacity.refrigeration,
+            cabinetry: capacity.cabinetry, foodTypes: capacity.foodTypes,
+            weeklyServed: capacity.weeklyServed, populations: capacity.populations,
+          },
+          documents: { proofOfInsurancePath: insurancePath, signedAgreementPath: agreementPath },
+        },
+      });
+      if (fnError) throw new Error((result as any)?.error || fnError.message);
+      if (result?.error) throw new Error(result.error);
 
       await supabase.auth.signOut();
       setStep(6);
+
     } catch (e: any) {
       toast.error(e.message || "Signup failed");
     } finally {
