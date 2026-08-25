@@ -92,8 +92,35 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
     retry: 2,
   });
 
-  if (loading || (requiresOrgApproval && orgLoading) || (requiresNonprofitApproval && nonprofitLoading)) {
+  // Address / locations / pickup details are no longer collected at signup, so
+  // an approved partner may still have an incomplete profile. Those partners
+  // are routed into the post-approval completion wizard.
+  const isPartner = requiresOrgApproval || requiresNonprofitApproval;
+  const onWizard = pathname.startsWith("/partner/complete-profile");
+  const { data: profileComplete, isLoading: completeLoading } = useQuery({
+    queryKey: ["partner-profile-complete", profile?.organization_id, profile?.nonprofit_id, role],
+    enabled: !!profile && isPartner && !onWizard,
+    queryFn: async () => {
+      if (requiresNonprofitApproval) {
+        if (!profile?.nonprofit_id) return true;
+        const [np, locs] = await Promise.all([
+          supabase.from("nonprofits").select("address").eq("id", profile.nonprofit_id).maybeSingle(),
+          supabase.from("nonprofit_locations").select("id").eq("nonprofit_id", profile.nonprofit_id).limit(1),
+        ]);
+        return !!np.data?.address && (locs.data?.length ?? 0) > 0;
+      }
+      if (!profile?.organization_id) return true;
+      const [org, locs] = await Promise.all([
+        supabase.from("organizations").select("address").eq("id", profile.organization_id).maybeSingle(),
+        supabase.from("locations").select("id").eq("organization_id", profile.organization_id).limit(1),
+      ]);
+      return !!org.data?.address && (locs.data?.length ?? 0) > 0;
+    },
+  });
+
+  if (loading || (requiresOrgApproval && orgLoading) || (requiresNonprofitApproval && nonprofitLoading) || (isPartner && !onWizard && completeLoading)) {
     return (
+
       <div className="flex items-center justify-center h-screen bg-background">
         <div className="text-center space-y-3">
           <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
