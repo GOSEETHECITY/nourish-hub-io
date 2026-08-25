@@ -156,6 +156,13 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
     if (orgStatus !== "approved") return <PendingApproval status="pending" type="government" />;
   }
 
+  // Approved but missing address / first location: finish the profile first.
+  if (isPartner && !onWizard && profileComplete === false) {
+    return <Navigate to="/partner/complete-profile" replace />;
+  }
+
+
+
   if (allowedRoles && !role) {
     return <Navigate to="/login" replace />;
   }
