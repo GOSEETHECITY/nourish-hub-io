@@ -1,27 +1,15 @@
-import { useState, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Plus, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { toast } from "sonner";
 import { MARKETPLACE_ELIGIBLE_TYPES } from "@/lib/marketplace";
 import type { Coupon, Location } from "@/types/database";
 
-const emptyCoupon = { title: "", description: "", price: "", original_price: "", quantity_available: "", pickup_address: "" };
-
 export default function VenueMarketplace() {
   const { profile } = useAuth();
-  const queryClient = useQueryClient();
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState(emptyCoupon);
-  const [selectedLocationId, setSelectedLocationId] = useState("");
 
   const { data: locations = [] } = useQuery({
     queryKey: ["venue-locations", profile?.organization_id],
@@ -51,28 +39,6 @@ export default function VenueMarketplace() {
     enabled: !!profile?.organization_id,
   });
 
-  const createCoupon = useMutation({
-    mutationFn: async () => {
-      const locId = selectedLocationId || eligibleLocations[0]?.id;
-      if (!locId || !profile?.organization_id) throw new Error("No location selected");
-      const loc = locations.find((l) => l.id === locId);
-      const { error } = await supabase.from("coupons").insert({
-        location_id: locId, organization_id: profile.organization_id,
-        title: form.title, description: form.description || null,
-        price: Number(form.price), original_price: form.original_price ? Number(form.original_price) : null,
-        quantity_available: Number(form.quantity_available),
-        pickup_address: form.pickup_address || loc?.pickup_address || null,
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["venue-coupons"] });
-      toast.success("Coupon created!");
-      setDialogOpen(false);
-      setForm(emptyCoupon);
-    },
-    onError: (e) => toast.error(e.message),
-  });
 
   if (!hasEligible) return null; // Should not render if not eligible (hidden by nav)
 
