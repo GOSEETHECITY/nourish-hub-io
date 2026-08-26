@@ -102,7 +102,7 @@ export default function CompleteProfile() {
       county: savedLocation?.county ?? savedEntity?.county ?? "",
     });
 
-    if (isNonprofit) {
+    if (isNonprofit && savedLocation && "pickup_dropoff_instructions" in savedLocation) {
       setPickup({
         sameAddress: true,
         instructions: savedLocation?.pickup_dropoff_instructions ?? "",
@@ -116,10 +116,12 @@ export default function CompleteProfile() {
       savedLocation?.state,
       savedLocation?.zip,
     ].filter(Boolean).join(", ");
-    setPickup({
-      sameAddress: !savedLocation?.pickup_address || savedLocation.pickup_address === savedFullAddress,
-      instructions: savedLocation?.pickup_instructions ?? "",
-    });
+    if (savedLocation && "pickup_address" in savedLocation) {
+      setPickup({
+        sameAddress: !savedLocation.pickup_address || savedLocation.pickup_address === savedFullAddress,
+        instructions: savedLocation.pickup_instructions ?? "",
+      });
+    }
   }, [data, isNonprofit]);
 
   const fullAddress = useMemo(
