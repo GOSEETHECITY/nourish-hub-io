@@ -143,34 +143,8 @@ export default function VenueMarketplace() {
           </TableBody>
         </Table></div>
       </div>
+      </div>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>Create Marketplace Coupon</DialogTitle></DialogHeader>
-          <div className="space-y-4 pt-4">
-            {eligibleLocations.length > 1 && (
-              <div>
-                <Label>Location</Label>
-                <Select value={selectedLocationId} onValueChange={setSelectedLocationId}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{eligibleLocations.map((l) => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-            )}
-            <div><Label>Title *</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
-            <div><Label>Description</Label><Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
-            <div className="grid grid-cols-2 gap-4">
-              <div><Label>Price ($) *</Label><Input type="number" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></div>
-              <div><Label>Original Price ($)</Label><Input type="number" step="0.01" value={form.original_price} onChange={(e) => setForm({ ...form, original_price: e.target.value })} /></div>
-            </div>
-            <div><Label>Quantity Available *</Label><Input type="number" value={form.quantity_available} onChange={(e) => setForm({ ...form, quantity_available: e.target.value })} /></div>
-            <div><Label>Pickup Address</Label><Input value={form.pickup_address} onChange={(e) => setForm({ ...form, pickup_address: e.target.value })} placeholder="Defaults to location address" /></div>
-            <Button className="w-full" onClick={() => createCoupon.mutate()} disabled={!form.title || !form.price || !form.quantity_available || createCoupon.isPending}>
-              {createCoupon.isPending ? "Creating..." : "Create Coupon"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
