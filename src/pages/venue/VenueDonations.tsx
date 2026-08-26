@@ -138,12 +138,32 @@ export default function VenueDonations() {
   });
   const hasBaseline = baselineCount > 0;
 
+  // Posting is also gated on saved operating hours.
+  const { data: orgHours } = useQuery({
+    queryKey: ["venue-org-hours", profile?.organization_id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("organizations")
+        .select("hours_of_operation")
+        .eq("id", profile!.organization_id!)
+        .maybeSingle();
+      return data?.hours_of_operation ?? null;
+    },
+    enabled: !!profile?.organization_id,
+  });
+  const hoursSet = hasRealHours(orgHours);
+
   const openDialog = () => {
-    if (!hasBaseline) {
-      toast.error("Complete your sustainability baseline before posting a donation.");
-      navigate("/venue/baseline");
+    if (!hasBaseline || !hoursSet) {
+      const missing = [
+        !hasBaseline ? "complete your sustainability baseline" : null,
+        !hoursSet ? "set your operating hours in Settings" : null,
+      ].filter(Boolean).join(" and ");
+      toast.error(`Before posting a donation you need to ${missing}.`);
+      navigate(!hasBaseline ? "/venue/baseline" : "/venue/settings");
       return;
     }
+
     setForm(emptyDonation);
     setIsFlash(false);
     setLineItems([emptyLine()]);
