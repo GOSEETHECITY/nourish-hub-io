@@ -12,6 +12,8 @@ import PartnerNotificationBell from "./PartnerNotificationBell";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getLogoSignedUrl } from "@/lib/orgProfile";
 import SupportRequestButton from "@/components/support/SupportRequestButton";
+import GstcWelcomeModal from "@/components/partner/GstcWelcomeModal";
+
 
 
 function FranchiseNavItem({ role, organizationId, onClose }: { role: string | null; organizationId: string | null | undefined; onClose: () => void }) {
@@ -227,8 +229,10 @@ export default function PartnerDashboardLayout({
         </header>
 
         <main className="flex-1 overflow-auto p-4 md:p-6">
+          <GstcWelcomeModal />
           <Outlet />
         </main>
+
       </div>
     </div>
   );

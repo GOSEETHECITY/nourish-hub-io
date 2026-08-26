@@ -105,16 +105,18 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
         if (!profile?.nonprofit_id) return true;
         const [np, locs] = await Promise.all([
           supabase.from("nonprofits").select("address").eq("id", profile.nonprofit_id).maybeSingle(),
-          supabase.from("nonprofit_locations").select("id").eq("nonprofit_id", profile.nonprofit_id).limit(1),
+          supabase.from("nonprofit_locations").select("id, address, pickup_dropoff_instructions").eq("nonprofit_id", profile.nonprofit_id).limit(1),
         ]);
-        return !!np.data?.address && (locs.data?.length ?? 0) > 0;
+        const npLoc = locs.data?.[0];
+        return !!np.data?.address && !!npLoc?.address && !!npLoc?.pickup_dropoff_instructions;
       }
       if (!profile?.organization_id) return true;
       const [org, locs] = await Promise.all([
         supabase.from("organizations").select("address").eq("id", profile.organization_id).maybeSingle(),
-        supabase.from("locations").select("id").eq("organization_id", profile.organization_id).limit(1),
+        supabase.from("locations").select("id, address, pickup_address").eq("organization_id", profile.organization_id).limit(1),
       ]);
-      return !!org.data?.address && (locs.data?.length ?? 0) > 0;
+      const loc = locs.data?.[0];
+      return !!org.data?.address && !!loc?.address && !!loc?.pickup_address;
     },
   });
 

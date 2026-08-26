@@ -139,10 +139,17 @@ export default function PartnerNotificationBell() {
                     key={n.id}
                     className={`flex items-start gap-3 px-4 py-3 hover:bg-muted/50 cursor-pointer border-b last:border-b-0 transition-colors ${isUnread ? "bg-[#6d412a]/[0.08]" : ""}`}
                     onClick={() => {
-                      if (n.link_path) navigate(n.link_path);
+                      // Consumer app links open in a new tab so the partner
+                      // portal stays open behind them.
+                      if (n.link_path?.startsWith("/app")) {
+                        window.open(n.link_path, "_blank", "noopener,noreferrer");
+                      } else if (n.link_path) {
+                        navigate(n.link_path);
+                      }
                       if (isUnread) markRead.mutate(n.id);
                       setOpen(false);
                     }}
+
                   >
                     <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${isUnread ? "bg-primary/10" : "bg-muted"}`}>
                       <Icon className={`w-4 h-4 ${isUnread ? "text-primary" : "text-muted-foreground"}`} />
