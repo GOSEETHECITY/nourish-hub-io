@@ -92,13 +92,15 @@ export default function VenueMarketplace() {
       {/* Coming Soon Card */}
       <div className="bg-card rounded-xl border p-8 text-center space-y-4">
         <Rocket className="w-12 h-12 text-primary mx-auto" />
-        <h2 className="text-xl font-bold text-foreground">🚀 Marketplace Coming Soon</h2>
+        <h2 className="text-xl font-bold text-foreground">Marketplace Coming Soon</h2>
         <p className="text-sm text-muted-foreground max-w-md mx-auto">
-          The HarietAI Marketplace is launching soon on the GO See The City app. Connect your Stripe account now so you're ready to start selling the moment it goes live.
+          The HarietAI Marketplace is launching soon on the GO See The City app. Selling and Stripe connection are turned off until it goes live.
         </p>
-        <Button variant="outline" className="mx-auto">Connect Stripe</Button>
+        <Button variant="outline" className="mx-auto" disabled>Connect Stripe</Button>
+        <p className="text-xs text-muted-foreground">Available when the marketplace launches</p>
       </div>
 
+      <div className="opacity-50 pointer-events-none select-none space-y-6" aria-disabled="true">
       {/* Existing Coupons */}
       <div className="grid grid-cols-3 gap-4">
         <div className="bg-card rounded-xl border p-5"><p className="text-xs text-muted-foreground">Active Coupons</p><p className="text-lg font-bold text-foreground">{activeCoupons}</p></div>
@@ -107,10 +109,11 @@ export default function VenueMarketplace() {
       </div>
 
       <div className="flex justify-end">
-        <Button onClick={() => { setForm(emptyCoupon); setSelectedLocationId(eligibleLocations[0]?.id || ""); setDialogOpen(true); }}>
+        <Button disabled>
           <Plus className="w-4 h-4 mr-2" />Create Coupon
         </Button>
       </div>
+
 
       <div className="bg-card rounded-xl border">
         <div className="overflow-x-auto"><Table>
