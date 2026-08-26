@@ -53,11 +53,12 @@ export default function OnboardingChecklist() {
   const { data: org } = useQuery({
     queryKey: ["onboard-org", profile?.organization_id],
     queryFn: async () => {
-      const { data } = await supabase.from("organizations").select("marketplace_enabled").eq("id", profile!.organization_id!).maybeSingle();
+      const { data } = await supabase.from("organizations").select("marketplace_enabled, hours_of_operation").eq("id", profile!.organization_id!).maybeSingle();
       return data;
     },
     enabled: !!profile?.organization_id,
   });
+
 
   const { data: stripeLocations = [] } = useQuery({
     queryKey: ["onboard-stripe", profile?.organization_id],
