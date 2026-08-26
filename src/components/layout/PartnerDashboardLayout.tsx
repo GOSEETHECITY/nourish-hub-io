@@ -12,6 +12,8 @@ import PartnerNotificationBell from "./PartnerNotificationBell";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getLogoSignedUrl } from "@/lib/orgProfile";
 import SupportRequestButton from "@/components/support/SupportRequestButton";
+import GstcWelcomeModal from "@/components/partner/GstcWelcomeModal";
+
 
 
 function FranchiseNavItem({ role, organizationId, onClose }: { role: string | null; organizationId: string | null | undefined; onClose: () => void }) {
