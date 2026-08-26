@@ -26,7 +26,8 @@ const ConsumerProfile = () => {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      if (!consumer?.id) return;
+      // Fallback ids are placeholders for a consumer row that has not loaded yet.
+      if (!consumer?.id || consumer.id.startsWith("fallback-")) return;
       const { data } = await supabase
         .from("consumer_badges")
         .select("id, badge_key, badge_name, badge_icon")

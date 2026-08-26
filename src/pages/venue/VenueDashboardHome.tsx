@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Package, Leaf, DollarSign, BarChart3, MapPin, FileText } from "lucide-react";
 import OnboardingChecklist from "@/components/venue/OnboardingChecklist";
+import HoursTaskCard from "@/components/venue/HoursTaskCard";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CO2_LBS_PER_LB_FOOD } from "@/lib/co2";
 import type { FoodListing, Location } from "@/types/database";
@@ -106,6 +107,8 @@ export default function VenueDashboardHome() {
       </div>
 
       <OnboardingChecklist />
+
+      <HoursTaskCard />
 
       {isMultiLocation && (
         <div className="bg-primary/5 border border-primary/20 rounded-xl p-5 space-y-4">
