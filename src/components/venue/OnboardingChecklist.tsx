@@ -3,7 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { CheckCircle2, Circle, X, Leaf, MapPin, Package, CreditCard } from "lucide-react";
+import { CheckCircle2, Circle, X, Leaf, MapPin, Package, CreditCard, Clock } from "lucide-react";
+import { hasRealHours } from "@/lib/orgProfile";
+
 
 const DISMISSED_KEY = "hariet_onboarding_dismissed";
 
