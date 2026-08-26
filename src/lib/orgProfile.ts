@@ -18,6 +18,20 @@ export const defaultHours = (): HoursOfOperation =>
     return acc;
   }, {} as HoursOfOperation);
 
+/**
+ * True when a partner has actually saved operating hours: the record exists and
+ * at least one day is open with an open/close time.
+ */
+export const hasRealHours = (hours: unknown): boolean => {
+  if (!hours || typeof hours !== "object") return false;
+  const h = hours as Partial<Record<string, Partial<HoursDay>>>;
+  return DAY_KEYS.some((k) => {
+    const day = h[k];
+    return !!day && day.closed !== true && !!day.open && !!day.close;
+  });
+};
+
+
 // Basic RFC-5322-ish email + simple E.164-friendly phone check.
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // Accepts +1 555-123-4567, (555) 123-4567, 5551234567 etc. 7-15 digits.

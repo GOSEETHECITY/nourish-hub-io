@@ -3,7 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { CheckCircle2, Circle, X, Leaf, MapPin, Package, CreditCard } from "lucide-react";
+import { CheckCircle2, Circle, X, Leaf, MapPin, Package, CreditCard, Clock } from "lucide-react";
+import { hasRealHours } from "@/lib/orgProfile";
+
 
 const DISMISSED_KEY = "hariet_onboarding_dismissed";
 
@@ -53,11 +55,12 @@ export default function OnboardingChecklist() {
   const { data: org } = useQuery({
     queryKey: ["onboard-org", profile?.organization_id],
     queryFn: async () => {
-      const { data } = await supabase.from("organizations").select("marketplace_enabled").eq("id", profile!.organization_id!).maybeSingle();
+      const { data } = await supabase.from("organizations").select("marketplace_enabled, hours_of_operation").eq("id", profile!.organization_id!).maybeSingle();
       return data;
     },
     enabled: !!profile?.organization_id,
   });
+
 
   const { data: stripeLocations = [] } = useQuery({
     queryKey: ["onboard-stripe", profile?.organization_id],
@@ -73,11 +76,13 @@ export default function OnboardingChecklist() {
   const items: ChecklistItem[] = [
     { id: "baseline", label: "Complete sustainability baseline", icon: Leaf, done: baselines.length > 0, route: "/venue/baseline" },
     { id: "location", label: "Add your first location", icon: MapPin, done: locations.length > 0, route: "/venue/locations" },
+    { id: "hours", label: "Set operational hours", icon: Clock, done: hasRealHours(org?.hours_of_operation), route: "/venue/settings" },
     { id: "donation", label: "Post your first donation", icon: Package, done: donations.length > 0, route: "/venue/donations" },
     ...(org?.marketplace_enabled
       ? [{ id: "stripe", label: "Connect Stripe for marketplace", icon: CreditCard, done: stripeLocations.length > 0, route: "/venue/marketplace" } as ChecklistItem]
       : []),
   ];
+
 
   const allDone = items.every((i) => i.done);
   if (allDone) return null;

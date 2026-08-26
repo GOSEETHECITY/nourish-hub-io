@@ -1,27 +1,15 @@
-import { useState, useMemo } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Plus, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { toast } from "sonner";
 import { MARKETPLACE_ELIGIBLE_TYPES } from "@/lib/marketplace";
 import type { Coupon, Location } from "@/types/database";
 
-const emptyCoupon = { title: "", description: "", price: "", original_price: "", quantity_available: "", pickup_address: "" };
-
 export default function VenueMarketplace() {
   const { profile } = useAuth();
-  const queryClient = useQueryClient();
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState(emptyCoupon);
-  const [selectedLocationId, setSelectedLocationId] = useState("");
 
   const { data: locations = [] } = useQuery({
     queryKey: ["venue-locations", profile?.organization_id],
@@ -51,28 +39,6 @@ export default function VenueMarketplace() {
     enabled: !!profile?.organization_id,
   });
 
-  const createCoupon = useMutation({
-    mutationFn: async () => {
-      const locId = selectedLocationId || eligibleLocations[0]?.id;
-      if (!locId || !profile?.organization_id) throw new Error("No location selected");
-      const loc = locations.find((l) => l.id === locId);
-      const { error } = await supabase.from("coupons").insert({
-        location_id: locId, organization_id: profile.organization_id,
-        title: form.title, description: form.description || null,
-        price: Number(form.price), original_price: form.original_price ? Number(form.original_price) : null,
-        quantity_available: Number(form.quantity_available),
-        pickup_address: form.pickup_address || loc?.pickup_address || null,
-      });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["venue-coupons"] });
-      toast.success("Coupon created!");
-      setDialogOpen(false);
-      setForm(emptyCoupon);
-    },
-    onError: (e) => toast.error(e.message),
-  });
 
   if (!hasEligible) return null; // Should not render if not eligible (hidden by nav)
 
@@ -92,13 +58,15 @@ export default function VenueMarketplace() {
       {/* Coming Soon Card */}
       <div className="bg-card rounded-xl border p-8 text-center space-y-4">
         <Rocket className="w-12 h-12 text-primary mx-auto" />
-        <h2 className="text-xl font-bold text-foreground">🚀 Marketplace Coming Soon</h2>
+        <h2 className="text-xl font-bold text-foreground">Marketplace Coming Soon</h2>
         <p className="text-sm text-muted-foreground max-w-md mx-auto">
-          The HarietAI Marketplace is launching soon on the GO See The City app. Connect your Stripe account now so you're ready to start selling the moment it goes live.
+          The HarietAI Marketplace is launching soon on the GO See The City app. Selling and Stripe connection are turned off until it goes live.
         </p>
-        <Button variant="outline" className="mx-auto">Connect Stripe</Button>
+        <Button variant="outline" className="mx-auto" disabled>Connect Stripe</Button>
+        <p className="text-xs text-muted-foreground">Available when the marketplace launches</p>
       </div>
 
+      <div className="opacity-50 pointer-events-none select-none space-y-6" aria-disabled="true">
       {/* Existing Coupons */}
       <div className="grid grid-cols-3 gap-4">
         <div className="bg-card rounded-xl border p-5"><p className="text-xs text-muted-foreground">Active Coupons</p><p className="text-lg font-bold text-foreground">{activeCoupons}</p></div>
@@ -107,10 +75,11 @@ export default function VenueMarketplace() {
       </div>
 
       <div className="flex justify-end">
-        <Button onClick={() => { setForm(emptyCoupon); setSelectedLocationId(eligibleLocations[0]?.id || ""); setDialogOpen(true); }}>
+        <Button disabled>
           <Plus className="w-4 h-4 mr-2" />Create Coupon
         </Button>
       </div>
+
 
       <div className="bg-card rounded-xl border">
         <div className="overflow-x-auto"><Table>
@@ -140,34 +109,8 @@ export default function VenueMarketplace() {
           </TableBody>
         </Table></div>
       </div>
+      </div>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>Create Marketplace Coupon</DialogTitle></DialogHeader>
-          <div className="space-y-4 pt-4">
-            {eligibleLocations.length > 1 && (
-              <div>
-                <Label>Location</Label>
-                <Select value={selectedLocationId} onValueChange={setSelectedLocationId}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{eligibleLocations.map((l) => <SelectItem key={l.id} value={l.id}>{l.name}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-            )}
-            <div><Label>Title *</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
-            <div><Label>Description</Label><Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
-            <div className="grid grid-cols-2 gap-4">
-              <div><Label>Price ($) *</Label><Input type="number" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></div>
-              <div><Label>Original Price ($)</Label><Input type="number" step="0.01" value={form.original_price} onChange={(e) => setForm({ ...form, original_price: e.target.value })} /></div>
-            </div>
-            <div><Label>Quantity Available *</Label><Input type="number" value={form.quantity_available} onChange={(e) => setForm({ ...form, quantity_available: e.target.value })} /></div>
-            <div><Label>Pickup Address</Label><Input value={form.pickup_address} onChange={(e) => setForm({ ...form, pickup_address: e.target.value })} placeholder="Defaults to location address" /></div>
-            <Button className="w-full" onClick={() => createCoupon.mutate()} disabled={!form.title || !form.price || !form.quantity_available || createCoupon.isPending}>
-              {createCoupon.isPending ? "Creating..." : "Create Coupon"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
