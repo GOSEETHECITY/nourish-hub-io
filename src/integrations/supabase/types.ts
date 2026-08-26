@@ -2191,6 +2191,7 @@ export type Database = {
           created_at: string
           email: string | null
           first_name: string | null
+          gstc_welcome_seen: boolean
           id: string
           last_name: string | null
           location_id: string | null
@@ -2204,6 +2205,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           first_name?: string | null
+          gstc_welcome_seen?: boolean
           id: string
           last_name?: string | null
           location_id?: string | null
@@ -2217,6 +2219,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           first_name?: string | null
+          gstc_welcome_seen?: boolean
           id?: string
           last_name?: string | null
           location_id?: string | null
