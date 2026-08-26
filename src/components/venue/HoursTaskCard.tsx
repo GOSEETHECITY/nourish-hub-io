@@ -28,7 +28,7 @@ export default function HoursTaskCard() {
     },
   });
 
-  if (dismissed || !org || org.hours_of_operation) return null;
+  if (dismissed || !org || hasRealHours(org.hours_of_operation)) return null;
 
   const dismiss = () => {
     setDismissed(true);
