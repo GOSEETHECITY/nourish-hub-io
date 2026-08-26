@@ -17,6 +17,8 @@ import { Trash2, FileText, Heart } from "lucide-react";
 import { toast } from "sonner";
 import type { FoodListing, Location, FoodType } from "@/types/database";
 import { openReceiptPdf } from "@/lib/taxReceipts";
+import { hasRealHours } from "@/lib/orgProfile";
+
 
 const FOOD_TYPES: { value: FoodType; label: string }[] = [
   { value: "prepared_meals", label: "Prepared Meals" },
