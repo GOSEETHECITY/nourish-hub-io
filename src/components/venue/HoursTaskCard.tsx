@@ -4,6 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Clock, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { hasRealHours } from "@/lib/orgProfile";
+
 
 const DISMISSED_KEY = "hariet_hours_task_dismissed";
 
