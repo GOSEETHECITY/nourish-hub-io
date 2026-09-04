@@ -9,28 +9,27 @@ const ConsumerPhoneEntry = () => {
   const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
   const [sending, setSending] = useState(false);
+  const [marketingConsent, setMarketingConsent] = useState(false);
 
   const handleNext = async () => {
     setError("");
     if (phone.length < 10) return;
-    // Invite-code session value is required before phone verification can start.
-    if (!sessionStorage.getItem("invite_code")) {
-      navigate("/app/invite", { replace: true });
-      return;
-    }
+
     setSending(true);
     const e164 = `+1${phone}`;
-    const { error } = await supabase.auth.signInWithOtp({
+    const { error: otpError } = await supabase.auth.signInWithOtp({
       phone: e164,
       options: { channel: "sms" },
     });
     setSending(false);
-    if (error) {
-      setError(error.message || "Could not send code. Please try again.");
+    if (otpError) {
+      setError(otpError.message || "Could not send code. Please try again.");
       return;
     }
+
     sessionStorage.setItem("signup_phone", phone);
     sessionStorage.setItem("signup_phone_e164", e164);
+    sessionStorage.setItem("sms_marketing_consent", marketingConsent ? "true" : "false");
     sessionStorage.removeItem("phone_verified");
     navigate("/app/verification");
   };
@@ -38,11 +37,21 @@ const ConsumerPhoneEntry = () => {
   return (
     <ConsumerMobileLayout>
       <header className="flex items-center gap-3 px-4 py-4">
-        <button onClick={() => navigate(-1)}><ArrowLeft className="w-6 h-6 text-[#1B2A4A]" /></button>
+        <button onClick={() => navigate(-1)} aria-label="Back">
+          <ArrowLeft className="w-6 h-6 text-[#1B2A4A]" />
+        </button>
         <h1 className="text-lg font-bold text-[#1B2A4A]">Sign up</h1>
       </header>
-      <div className="px-6 pt-8 flex flex-col gap-6">
+      <div className="px-6 pt-4 flex flex-col gap-5">
+        <div className="flex flex-col items-center">
+          <h2 className="text-3xl font-extrabold tracking-tight text-center">
+            <span className="text-[#F97316]">GO</span>{" "}
+            <span className="text-[#1B2A4A]">See The City</span>
+          </h2>
+        </div>
+
         <p className="text-xl font-bold text-[#1B2A4A]">Enter your phone number</p>
+
         <div className="flex items-center gap-2 border border-gray-300 rounded-full px-4 py-3">
           <span className="text-lg">🇺🇸</span>
           <span className="text-gray-500">+1</span>
@@ -54,6 +63,24 @@ const ConsumerPhoneEntry = () => {
             type="tel"
           />
         </div>
+
+        <p className="text-xs text-gray-500 -mt-2">
+          GO See The City will text you a one-time code to verify this number. Message and data rates may apply.
+        </p>
+
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={marketingConsent}
+            onChange={(e) => setMarketingConsent(e.target.checked)}
+            className="mt-1 w-5 h-5 accent-[#F97316] shrink-0"
+          />
+          <span className="text-sm text-gray-700 leading-relaxed">
+            Text me deals and events. I agree to receive recurring marketing text messages from GO See The City about grand opening events, restaurant deals, surplus food offers, and local happenings at the number above. Consent is not required to create an account. Message frequency varies. Message and data rates may apply. Reply STOP to opt out or HELP for help.
+          </span>
+        </label>
+        <p className="text-xs text-gray-400 -mt-3 ml-8">Optional — you can create your account without this.</p>
+
         {error && <p className="text-sm text-red-500">{error}</p>}
         <button
           onClick={handleNext}
