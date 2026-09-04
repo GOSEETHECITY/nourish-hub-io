@@ -555,6 +555,7 @@ export type Database = {
           phone: string | null
           pounds_rescued: number | null
           referral_code: string | null
+          sms_marketing_consent: boolean | null
           user_id: string | null
           zip_code: string | null
         }
@@ -572,6 +573,7 @@ export type Database = {
           phone?: string | null
           pounds_rescued?: number | null
           referral_code?: string | null
+          sms_marketing_consent?: boolean | null
           user_id?: string | null
           zip_code?: string | null
         }
@@ -589,6 +591,7 @@ export type Database = {
           phone?: string | null
           pounds_rescued?: number | null
           referral_code?: string | null
+          sms_marketing_consent?: boolean | null
           user_id?: string | null
           zip_code?: string | null
         }
