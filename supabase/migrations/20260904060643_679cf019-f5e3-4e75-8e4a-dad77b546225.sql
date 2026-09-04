@@ -1,0 +1,1 @@
+ALTER TABLE public.consumers ADD COLUMN IF NOT EXISTS sms_marketing_consent boolean DEFAULT false;
