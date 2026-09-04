@@ -16,7 +16,7 @@ const ConsumerVerification = () => {
 
   // Guard against direct navigation: must have started the OTP flow.
   useEffect(() => {
-    if (!phoneE164 || !sessionStorage.getItem("invite_code")) {
+    if (!phoneE164) {
       navigate("/app/phone-entry", { replace: true });
     }
   }, [phoneE164, navigate]);

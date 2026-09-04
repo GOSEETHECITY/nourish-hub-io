@@ -12,22 +12,15 @@ const ConsumerSignup = () => {
   const phone = sessionStorage.getItem("signup_phone") || "";
   const phoneE164 = sessionStorage.getItem("signup_phone_e164") || "";
   const phoneVerified = sessionStorage.getItem("phone_verified") || "";
-  const inviteCode = sessionStorage.getItem("invite_code") || "";
   const submittedRef = useRef(false);
 
-  // Hard gate: signup is only reachable after a verified phone OTP and a
-  // captured invite code. The DB also enforces the invite-code requirement,
-  // but blocking client-side avoids a noisy round-trip.
+  // Phone verification is required before signup.
   useEffect(() => {
     if (submittedRef.current) return;
-    if (!inviteCode) {
-      navigate("/app/invite", { replace: true });
-      return;
-    }
     if (!phoneVerified || phoneVerified !== phoneE164) {
       navigate("/app/phone-entry", { replace: true });
     }
-  }, [inviteCode, phoneVerified, phoneE164, navigate]);
+  }, [phoneVerified, phoneE164, navigate]);
 
   const [form, setForm] = useState({
     firstName: "",
@@ -46,10 +39,6 @@ const ConsumerSignup = () => {
 
   const handleSubmit = async () => {
     setError("");
-    if (!inviteCode) {
-      setError("Invite code is required.");
-      return;
-    }
     setLoading(true);
 
     // Phone OTP verification already created an authenticated session.
@@ -81,6 +70,7 @@ const ConsumerSignup = () => {
       zip_code: form.zip,
       city: form.city,
       date_of_birth: form.dob || null,
+      sms_marketing_consent: sessionStorage.getItem("sms_marketing_consent") === "true",
     };
 
     const { data: existingConsumer } = await supabase
@@ -99,7 +89,6 @@ const ConsumerSignup = () => {
       ({ error: insertErr } = await supabase.from("consumers").insert({
         ...consumerPayload,
         user_id: updated.user.id,
-        invite_code_used: inviteCode,
       }));
     }
 
@@ -108,7 +97,6 @@ const ConsumerSignup = () => {
       setLoading(false);
       return;
     }
-
 
     await refreshConsumer();
 
@@ -121,12 +109,14 @@ const ConsumerSignup = () => {
       try { await supabase.rpc("apply_referral" as any, { p_code: referralCode }); } catch (_) {}
       sessionStorage.removeItem("referral_code");
     }
+    const inviteCode = sessionStorage.getItem("invite_code");
     if (inviteCode) {
       try { await supabase.rpc("apply_referral" as any, { p_code: inviteCode }); } catch (_) {}
     }
 
     sessionStorage.removeItem("phone_verified");
     sessionStorage.removeItem("signup_phone_e164");
+    sessionStorage.removeItem("sms_marketing_consent");
     submittedRef.current = true;
     setLoading(false);
     navigate("/app/home");
@@ -142,51 +132,51 @@ const ConsumerSignup = () => {
       </header>
       <div className="px-6 pb-8">
         <div className="flex flex-col gap-3">
-        <input
-          placeholder="First name"
-          value={form.firstName}
-          onChange={(e) => update("firstName", e.target.value)}
-          className="w-full py-3 px-4 rounded-xl border border-gray-300"
-        />
-        <input
-          placeholder="Last name"
-          value={form.lastName}
-          onChange={(e) => update("lastName", e.target.value)}
-          className="w-full py-3 px-4 rounded-xl border border-gray-300"
-        />
-        <input
-          placeholder="Email"
-          type="email"
-          value={form.email}
-          onChange={(e) => update("email", e.target.value)}
-          className="w-full py-3 px-4 rounded-xl border border-gray-300"
-        />
-        <PasswordInput
-          placeholder="Password"
-          value={form.password}
-          onChange={(e) => update("password", e.target.value)}
-          className="w-full py-3 px-4 rounded-xl border border-gray-300"
-        />
-        <input
-          placeholder="ZIP"
-          value={form.zip}
-          onChange={(e) => update("zip", e.target.value)}
-          className="w-full py-3 px-4 rounded-xl border border-gray-300"
-        />
-        <input
-          placeholder="City"
-          value={form.city}
-          onChange={(e) => update("city", e.target.value)}
-          className="w-full py-3 px-4 rounded-xl border border-gray-300"
-        />
-        {error && <p className="text-red-500 text-sm">{error}</p>}
-        <button
-          onClick={handleSubmit}
-          disabled={loading}
-          className="w-full py-3 rounded-xl bg-[#F97316] text-white font-semibold disabled:opacity-50 mt-2"
-        >
-          {loading ? "Creating..." : "Sign up"}
-        </button>
+          <input
+            placeholder="First name"
+            value={form.firstName}
+            onChange={(e) => update("firstName", e.target.value)}
+            className="w-full py-3 px-4 rounded-xl border border-gray-300"
+          />
+          <input
+            placeholder="Last name"
+            value={form.lastName}
+            onChange={(e) => update("lastName", e.target.value)}
+            className="w-full py-3 px-4 rounded-xl border border-gray-300"
+          />
+          <input
+            placeholder="Email"
+            type="email"
+            value={form.email}
+            onChange={(e) => update("email", e.target.value)}
+            className="w-full py-3 px-4 rounded-xl border border-gray-300"
+          />
+          <PasswordInput
+            placeholder="Password"
+            value={form.password}
+            onChange={(e) => update("password", e.target.value)}
+            className="w-full py-3 px-4 rounded-xl border border-gray-300"
+          />
+          <input
+            placeholder="ZIP"
+            value={form.zip}
+            onChange={(e) => update("zip", e.target.value)}
+            className="w-full py-3 px-4 rounded-xl border border-gray-300"
+          />
+          <input
+            placeholder="City"
+            value={form.city}
+            onChange={(e) => update("city", e.target.value)}
+            className="w-full py-3 px-4 rounded-xl border border-gray-300"
+          />
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+          <button
+            onClick={handleSubmit}
+            disabled={loading}
+            className="w-full py-3 rounded-xl bg-[#F97316] text-white font-semibold disabled:opacity-50 mt-2"
+          >
+            {loading ? "Creating..." : "Sign up"}
+          </button>
         </div>
       </div>
     </ConsumerMobileLayout>
