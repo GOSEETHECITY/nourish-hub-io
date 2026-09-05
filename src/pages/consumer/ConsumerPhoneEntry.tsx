@@ -45,7 +45,7 @@ const ConsumerPhoneEntry = () => {
       <div className="px-6 pt-4 flex flex-col gap-5">
         <div className="flex flex-col items-center">
           <img
-            src={goSeeTheCityLogo.url}
+            src="/go-see-the-city-logo.png"
             alt="GO See The City"
             className="h-28 w-auto object-contain"
           />
