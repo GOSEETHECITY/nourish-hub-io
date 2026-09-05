@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import ConsumerMobileLayout from "@/components/consumer/ConsumerMobileLayout";
 import { supabase } from "@/integrations/supabase/client";
+import goSeeTheCityLogo from "@/assets/go-see-the-city-logo.png.asset.json";
 
 const ConsumerPhoneEntry = () => {
   const navigate = useNavigate();
@@ -44,10 +45,11 @@ const ConsumerPhoneEntry = () => {
       </header>
       <div className="px-6 pt-4 flex flex-col gap-5">
         <div className="flex flex-col items-center">
-          <h2 className="text-3xl font-extrabold tracking-tight text-center">
-            <span className="text-[#F97316]">GO</span>{" "}
-            <span className="text-[#1B2A4A]">See The City</span>
-          </h2>
+          <img
+            src={goSeeTheCityLogo.url}
+            alt="GO See The City"
+            className="h-28 w-auto object-contain"
+          />
         </div>
 
         <p className="text-xl font-bold text-[#1B2A4A]">Enter your phone number</p>
@@ -65,7 +67,7 @@ const ConsumerPhoneEntry = () => {
         </div>
 
         <p className="text-xs text-gray-500 -mt-2">
-          GO See The City will text you a one-time code to verify this number. Message and data rates may apply.
+          By entering your phone number and selecting “Next,” you consent to receive a one-time SMS verification code from GO See The City to verify your account. Message and data rates may apply.
         </p>
 
         <label className="flex items-start gap-3 cursor-pointer">
@@ -76,10 +78,10 @@ const ConsumerPhoneEntry = () => {
             className="mt-1 w-5 h-5 accent-[#F97316] shrink-0"
           />
           <span className="text-sm text-gray-700 leading-relaxed">
-            Text me deals and events. I agree to receive recurring marketing text messages from GO See The City about grand opening events, restaurant deals, surplus food offers, and local happenings at the number above. Consent is not required to create an account. Message frequency varies. Message and data rates may apply. Reply STOP to opt out or HELP for help.
+            I agree to receive recurring promotional text messages from GO See The City about grand opening events, restaurant deals, surplus food offers, and local happenings at the number provided above. Message frequency varies. Message and data rates may apply. Reply STOP to opt out or HELP for help.
           </span>
         </label>
-        <p className="text-xs text-gray-400 -mt-3 ml-8">Optional — you can create your account without this.</p>
+        <p className="text-xs text-gray-400 -mt-3 ml-8">Optional — You can create an account without subscribing to promotional text messages.</p>
 
         {error && <p className="text-sm text-red-500">{error}</p>}
         <button
