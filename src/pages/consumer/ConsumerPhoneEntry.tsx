@@ -77,7 +77,7 @@ const ConsumerPhoneEntry = () => {
             className="mt-1 w-5 h-5 accent-[#F97316] shrink-0"
           />
           <span className="text-sm text-gray-700 leading-relaxed">
-            I agree to receive recurring promotional text messages from GO See The City about grand opening events, restaurant deals, surplus food offers, and local happenings at the number provided above. Message frequency varies. Message and data rates may apply. Reply STOP to opt out or HELP for help.
+            I agree to receive recurring promotional text messages from GO See The City about grand opening events, restaurant deals, surplus food offers, and local happenings at the number provided above. Message frequency varies. Message and data rates may apply. Reply STOP to opt out.
           </span>
         </label>
         <p className="text-xs text-gray-400 -mt-3 ml-8">Optional — You can create an account without subscribing to promotional text messages.</p>
