@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import ConsumerMobileLayout from "@/components/consumer/ConsumerMobileLayout";
 import { supabase } from "@/integrations/supabase/client";
-import goSeeTheCityLogo from "@/assets/go-see-the-city-logo.png.asset.json";
 
 const ConsumerPhoneEntry = () => {
   const navigate = useNavigate();
