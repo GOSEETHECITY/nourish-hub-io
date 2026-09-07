@@ -12,8 +12,6 @@ export function registerPmtilesProtocol() {
   protocolRegistered = true;
 }
 
-const DEFAULT_PMTILES_URL = "https://build.protomaps.com/20260904.pmtiles";
-
 const VERSATILES_STYLE_URL =
   "https://tiles.versatiles.org/assets/styles/colorful/style.json";
 
@@ -35,19 +33,19 @@ function protomapsLightStyle(pmtilesUrl: string) {
 }
 
 export function getMapStyle() {
-  registerPmtilesProtocol();
-
   const customStyleUrl = import.meta.env.VITE_MAP_STYLE_URL;
   if (customStyleUrl) {
     return customStyleUrl;
   }
 
-  if (import.meta.env.VITE_USE_VERSATILES === "true") {
-    return VERSATILES_STYLE_URL;
+  const pmtilesUrl = import.meta.env.VITE_PMTILES_URL;
+  if (pmtilesUrl) {
+    registerPmtilesProtocol();
+    return protomapsLightStyle(pmtilesUrl);
   }
 
-  const pmtilesUrl = import.meta.env.VITE_PMTILES_URL || DEFAULT_PMTILES_URL;
-  return protomapsLightStyle(pmtilesUrl);
+  // Default: VersaTiles public style (CORS-enabled, free commercial use).
+  return VERSATILES_STYLE_URL;
 }
 
 export function getMapAttribution() {
