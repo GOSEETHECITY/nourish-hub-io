@@ -1,9 +1,9 @@
 import { useEffect, useState, Component, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { formatTime, formatDateShort } from "@/lib/formatters";
-import Map, { Marker, Popup, NavigationControl, AttributionControl } from "react-map-gl/maplibre";
+import Map, { Marker, Popup, NavigationControl } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { getMapStyle, getMapAttribution } from "@/lib/mapConfig";
+import { getMapStyle } from "@/lib/mapConfig";
 
 // City center coordinates for initial map view
 const CITY_CENTERS: Record<string, [number, number]> = {
