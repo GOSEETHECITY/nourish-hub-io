@@ -68,7 +68,6 @@ class MapErrorBoundary extends Component<
 function ConsumerMap({ center, markers, onMarkerClick }: MapViewProps) {
   const [selected, setSelected] = useState<MapLocation | null>(null);
   const style = useMemo(() => getMapStyle(), []);
-  const attribution = useMemo(() => getMapAttribution(), []);
 
   return (
     <div className="consumer-static-map h-full w-full overflow-hidden rounded-[28px] bg-muted">
@@ -89,7 +88,6 @@ function ConsumerMap({ center, markers, onMarkerClick }: MapViewProps) {
         keyboard={false}
       >
         <NavigationControl showCompass={false} position="top-left" />
-        <AttributionControl position="bottom-right" customAttribution={attribution} />
         {markers.map((m) => (
           <Marker
             key={`${m.type}-${m.id}`}
