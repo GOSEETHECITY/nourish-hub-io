@@ -365,6 +365,7 @@ const App = () => (
               <Route path="/district/settings" element={<DistrictPlaceholder title="Settings" />} />
             </Route>
 
+            <Route path="/map-test" element={<MapTest />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
