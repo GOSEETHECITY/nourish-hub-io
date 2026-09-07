@@ -108,7 +108,6 @@ import ConsumerLogin from "./pages/consumer/ConsumerLogin";
 import ConsumerSignup from "./pages/consumer/ConsumerSignup";
 import ConsumerLocationPermission from "./pages/consumer/ConsumerLocationPermission";
 import ConsumerHome from "./pages/consumer/ConsumerHome";
-import MapTest from "./pages/MapTest";
 import ConsumerRestaurants from "./pages/consumer/ConsumerRestaurants";
 import ConsumerMarketplaceComingSoon from "./pages/consumer/ConsumerMarketplaceComingSoon";
 import ConsumerRestaurantDetail from "./pages/consumer/ConsumerRestaurantDetail";
