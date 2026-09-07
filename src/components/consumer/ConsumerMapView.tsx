@@ -1,8 +1,8 @@
 import { useMemo, useState, Component, ReactNode } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import Map, { Marker, Popup, NavigationControl, AttributionControl } from "react-map-gl/maplibre";
+import Map, { Marker, Popup, NavigationControl } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { getMapStyle, getMapAttribution } from "@/lib/mapConfig";
+import { getMapStyle } from "@/lib/mapConfig";
 
 interface MapLocation {
   id: string;
