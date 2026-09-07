@@ -86,6 +86,7 @@ function ConsumerMap({ center, markers, onMarkerClick }: MapViewProps) {
         dragRotate={false}
         boxZoom={false}
         keyboard={false}
+        onError={(e) => console.error("Map error:", e?.error?.message || e)}
       >
         <NavigationControl showCompass={false} position="top-left" />
         {markers.map((m) => (
