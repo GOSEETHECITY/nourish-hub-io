@@ -1,7 +1,8 @@
 import { useMemo, useState, Component, ReactNode } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import Map, { Marker, Popup, NavigationControl } from "react-map-gl/maplibre";
+import Map, { Marker, Popup, NavigationControl, AttributionControl } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { getMapStyle, getMapAttribution } from "@/lib/mapConfig";
 
 interface MapLocation {
   id: string;
@@ -17,8 +18,6 @@ interface MapViewProps {
   markers: MapLocation[];
   onMarkerClick: (id: string) => void;
 }
-
-const STADIA_STYLE_URL = "https://tiles.stadiamaps.com/styles/alidade_smooth.json";
 
 function PinSvg({ color }: { color: string }) {
   return (
@@ -65,31 +64,11 @@ class MapErrorBoundary extends Component<
   }
 }
 
-function MissingKeyMessage() {
-  return (
-    <div className="h-full w-full flex flex-col items-center justify-center gap-3 px-6 text-center">
-      <p className="text-sm text-gray-500">
-        A Stadia Maps API key is required for the vector basemap.
-      </p>
-      <p className="text-xs text-gray-400">
-        Add <code className="bg-gray-100 px-1 rounded">VITE_STADIA_MAPS_API_KEY</code> to your environment variables.
-      </p>
-    </div>
-  );
-}
-
 /* ── inner map component rendered by the boundary ── */
 function ConsumerMap({ center, markers, onMarkerClick }: MapViewProps) {
   const [selected, setSelected] = useState<MapLocation | null>(null);
-  const apiKey = import.meta.env.VITE_STADIA_MAPS_API_KEY;
-
-  const styleUrl = useMemo(() => {
-    return apiKey ? `${STADIA_STYLE_URL}?api_key=${apiKey}` : STADIA_STYLE_URL;
-  }, [apiKey]);
-
-  if (!apiKey) {
-    return <MissingKeyMessage />;
-  }
+  const style = useMemo(() => getMapStyle(), []);
+  const attribution = useMemo(() => getMapAttribution(), []);
 
   return (
     <div className="consumer-static-map h-full w-full overflow-hidden rounded-[28px] bg-muted">
@@ -100,7 +79,7 @@ function ConsumerMap({ center, markers, onMarkerClick }: MapViewProps) {
           zoom: 13,
         }}
         style={{ width: "100%", height: "100%" }}
-        mapStyle={styleUrl}
+        mapStyle={style}
         dragPan={false}
         scrollZoom={false}
         doubleClickZoom={false}
@@ -110,6 +89,7 @@ function ConsumerMap({ center, markers, onMarkerClick }: MapViewProps) {
         keyboard={false}
       >
         <NavigationControl showCompass={false} position="top-left" />
+        <AttributionControl position="bottom-right" customAttribution={attribution} />
         {markers.map((m) => (
           <Marker
             key={`${m.type}-${m.id}`}
