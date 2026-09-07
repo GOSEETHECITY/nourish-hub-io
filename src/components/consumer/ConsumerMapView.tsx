@@ -1,5 +1,7 @@
-import { useEffect, useState, Component, ReactNode } from "react";
+import { useMemo, useState, Component, ReactNode } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import Map, { Marker, Popup, NavigationControl } from "react-map-gl/maplibre";
+import "maplibre-gl/dist/maplibre-gl.css";
 
 interface MapLocation {
   id: string;
@@ -15,6 +17,29 @@ interface MapViewProps {
   markers: MapLocation[];
   onMarkerClick: (id: string) => void;
 }
+
+const STADIA_STYLE_URL = "https://tiles.stadiamaps.com/styles/alidade_smooth.json";
+
+function PinSvg({ color }: { color: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="42" viewBox="0 0 28 42">
+      <path
+        d="M14 0C6.3 0 0 6.3 0 14c0 10.5 14 28 14 28s14-17.5 14-28C28 6.3 21.7 0 14 0z"
+        fill={color}
+        stroke="#fff"
+        strokeWidth="1.5"
+      />
+      <circle cx="14" cy="14" r="6" fill="#fff" />
+    </svg>
+  );
+}
+
+const colorFor = (t: MapLocation["type"]) =>
+  t === "event" ? "#8DC63F" : t === "flash" ? "#EF4444" : "#F97316";
+const labelFor = (t: MapLocation["type"]) =>
+  t === "event" ? "Event" : t === "flash" ? "Flash rescue" : "Restaurant";
+const btnClassFor = (t: MapLocation["type"]) =>
+  t === "event" ? "bg-[#8DC63F]" : t === "flash" ? "bg-[#EF4444]" : "bg-[#F97316]";
 
 /* ── local error boundary so map crashes never bubble up ── */
 class MapErrorBoundary extends Component<
@@ -40,133 +65,99 @@ class MapErrorBoundary extends Component<
   }
 }
 
-/* ── inner map component, only rendered once leaflet is loaded ── */
-function LeafletMap({ center, markers, onMarkerClick, modules }: MapViewProps & { modules: any }) {
-  const { MapContainer, TileLayer, Marker, Popup, orangeIcon, greenIcon, redIcon } = modules;
-
-  const iconFor = (t: MapLocation["type"]) =>
-    t === "event" ? greenIcon : t === "flash" ? redIcon : orangeIcon;
-  const labelFor = (t: MapLocation["type"]) =>
-    t === "event" ? "Event" : t === "flash" ? "Flash rescue" : "Restaurant";
-  const btnBgFor = (t: MapLocation["type"]) =>
-    t === "event" ? "bg-[#8DC63F]" : t === "flash" ? "bg-[#EF4444]" : "bg-[#F97316]";
-
+function MissingKeyMessage() {
   return (
-    <div className="consumer-static-map h-full w-full overflow-hidden rounded-[28px] bg-muted">
-      <MapContainer
-        key={`${center[0]}-${center[1]}`}
-        center={center}
-        zoom={13}
-        style={{ height: "100%", width: "100%" }}
-        zoomControl={true}
-        dragging={false}
-        scrollWheelZoom={false}
-        doubleClickZoom={false}
-        touchZoom={false}
-        boxZoom={false}
-        keyboard={false}
-        tap={false}
-        bounceAtZoomLimits={false}
-        attributionControl={false}
-        className="h-full w-full"
-      >
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          subdomains="abc"
-          maxZoom={19}
-        />
-        {markers.map((m) => (
-          <Marker key={`${m.type}-${m.id}`} position={[m.lat, m.lng]} icon={iconFor(m.type)}>
-            <Popup autoPan={false}>
-              <div className="text-center">
-                <p className="font-semibold">{m.name}</p>
-                <p className="text-xs text-gray-500">{m.subtitle ?? labelFor(m.type)}</p>
-                <button
-                  onClick={() => onMarkerClick(m.id)}
-                  className={`mt-1 px-3 py-1 text-white rounded-full text-xs font-semibold ${btnBgFor(m.type)}`}
-                >
-                  View
-                </button>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
-      </MapContainer>
+    <div className="h-full w-full flex flex-col items-center justify-center gap-3 px-6 text-center">
+      <p className="text-sm text-gray-500">
+        A Stadia Maps API key is required for the vector basemap.
+      </p>
+      <p className="text-xs text-gray-400">
+        Add <code className="bg-gray-100 px-1 rounded">VITE_STADIA_MAPS_API_KEY</code> to your environment variables.
+      </p>
     </div>
   );
 }
 
-/* ── public wrapper: lazy-loads Leaflet, catches errors ── */
+/* ── inner map component rendered by the boundary ── */
+function ConsumerMap({ center, markers, onMarkerClick }: MapViewProps) {
+  const [selected, setSelected] = useState<MapLocation | null>(null);
+  const apiKey = import.meta.env.VITE_STADIA_MAPS_API_KEY;
+
+  const styleUrl = useMemo(() => {
+    return apiKey ? `${STADIA_STYLE_URL}?api_key=${apiKey}` : STADIA_STYLE_URL;
+  }, [apiKey]);
+
+  if (!apiKey) {
+    return <MissingKeyMessage />;
+  }
+
+  return (
+    <div className="consumer-static-map h-full w-full overflow-hidden rounded-[28px] bg-muted">
+      <Map
+        initialViewState={{
+          latitude: center[0],
+          longitude: center[1],
+          zoom: 13,
+        }}
+        style={{ width: "100%", height: "100%" }}
+        mapStyle={styleUrl}
+        dragPan={false}
+        scrollZoom={false}
+        doubleClickZoom={false}
+        touchZoomRotate={false}
+        dragRotate={false}
+        boxZoom={false}
+        keyboard={false}
+      >
+        <NavigationControl showCompass={false} position="top-left" />
+        {markers.map((m) => (
+          <Marker
+            key={`${m.type}-${m.id}`}
+            latitude={m.lat}
+            longitude={m.lng}
+            anchor="bottom"
+            onClick={(e) => {
+              e.originalEvent.stopPropagation();
+              setSelected(m);
+            }}
+          >
+            <div className="cursor-pointer" style={{ transform: "translate(-50%, -100%)" }}>
+              <PinSvg color={colorFor(m.type)} />
+            </div>
+          </Marker>
+        ))}
+        {selected && (
+          <Popup
+            latitude={selected.lat}
+            longitude={selected.lng}
+            anchor="bottom"
+            closeButton={false}
+            closeOnClick={false}
+            onClose={() => setSelected(null)}
+            offset={[0, -42]}
+          >
+            <div className="text-center min-w-[140px]">
+              <p className="font-semibold text-sm">{selected.name}</p>
+              <p className="text-xs text-gray-500">{selected.subtitle ?? labelFor(selected.type)}</p>
+              <button
+                onClick={() => onMarkerClick(selected.id)}
+                className={`mt-2 px-3 py-1 text-white rounded-full text-xs font-semibold ${btnClassFor(selected.type)}`}
+              >
+                View
+              </button>
+            </div>
+          </Popup>
+        )}
+      </Map>
+    </div>
+  );
+}
+
+/* ── public wrapper: catches errors and shows loading state ── */
 export default function ConsumerMapView({ center, markers, onMarkerClick }: MapViewProps) {
-  const [modules, setModules] = useState<any>(null);
-  const [failed, setFailed] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    const load = async () => {
-      try {
-        // Import Leaflet core + CSS
-        const L = await import("leaflet");
-        await import("leaflet/dist/leaflet.css");
-
-        // Fix default marker icons (Vite may return module objects)
-        const resolve = (mod: any) =>
-          typeof mod === "string" ? mod : mod?.default ?? mod;
-
-        const iconUrl = resolve(
-          await import("leaflet/dist/images/marker-icon.png")
-        );
-        const iconRetinaUrl = resolve(
-          await import("leaflet/dist/images/marker-icon-2x.png")
-        );
-        const shadowUrl = resolve(
-          await import("leaflet/dist/images/marker-shadow.png")
-        );
-
-        delete (L.Icon.Default.prototype as any)._getIconUrl;
-        L.Icon.Default.mergeOptions({ iconUrl, iconRetinaUrl, shadowUrl });
-
-        const makeSvgIcon = (color: string) => {
-          const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="42" viewBox="0 0 28 42">
-            <path d="M14 0C6.3 0 0 6.3 0 14c0 10.5 14 28 14 28s14-17.5 14-28C28 6.3 21.7 0 14 0z" fill="${color}" stroke="#fff" stroke-width="1.5"/>
-            <circle cx="14" cy="14" r="6" fill="#fff"/>
-          </svg>`;
-          return L.divIcon({
-            html: svg,
-            className: "",
-            iconSize: [28, 42],
-            iconAnchor: [14, 42],
-            popupAnchor: [0, -36],
-          });
-        };
-
-        const orangeIcon = makeSvgIcon("#F97316");
-        const greenIcon = makeSvgIcon("#8DC63F");
-        const redIcon = makeSvgIcon("#EF4444");
-
-        // Import react-leaflet and destructure named exports explicitly
-        const RL = await import("react-leaflet");
-        const MapContainer = RL.MapContainer;
-        const TileLayer = RL.TileLayer;
-        const Marker = RL.Marker;
-        const Popup = RL.Popup;
-
-        if (!cancelled) {
-          setModules({ MapContainer, TileLayer, Marker, Popup, orangeIcon, greenIcon, redIcon });
-        }
-      } catch (err) {
-        console.error("Failed to load map:", err);
-        if (!cancelled) setFailed(true);
-      }
-    };
-
-    load();
-    return () => { cancelled = true; };
-  }, []);
-
-  if (failed) {
+  if (hasError) {
     return (
       <div className="h-full w-full flex items-center justify-center pt-16">
         <p className="text-gray-400 text-sm">Map could not be loaded.</p>
@@ -174,7 +165,9 @@ export default function ConsumerMapView({ center, markers, onMarkerClick }: MapV
     );
   }
 
-  if (!modules) {
+  // We keep a lightweight loading state while the map library initializes.
+  // react-map-gl renders the map synchronously, so this is mostly for data fetching.
+  if (!center) {
     return (
       <div className="h-full w-full flex flex-col items-center justify-center gap-4 pt-16">
         <Skeleton className="w-3/4 h-4" />
@@ -187,11 +180,10 @@ export default function ConsumerMapView({ center, markers, onMarkerClick }: MapV
 
   return (
     <MapErrorBoundary>
-      <LeafletMap
+      <ConsumerMap
         center={center}
         markers={markers}
         onMarkerClick={onMarkerClick}
-        modules={modules}
       />
     </MapErrorBoundary>
   );
