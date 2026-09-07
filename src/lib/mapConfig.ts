@@ -1,6 +1,6 @@
 import { layers, LIGHT } from "@protomaps/basemaps";
 import { Protocol } from "pmtiles";
-import maplibregl from "maplibre-gl";
+import { addProtocol } from "maplibre-gl";
 
 const PROTOCOL_NAME = "pmtiles";
 let protocolRegistered = false;
