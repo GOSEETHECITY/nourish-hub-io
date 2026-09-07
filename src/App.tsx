@@ -134,6 +134,7 @@ import ConsumerWaitlist from "./pages/consumer/ConsumerWaitlist";
 import EventPreview from "./pages/consumer/EventPreview";
 import ErrorBoundary from "./components/ErrorBoundary";
 import NotFound from "./pages/NotFound";
+import MapTest from "./pages/MapTest";
 import { LocationProvider } from "./contexts/LocationContext";
 import DistrictLayout from "./components/district/DistrictLayout";
 import DistrictHome from "./pages/district/DistrictHome";
