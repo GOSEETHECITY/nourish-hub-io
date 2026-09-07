@@ -1,8 +1,9 @@
 import { useEffect, useState, Component, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { formatTime, formatDateShort } from "@/lib/formatters";
-import Map, { Marker, Popup, NavigationControl } from "react-map-gl/maplibre";
+import Map, { Marker, Popup, NavigationControl, AttributionControl } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { getMapStyle, getMapAttribution } from "@/lib/mapConfig";
 
 // City center coordinates for initial map view
 const CITY_CENTERS: Record<string, [number, number]> = {
@@ -40,8 +41,6 @@ interface GeocodedEvent {
   lng: number;
 }
 
-const STADIA_STYLE_URL = "https://tiles.stadiamaps.com/styles/alidade_smooth.json";
-
 function PinSvg({ color }: { color: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="36" viewBox="0 0 28 42">
@@ -71,17 +70,6 @@ class MapErrorBoundary extends Component<
   }
 }
 
-function MissingKeyMessage() {
-  return (
-    <div className="w-full h-full flex flex-col items-center justify-center gap-2 px-6 text-center">
-      <p className="text-sm text-gray-500">Stadia Maps API key missing.</p>
-      <p className="text-xs text-gray-400">
-        Add <code className="bg-gray-100 px-1 rounded">VITE_STADIA_MAPS_API_KEY</code> to enable the map.
-      </p>
-    </div>
-  );
-}
-
 /* ── Inner map rendered after geocoding completes ── */
 function EventsMapInner({
   center,
@@ -92,12 +80,8 @@ function EventsMapInner({
 }) {
   const navigate = useNavigate();
   const [selected, setSelected] = useState<GeocodedEvent | null>(null);
-  const apiKey = import.meta.env.VITE_STADIA_MAPS_API_KEY;
-  const styleUrl = apiKey ? `${STADIA_STYLE_URL}?api_key=${apiKey}` : STADIA_STYLE_URL;
-
-  if (!apiKey) {
-    return <MissingKeyMessage />;
-  }
+  const style = getMapStyle();
+  const attribution = getMapAttribution();
 
   return (
     <Map
@@ -107,10 +91,11 @@ function EventsMapInner({
         zoom: 11,
       }}
       style={{ width: "100%", height: "100%" }}
-      mapStyle={styleUrl}
+      mapStyle={style}
       scrollZoom={false}
     >
       <NavigationControl showCompass={false} position="top-right" />
+      <AttributionControl position="bottom-right" customAttribution={attribution} />
       {geocoded.map((g) => (
         <Marker
           key={g.event.id}
