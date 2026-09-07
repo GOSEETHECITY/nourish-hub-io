@@ -92,6 +92,7 @@ function EventsMapInner({
       style={{ width: "100%", height: "100%" }}
       mapStyle={style}
       scrollZoom={false}
+      onError={(e) => console.error("Events map error:", e?.error?.message || e)}
     >
       <NavigationControl showCompass={false} position="top-right" />
       {geocoded.map((g) => (
