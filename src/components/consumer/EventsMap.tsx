@@ -1,6 +1,8 @@
 import { useEffect, useState, Component, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { formatTime, formatDateShort } from "@/lib/formatters";
+import Map, { Marker, Popup, NavigationControl } from "react-map-gl/maplibre";
+import "maplibre-gl/dist/maplibre-gl.css";
 
 // City center coordinates for initial map view
 const CITY_CENTERS: Record<string, [number, number]> = {
@@ -38,6 +40,22 @@ interface GeocodedEvent {
   lng: number;
 }
 
+const STADIA_STYLE_URL = "https://tiles.stadiamaps.com/styles/alidade_smooth.json";
+
+function PinSvg({ color }: { color: string }) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="36" viewBox="0 0 28 42">
+      <path
+        d="M14 0C6.3 0 0 6.3 0 14c0 10.5 14 28 14 28s14-17.5 14-28C28 6.3 21.7 0 14 0z"
+        fill={color}
+        stroke="#fff"
+        strokeWidth="1.5"
+      />
+      <circle cx="14" cy="14" r="6" fill="#fff" />
+    </svg>
+  );
+}
+
 /* ── Error boundary so map crashes never bubble up ── */
 class MapErrorBoundary extends Component<
   { children: ReactNode },
@@ -53,106 +71,95 @@ class MapErrorBoundary extends Component<
   }
 }
 
-/* ── Inner map rendered only after leaflet loads ── */
-function LeafletEventsMap({
-  center,
-  geocoded,
-  modules,
-}: {
-  center: [number, number];
-  geocoded: GeocodedEvent[];
-  modules: any;
-}) {
-  const navigate = useNavigate();
-  const { MapContainer, TileLayer, Marker, Popup } = modules;
-
+function MissingKeyMessage() {
   return (
-    <MapContainer
-      key={`${center[0]}-${center[1]}`}
-      center={center}
-      zoom={11}
-      scrollWheelZoom={false}
-      style={{ width: "100%", height: "100%" }}
-      attributionControl={false}
-    >
-      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-      {geocoded.map((g) => (
-        <Marker key={g.event.id} position={[g.lat, g.lng]}>
-          <Popup>
-            <div
-              className="cursor-pointer"
-              onClick={() => navigate(`/app/event/${g.event.id}`)}
-            >
-              <p className="font-semibold text-sm">{g.event.title}</p>
-              {g.event.event_date && (
-                <p className="text-xs text-gray-500">
-                  {formatDateShort(g.event.event_date)}
-                  {g.event.start_time &&
-                    ` · ${formatTime(g.event.start_time)}`}
-                </p>
-              )}
-            </div>
-          </Popup>
-        </Marker>
-      ))}
-    </MapContainer>
+    <div className="w-full h-full flex flex-col items-center justify-center gap-2 px-6 text-center">
+      <p className="text-sm text-gray-500">Stadia Maps API key missing.</p>
+      <p className="text-xs text-gray-400">
+        Add <code className="bg-gray-100 px-1 rounded">VITE_STADIA_MAPS_API_KEY</code> to enable the map.
+      </p>
+    </div>
   );
 }
 
-/* ── Public wrapper: lazy-loads Leaflet, geocodes events ── */
+/* ── Inner map rendered after geocoding completes ── */
+function EventsMapInner({
+  center,
+  geocoded,
+}: {
+  center: [number, number];
+  geocoded: GeocodedEvent[];
+}) {
+  const navigate = useNavigate();
+  const [selected, setSelected] = useState<GeocodedEvent | null>(null);
+  const apiKey = import.meta.env.VITE_STADIA_MAPS_API_KEY;
+  const styleUrl = apiKey ? `${STADIA_STYLE_URL}?api_key=${apiKey}` : STADIA_STYLE_URL;
+
+  if (!apiKey) {
+    return <MissingKeyMessage />;
+  }
+
+  return (
+    <Map
+      initialViewState={{
+        latitude: center[0],
+        longitude: center[1],
+        zoom: 11,
+      }}
+      style={{ width: "100%", height: "100%" }}
+      mapStyle={styleUrl}
+      scrollZoom={false}
+    >
+      <NavigationControl showCompass={false} position="top-right" />
+      {geocoded.map((g) => (
+        <Marker
+          key={g.event.id}
+          latitude={g.lat}
+          longitude={g.lng}
+          anchor="bottom"
+          onClick={(e) => {
+            e.originalEvent.stopPropagation();
+            setSelected(g);
+          }}
+        >
+          <div className="cursor-pointer" style={{ transform: "translate(-50%, -100%)" }}>
+            <PinSvg color="#8DC63F" />
+          </div>
+        </Marker>
+      ))}
+      {selected && (
+        <Popup
+          latitude={selected.lat}
+          longitude={selected.lng}
+          anchor="bottom"
+          closeButton={false}
+          closeOnClick={false}
+          onClose={() => setSelected(null)}
+          offset={[0, -36]}
+        >
+          <div
+            className="cursor-pointer min-w-[160px]"
+            onClick={() => navigate(`/app/event/${selected.event.id}`)}
+          >
+            <p className="font-semibold text-sm">{selected.event.title}</p>
+            {selected.event.event_date && (
+              <p className="text-xs text-gray-500">
+                {formatDateShort(selected.event.event_date)}
+                {selected.event.start_time && ` · ${formatTime(selected.event.start_time)}`}
+              </p>
+            )}
+          </div>
+        </Popup>
+      )}
+    </Map>
+  );
+}
+
+/* ── Public wrapper: geocodes events, loads MapLibre ── */
 export default function EventsMap({ events, city }: EventsMapProps) {
-  const [modules, setModules] = useState<any>(null);
-  const [failed, setFailed] = useState(false);
   const [geocoded, setGeocoded] = useState<GeocodedEvent[]>([]);
 
   const center: [number, number] = CITY_CENTERS[city] || [33.749, -84.388];
-
-  // Lazy-load Leaflet + react-leaflet (same pattern as ConsumerMapView)
-  useEffect(() => {
-    let cancelled = false;
-
-    const load = async () => {
-      try {
-        const L = await import("leaflet");
-        await import("leaflet/dist/leaflet.css");
-
-        const resolve = (mod: any) =>
-          typeof mod === "string" ? mod : mod?.default ?? mod;
-
-        const iconUrl = resolve(
-          await import("leaflet/dist/images/marker-icon.png")
-        );
-        const iconRetinaUrl = resolve(
-          await import("leaflet/dist/images/marker-icon-2x.png")
-        );
-        const shadowUrl = resolve(
-          await import("leaflet/dist/images/marker-shadow.png")
-        );
-
-        delete (L.Icon.Default.prototype as any)._getIconUrl;
-        L.Icon.Default.mergeOptions({ iconUrl, iconRetinaUrl, shadowUrl });
-
-        const RL = await import("react-leaflet");
-
-        if (!cancelled) {
-          setModules({
-            MapContainer: RL.MapContainer,
-            TileLayer: RL.TileLayer,
-            Marker: RL.Marker,
-            Popup: RL.Popup,
-          });
-        }
-      } catch (err) {
-        console.error("Failed to load map:", err);
-        if (!cancelled) setFailed(true);
-      }
-    };
-
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   // Geocode event addresses
   useEffect(() => {
@@ -202,24 +209,10 @@ export default function EventsMap({ events, city }: EventsMapProps) {
     };
   }, [events]);
 
-  if (failed) return null;
-
-  if (!modules) {
-    return (
-      <div className="w-full h-48 rounded-xl overflow-hidden shadow-md mb-4 bg-gray-100 flex items-center justify-center">
-        <p className="text-sm text-gray-400">Loading map...</p>
-      </div>
-    );
-  }
-
   return (
     <MapErrorBoundary>
       <div className="w-full h-48 rounded-xl overflow-hidden shadow-md mb-4">
-        <LeafletEventsMap
-          center={center}
-          geocoded={geocoded}
-          modules={modules}
-        />
+        <EventsMapInner center={center} geocoded={geocoded} />
       </div>
     </MapErrorBoundary>
   );
