@@ -8,7 +8,7 @@ let protocolRegistered = false;
 export function registerPmtilesProtocol() {
   if (protocolRegistered) return;
   const protocol = new Protocol();
-  maplibregl.addProtocol(PROTOCOL_NAME, protocol.tile);
+  addProtocol(PROTOCOL_NAME, protocol.tile);
   protocolRegistered = true;
 }
 
