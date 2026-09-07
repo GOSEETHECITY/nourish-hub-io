@@ -81,7 +81,6 @@ function EventsMapInner({
   const navigate = useNavigate();
   const [selected, setSelected] = useState<GeocodedEvent | null>(null);
   const style = getMapStyle();
-  const attribution = getMapAttribution();
 
   return (
     <Map
@@ -95,7 +94,6 @@ function EventsMapInner({
       scrollZoom={false}
     >
       <NavigationControl showCompass={false} position="top-right" />
-      <AttributionControl position="bottom-right" customAttribution={attribution} />
       {geocoded.map((g) => (
         <Marker
           key={g.event.id}
