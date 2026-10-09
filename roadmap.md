@@ -1,7 +1,7 @@
 # Requested website fixes
-- [ ] Relabel existing app download calls to action without changing destinations.
-- [ ] Confirm Shop Now is absent from the footer.
-- [ ] Fix mouse dropdown interactions and preserve keyboard access.
-- [ ] Correct copyright spacing.
-- [ ] Standardize displayed brand names and all browser titles.
-- [ ] Correct About page grammar and verify the changes.
+- [x] Relabel existing homepage food-lovers and About calls to action without changing destinations. No download button exists in the current homepage hero or Partners page; no new buttons added.
+- [x] Confirm Shop Now is already absent from the footer.
+- [x] Fix desktop mouse dropdown interactions and verify click, hover, keyboard, Escape, and outside-click behavior.
+- [x] Correct copyright spacing.
+- [x] Standardize displayed brand names, stored news copy at display time, and all browser title setters.
+- [x] Correct About page grammar; verify nine public pages and pass both brand-copy tests.
