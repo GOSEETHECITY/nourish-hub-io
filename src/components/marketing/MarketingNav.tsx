@@ -42,6 +42,7 @@ export default function MarketingNav({ variant = "light" }: { variant?: "light" 
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const restoringDropdownFocus = useRef(false);
   const { pathname } = useLocation();
   const isDark = variant === "dark";
 
@@ -100,7 +101,9 @@ export default function MarketingNav({ variant = "light" }: { variant?: "light" 
                   onKeyDown={(e) => {
                     if (e.key === "Escape") {
                       setOpenDropdown(null);
+                      restoringDropdownFocus.current = true;
                       e.currentTarget.querySelector<HTMLButtonElement>("button")?.focus();
+                      restoringDropdownFocus.current = false;
                     }
                   }}
                 >
@@ -108,7 +111,7 @@ export default function MarketingNav({ variant = "light" }: { variant?: "light" 
                     type="button"
                     onClick={() => setOpenDropdown(isOpen ? null : item.label)}
                     onFocus={(e) => {
-                      if (e.currentTarget.matches(":focus-visible")) setOpenDropdown(item.label);
+                      if (!restoringDropdownFocus.current && e.currentTarget.matches(":focus-visible")) setOpenDropdown(item.label);
                     }}
                     onKeyDown={(e) => {
                       if (e.key === "ArrowDown") {
