@@ -5,6 +5,7 @@ import MarketingNav from "@/components/marketing/MarketingNav";
 import MarketingFooter from "@/components/marketing/MarketingFooter";
 import { supabase } from "@/integrations/supabase/client";
 import { externalPressReleases } from "@/lib/pressReleases";
+import { normalizeArticleBrandCopy } from "@/lib/brandCopy";
 
 type Article = {
   id: string;
@@ -92,7 +93,7 @@ export default function News() {
         .select("id,title,slug,category,excerpt,cover_image_url,author,published_date,is_featured")
         .eq("status", "published")
         .order("published_date", { ascending: false });
-      setArticles((data ?? []) as Article[]);
+      setArticles(((data ?? []) as Article[]).map(normalizeArticleBrandCopy));
       setLoading(false);
     })();
   }, []);
