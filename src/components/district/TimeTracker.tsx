@@ -3,7 +3,7 @@ import { timeTracker } from "@/lib/districtMockData";
 
 export default function TimeTracker() {
   const items = [
-    { label: "HarietAI", value: `${timeTracker.hariet} hrs` },
+    { label: "Hariet.AI", value: `${timeTracker.hariet} hrs` },
     { label: "School Staff", value: `${timeTracker.school} hrs` },
     { label: "District Staff", value: `${timeTracker.district} hrs` },
   ];

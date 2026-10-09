@@ -252,7 +252,7 @@ export default function CompleteProfile() {
         if (error) throw error;
       }
 
-      toast.success("Profile complete. Welcome to HarietAI.");
+      toast.success("Profile complete. Welcome to Hariet.AI.");
       window.location.replace(isNonprofit ? "/nonprofit" : role === "government_partner" ? "/government" : "/venue");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not save pickup details");

@@ -13,7 +13,7 @@ export default function ConfirmationScreen({ message }: Props) {
       <div className="w-full max-w-md text-center space-y-6">
         <div className="flex justify-center">
           <div className="bg-primary rounded-2xl p-4">
-            <img src={logo} alt="HarietAI" className="h-10 w-auto" />
+            <img src={logo} alt="Hariet.AI" className="h-10 w-auto" />
           </div>
         </div>
         <div className="flex justify-center">

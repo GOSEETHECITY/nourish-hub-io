@@ -87,7 +87,7 @@ export default function DashboardLayout() {
   const sidebarContent = (
     <>
       <div className="p-6 pb-8 flex items-center justify-between">
-        <img src={logo} alt="HarietAI" className="h-12 w-auto" />
+        <img src={logo} alt="Hariet.AI" className="h-12 w-auto" />
         {isMobile && (
           <button onClick={() => setSidebarOpen(false)} className="text-primary-foreground/60 hover:text-primary-foreground">
             <X className="w-5 h-5" />

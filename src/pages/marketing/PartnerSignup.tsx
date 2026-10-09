@@ -40,7 +40,7 @@ export default function PartnerSignup() {
       <MarketingNav />
       <div className="max-w-2xl mx-auto px-4 py-16">
         <h1 className="text-4xl font-bold mb-2">Become a Partner</h1>
-        <p className="text-muted-foreground mb-8">Apply to join the HarietAI network. We review every application and email your credentials on approval.</p>
+        <p className="text-muted-foreground mb-8">Apply to join the Hariet.AI network. We review every application and email your credentials on approval.</p>
         {done ? (
           <Card><CardContent className="py-16 text-center">
             <CheckCircle2 className="w-12 h-12 mx-auto text-green-600 mb-4" />

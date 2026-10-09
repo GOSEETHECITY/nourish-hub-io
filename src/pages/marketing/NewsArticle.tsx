@@ -147,7 +147,7 @@ export default function NewsArticle() {
 
   useEffect(() => {
     if (!article) return;
-    document.title = `${article.title} | Hariet.AI News`;
+    document.title = "Hariet.AI | Food Diversion Platform";
     const setMeta = (attr: "name" | "property", key: string, content: string) => {
       let el = document.querySelector<HTMLMetaElement>(`meta[${attr}="${key}"]`);
       if (!el) {

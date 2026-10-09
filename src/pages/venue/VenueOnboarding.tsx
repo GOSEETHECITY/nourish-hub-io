@@ -61,7 +61,7 @@ export default function VenueOnboarding() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-xl bg-card rounded-xl border p-8 space-y-6">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-foreground">Welcome to HarietAI</h1>
+          <h1 className="text-2xl font-bold text-foreground">Welcome to Hariet.AI</h1>
           <p className="text-sm text-muted-foreground mt-1">Let's set up your venue — Step {step} of 2</p>
           <div className="flex gap-2 mt-4 justify-center">
             <div className={`h-1.5 w-16 rounded-full ${step >= 1 ? "bg-primary" : "bg-muted"}`} />

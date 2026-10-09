@@ -43,18 +43,18 @@ export default function GstcWelcomeModal() {
     <Dialog open={open} onOpenChange={(v) => { if (!v) void dismiss(); }}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-xl">You Also Get Access to the Go See The City App! 🎉</DialogTitle>
+          <DialogTitle className="text-xl">You Also Get Access to the GO See The City App! 🎉</DialogTitle>
         </DialogHeader>
         <div className="space-y-3 text-sm text-muted-foreground">
           <p>
-            As a HarietAI partner, you automatically get access to the Go See The City app. We're launching soon in
+            As a Hariet.AI partner, you automatically get access to the GO See The City app. We're launching soon in
             your city, and you get first access as we roll out!
           </p>
           <p>
             The app will be available to consumers throughout your community. When you're ready to step away from the
-            business, use Go See The City to discover grand opening events and more.
+            business, use GO See The City to discover grand opening events and more.
           </p>
-          <p>Your business keeps you busy, so Go See The City gives you a chance to enjoy the city, too!</p>
+          <p>Your business keeps you busy, so GO See The City gives you a chance to enjoy the city, too!</p>
           <p>
             Be sure to check the app week by week. As we continue to expand, you'll see more events and experiences
             added.

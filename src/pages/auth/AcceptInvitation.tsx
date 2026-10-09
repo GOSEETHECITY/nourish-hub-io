@@ -68,7 +68,7 @@ export default function AcceptInvitation() {
     if (user) {
       const { data: roleData } = await supabase.from("user_roles").select("role").eq("user_id", user.id).single();
       const role = roleData?.role;
-      toast({ title: "Account set up!", description: "Welcome to HarietAI." });
+      toast({ title: "Account set up!", description: "Welcome to Hariet.AI." });
       switch (role) {
         case "venue_partner": navigate("/venue"); break;
         case "nonprofit_partner": navigate("/nonprofit"); break;
@@ -87,7 +87,7 @@ export default function AcceptInvitation() {
         <div className="text-center">
           <div className="flex justify-center mb-6">
             <div className="bg-primary rounded-2xl p-4">
-              <img src={logo} alt="HarietAI" className="h-10 w-auto" />
+              <img src={logo} alt="Hariet.AI" className="h-10 w-auto" />
             </div>
           </div>
           <h1 className="text-2xl font-bold font-display text-foreground">Set Up Your Account</h1>
