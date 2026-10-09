@@ -123,7 +123,7 @@ export default function About() {
                 href="https://hariet.ai/app/login"
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl border border-[#6d412a]/25 text-[#6d412a] font-semibold hover:bg-[#6d412a]/5 transition text-lg"
               >
-                Download GO See The City
+                Open the Web App
               </a>
             </div>
           </div>
