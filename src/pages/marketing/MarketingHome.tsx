@@ -267,7 +267,7 @@ export default function MarketingHome() {
                   href="https://hariet.ai/app/login"
                   className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-[#fb9014] text-white font-semibold hover:bg-[#e08010] transition shadow-lg"
                 >
-                  Download the App <ArrowRight className="w-4 h-4" />
+                  Open the Web App <ArrowRight className="w-4 h-4" />
                 </a>
               </div>
             </div>

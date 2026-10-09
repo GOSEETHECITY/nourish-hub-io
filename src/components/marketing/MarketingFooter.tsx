@@ -38,11 +38,6 @@ export default function MarketingFooter() {
             <h4 className="text-white font-semibold text-sm mb-4">More</h4>
             <ul className="space-y-3 text-sm">
               <li>
-                <a href="https://harietai.com" target="_blank" rel="noreferrer" className="hover:text-white transition">
-                  Shop Now
-                </a>
-              </li>
-              <li>
                 <a href="https://goseethecity.com" target="_blank" rel="noreferrer" className="hover:text-white transition">
                   GO See The City
                 </a>
