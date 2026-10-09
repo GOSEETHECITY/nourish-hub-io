@@ -5,6 +5,7 @@ import MarketingNav from "@/components/marketing/MarketingNav";
 import MarketingFooter from "@/components/marketing/MarketingFooter";
 import { supabase } from "@/integrations/supabase/client";
 import { externalPressReleases } from "@/lib/pressReleases";
+import { normalizeArticleBrandCopy } from "@/lib/brandCopy";
 
 type Article = {
   id: string;
@@ -74,8 +75,8 @@ export default function News() {
   }, [searchParams]);
 
   useEffect(() => {
-    document.title = "News | Hariet.AI";
-    const desc = "Updates, press coverage, and announcements from Hariet.AI and Go See The City.";
+    document.title = "Hariet.AI | Food Diversion Platform";
+    const desc = "Updates, press coverage, and announcements from Hariet.AI and GO See The City.";
     let meta = document.querySelector<HTMLMetaElement>('meta[name="description"]');
     if (!meta) {
       meta = document.createElement("meta");
@@ -92,7 +93,7 @@ export default function News() {
         .select("id,title,slug,category,excerpt,cover_image_url,author,published_date,is_featured")
         .eq("status", "published")
         .order("published_date", { ascending: false });
-      setArticles((data ?? []) as Article[]);
+      setArticles(((data ?? []) as Article[]).map(normalizeArticleBrandCopy));
       setLoading(false);
     })();
   }, []);
@@ -144,7 +145,7 @@ export default function News() {
               News
             </h1>
             <p className="text-lg text-[#6d412a]/70 max-w-2xl leading-relaxed">
-              Updates, press coverage, and announcements from Hariet.AI and Go See The City.
+              Updates, press coverage, and announcements from Hariet.AI and GO See The City.
             </p>
           </div>
         </section>
@@ -298,7 +299,7 @@ export default function News() {
               </h2>
               <p className="text-[#6d412a]/70 leading-relaxed">
                 Occasional press releases, product updates, and milestones from the
-                network built by Go See The City.
+                network built by GO See The City.
               </p>
             </div>
             <form
@@ -336,7 +337,7 @@ export default function News() {
                 href="https://hariet.ai/app/login"
                 className="inline-flex items-center gap-2 text-sm font-semibold text-[#6d412a] hover:underline"
               >
-                Powered by Go See The City <ArrowUpRight className="w-4 h-4" />
+                Powered by GO See The City <ArrowUpRight className="w-4 h-4" />
               </a>
             </div>
           </div>

@@ -19,7 +19,7 @@ export default function SettingsPage() {
   });
   const [newPassword, setNewPassword] = useState("");
   const [platformForm, setPlatformForm] = useState({
-    platform_name: "HarietAI",
+    platform_name: "Hariet.AI",
     contact_email: "hello@hariet.ai",
     default_fee: "10",
   });

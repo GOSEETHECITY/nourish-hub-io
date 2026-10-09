@@ -12,7 +12,7 @@ export default function SupportDeflection() {
       </div>
       <ul className="mt-4 space-y-1.5 text-sm">
         <li className="flex justify-between"><span className="text-muted-foreground">Answered by Sort It app</span><span className="font-semibold">{supportBreakdown.sortIt}</span></li>
-        <li className="flex justify-between"><span className="text-muted-foreground">Answered by HarietAI support</span><span className="font-semibold">{supportBreakdown.hariet}</span></li>
+        <li className="flex justify-between"><span className="text-muted-foreground">Answered by Hariet.AI support</span><span className="font-semibold">{supportBreakdown.hariet}</span></li>
         <li className="flex justify-between"><span className="text-muted-foreground">Sent to district office</span><span className="font-semibold">{supportBreakdown.district}</span></li>
       </ul>
       <div className="mt-4 flex items-center gap-2 p-3 rounded-lg" style={{ background: "hsl(var(--district-success) / 0.12)" }}>

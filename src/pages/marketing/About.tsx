@@ -35,7 +35,7 @@ export default function About() {
               </p>
               <p className="text-[#6d412a]/80">
                 Roughly 40% of food produced in the United States goes to waste every year while
-                one in six Americans faces food insecurity. That gap is a supply chain problem.
+                one in six Americans face food insecurity. That gap is a supply chain problem.
                 Good food already exists. The infrastructure to move it from the kitchens that
                 have it to the people who need it does not.
               </p>
@@ -123,7 +123,7 @@ export default function About() {
                 href="https://hariet.ai/app/login"
                 className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl border border-[#6d412a]/25 text-[#6d412a] font-semibold hover:bg-[#6d412a]/5 transition text-lg"
               >
-                Open the Web App
+                Open the web app
               </a>
             </div>
           </div>

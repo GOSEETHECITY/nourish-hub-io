@@ -60,7 +60,7 @@ export default function VenueMarketplace() {
         <Rocket className="w-12 h-12 text-primary mx-auto" />
         <h2 className="text-xl font-bold text-foreground">Marketplace Coming Soon</h2>
         <p className="text-sm text-muted-foreground max-w-md mx-auto">
-          The HarietAI Marketplace is launching soon on the GO See The City app. Selling and Stripe connection are turned off until it goes live.
+          The Hariet.AI Marketplace is launching soon on the GO See The City app. Selling and Stripe connection are turned off until it goes live.
         </p>
         <Button variant="outline" className="mx-auto" disabled>Connect Stripe</Button>
         <p className="text-xs text-muted-foreground">Available when the marketplace launches</p>

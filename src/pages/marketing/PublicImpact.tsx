@@ -24,7 +24,7 @@ export default function PublicImpact() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    document.title = "Our Impact | Hariet.AI";
+    document.title = "Hariet.AI | Food Diversion Platform";
     const desc = "Real-time totals of food rescued, meals provided, and CO2 avoided across Hariet.AI's operator network.";
     let meta = document.querySelector('meta[name="description"]');
     if (!meta) { meta = document.createElement("meta"); meta.setAttribute("name", "description"); document.head.appendChild(meta); }

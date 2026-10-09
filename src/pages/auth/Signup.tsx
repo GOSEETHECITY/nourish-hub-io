@@ -42,9 +42,9 @@ export default function Signup() {
       <div className="w-full max-w-2xl space-y-8">
         <div className="text-center">
           <div className="flex justify-center mb-6">
-            <div className="bg-primary rounded-2xl p-4"><img src={logo} alt="HarietAI" className="h-10 w-auto" /></div>
+            <div className="bg-primary rounded-2xl p-4"><img src={logo} alt="Hariet.AI" className="h-10 w-auto" /></div>
           </div>
-          <h1 className="text-2xl font-bold font-display text-foreground">Join the HarietAI Network</h1>
+          <h1 className="text-2xl font-bold font-display text-foreground">Join the Hariet.AI Network</h1>
           <p className="text-sm text-muted-foreground mt-1">What best describes you?</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

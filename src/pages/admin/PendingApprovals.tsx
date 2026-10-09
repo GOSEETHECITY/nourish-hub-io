@@ -40,7 +40,7 @@ export default function PendingApprovals() {
       await supabase.functions.invoke("send-alert", {
         body: {
           to_email: s.contact_email, category: "onboarding_approved", urgent: false,
-          subject: "Your HarietAI application has been approved",
+          subject: "Your Hariet.AI application has been approved",
           text: `Hi ${s.contact_name}, ${s.organization_name} has been approved. You can now sign in with the account you created during signup.`,
         },
       });
@@ -84,7 +84,7 @@ export default function PendingApprovals() {
     await supabase.functions.invoke("send-alert", {
       body: {
         to_email: rejectFor.contact_email, category: "onboarding_rejected", urgent: false,
-        subject: "Update on your HarietAI application",
+        subject: "Update on your Hariet.AI application",
         text: `Hi ${rejectFor.contact_name}, we reviewed your application for ${rejectFor.organization_name} and could not approve it at this time. Reason: ${reason}. You are welcome to reply and provide additional detail.`,
       },
     });

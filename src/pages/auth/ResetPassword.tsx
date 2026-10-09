@@ -70,7 +70,7 @@ export default function ResetPassword() {
         <div className="text-center">
           <div className="flex justify-center mb-6">
             <div className="bg-primary rounded-2xl p-4">
-              <img src={logo} alt="HarietAI" className="h-10 w-auto" />
+              <img src={logo} alt="Hariet.AI" className="h-10 w-auto" />
             </div>
           </div>
           <h1 className="text-2xl font-bold font-display text-foreground">Set new password</h1>

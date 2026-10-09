@@ -73,11 +73,11 @@ export default function Login() {
           <div className="text-center">
             <Link to="/" className="flex justify-center mb-6" aria-label="Hariet.AI home">
               <div className="bg-primary rounded-2xl p-4 hover:opacity-90 transition-opacity">
-                <img src={logo} alt="HarietAI" className="h-10 w-auto" />
+                <img src={logo} alt="Hariet.AI" className="h-10 w-auto" />
               </div>
             </Link>
             <h1 className="text-2xl font-bold font-display text-foreground">Welcome back</h1>
-            <p className="text-sm text-muted-foreground mt-1">Sign in to your HarietAI account</p>
+            <p className="text-sm text-muted-foreground mt-1">Sign in to your Hariet.AI account</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-4">

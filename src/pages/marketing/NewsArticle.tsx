@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, Copy, Linkedin, Twitter, Check } from "lucide-re
 import MarketingNav from "@/components/marketing/MarketingNav";
 import MarketingFooter from "@/components/marketing/MarketingFooter";
 import { supabase } from "@/integrations/supabase/client";
+import { normalizeArticleBrandCopy } from "@/lib/brandCopy";
 
 type Article = {
   id: string;
@@ -131,7 +132,7 @@ export default function NewsArticle() {
         setLoading(false);
         return;
       }
-      setArticle(data as Article);
+      setArticle(normalizeArticleBrandCopy(data as Article));
       const { data: rel } = await supabase
         .from("articles")
         .select("id,title,slug,category,excerpt,body,cover_image_url,author,published_date")
@@ -140,14 +141,14 @@ export default function NewsArticle() {
         .neq("id", (data as Article).id)
         .order("published_date", { ascending: false })
         .limit(3);
-      setRelated((rel ?? []) as Article[]);
+      setRelated(((rel ?? []) as Article[]).map(normalizeArticleBrandCopy));
       setLoading(false);
     })();
   }, [slug]);
 
   useEffect(() => {
     if (!article) return;
-    document.title = `${article.title} | Hariet.AI News`;
+    document.title = "Hariet.AI | Food Diversion Platform";
     const setMeta = (attr: "name" | "property", key: string, content: string) => {
       let el = document.querySelector<HTMLMetaElement>(`meta[${attr}="${key}"]`);
       if (!el) {

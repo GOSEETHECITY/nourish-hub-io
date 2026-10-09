@@ -60,12 +60,12 @@ const harietPlatformFeatures = [
 
 export default function FeedItOnward() {
   useEffect(() => {
-    document.title = "Feed It Onward Go See The City × U.S. EPA #FeedItOnward";
+    document.title = "Hariet.AI | Food Diversion Platform";
     const meta = document.querySelector('meta[name="description"]');
     if (meta)
       meta.setAttribute(
         "content",
-        "Go See The City and Hariet.AI are proud partners in the U.S. EPA's Freedom 250 Feed It Onward Campaign redirecting surplus food from landfills to families, veterans, and neighbors."
+        "GO See The City and Hariet.AI are proud partners in the U.S. EPA's Freedom 250 Feed It Onward Campaign redirecting surplus food from landfills to families, veterans, and neighbors."
       );
   }, []);
 
@@ -80,13 +80,13 @@ export default function FeedItOnward() {
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#135489]/10 text-[#135489] text-xs font-semibold tracking-wide uppercase mb-6">
-            Go See The City × U.S. EPA #FeedItOnward
+            GO See The City × U.S. EPA #FeedItOnward
           </div>
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-tight tracking-tight text-black mb-6 max-w-4xl mx-auto">
             No Meal Left Behind. <span className="text-[#135489]">No Community Overlooked.</span>
           </h1>
           <p className="text-xl text-[#135489]/70 leading-relaxed max-w-2xl mx-auto mb-10">
-            Go See The City and Hariet.AI are proud partners in the U.S. EPA's Freedom 250 Feed It Onward Campaign a national movement to redirect surplus food from landfills to the families, veterans, and neighbors who need it most.
+            GO See The City and Hariet.AI are proud partners in the U.S. EPA's Freedom 250 Feed It Onward Campaign a national movement to redirect surplus food from landfills to the families, veterans, and neighbors who need it most.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a
@@ -137,7 +137,7 @@ export default function FeedItOnward() {
                 Hariet.AI carries that name and that mission into today's food system. The platform is a modern Underground Railroad for surplus food: a technology-powered network of restaurants, stadiums, hotels, healthcare operators, and nonprofits working together to ensure that what goes unsold doesn't go to waste.
               </p>
               <p>
-                Go See The City extends that network one step further creating same-day coupons that give customers a reason to walk through the door before closing time, turning surplus into sales and saving food before it ever needs to be donated.
+                GO See The City extends that network one step further creating same-day coupons that give customers a reason to walk through the door before closing time, turning surplus into sales and saving food before it ever needs to be donated.
               </p>
             </div>
           </div>
@@ -193,10 +193,10 @@ export default function FeedItOnward() {
             {/* GSTC */}
             <div className="rounded-3xl bg-[#FFFFFF] border border-black/10 p-8">
               <div className="text-xs font-semibold tracking-wide uppercase text-[#135489] mb-3">The Commerce Layer</div>
-              <h3 className="text-2xl font-bold text-black mb-2">Go See The City</h3>
+              <h3 className="text-2xl font-bold text-black mb-2">GO See The City</h3>
               <p className="text-lg font-semibold text-black mb-4">Turn Closing Time Into Community Time</p>
               <p className="text-[#135489]/80 mb-6 leading-relaxed">
-                Go See The City drives foot traffic to local businesses by enabling them to create same-day coupons for surplus food giving customers a reason to show up before closing and giving businesses a way to convert unsold inventory into revenue instead of waste.
+                GO See The City drives foot traffic to local businesses by enabling them to create same-day coupons for surplus food giving customers a reason to show up before closing and giving businesses a way to convert unsold inventory into revenue instead of waste.
               </p>
               <ul className="space-y-3 mb-8">
                 {gstcFeatures.map((f) => (
@@ -260,7 +260,7 @@ export default function FeedItOnward() {
                 Feed It Onward is the U.S. EPA's national storytelling and partnership initiative, launched as part of Freedom 250 America's 250th birthday celebration. It shines a light on the farms, businesses, nonprofits, and communities already doing the work of keeping food in use and out of landfills.
               </p>
               <p>
-                This isn't about new mandates or big spending. It's about celebrating what's already working. Feed It Onward tells that story and Go See The City and Hariet.AI are proud to be part of it.
+                This isn't about new mandates or big spending. It's about celebrating what's already working. Feed It Onward tells that story and GO See The City and Hariet.AI are proud to be part of it.
               </p>
             </div>
           </div>
@@ -385,7 +385,7 @@ export default function FeedItOnward() {
             <div className="rounded-3xl bg-[#135489] text-white p-10 flex flex-col">
               <h3 className="text-2xl font-bold mb-4">Shop Surplus. Save Money. Feed Your City.</h3>
               <p className="text-white/80 leading-relaxed mb-8">
-                Go See The City makes it easy to find same-day deals on surplus food from businesses in your neighborhood saving you money while keeping good food out of the landfill. Every coupon redeemed is a meal saved and a local business supported.
+                GO See The City makes it easy to find same-day deals on surplus food from businesses in your neighborhood saving you money while keeping good food out of the landfill. Every coupon redeemed is a meal saved and a local business supported.
               </p>
               <div className="mt-auto">
                 <a

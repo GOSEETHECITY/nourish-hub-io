@@ -113,7 +113,7 @@ export default function SendInvites() {
           <DialogHeader><DialogTitle>Email preview — {preview?.name}</DialogTitle></DialogHeader>
           {preview && (
             <div className="border rounded-lg p-6 bg-[hsl(30,88%,9%)] text-[#f5f0e6] font-sans text-sm space-y-3">
-              <p className="text-[#d4a03a] text-xl font-bold">HarietAI</p>
+              <p className="text-[#d4a03a] text-xl font-bold">Hariet.AI</p>
               <p><strong className="text-[#d4a03a]">To:</strong> {preview.email}</p>
               <p><strong className="text-[#d4a03a]">Subject:</strong> Your {preview.name} account is ready</p>
               <div className="border-t border-[#3a2812] pt-3">

@@ -42,6 +42,7 @@ export default function MarketingNav({ variant = "light" }: { variant?: "light" 
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [mobileExpanded, setMobileExpanded] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const restoringDropdownFocus = useRef(false);
   const { pathname } = useLocation();
   const isDark = variant === "dark";
 
@@ -87,13 +88,44 @@ export default function MarketingNav({ variant = "light" }: { variant?: "light" 
               const active = isDropdownActive(item);
               const isOpen = openDropdown === item.label;
               return (
-                <div key={item.label} className="relative">
+                <div
+                  key={item.label}
+                  className="relative"
+                  onMouseEnter={() => setOpenDropdown(item.label)}
+                  onMouseLeave={(e) => {
+                    if (!e.currentTarget.contains(document.activeElement)) setOpenDropdown(null);
+                  }}
+                  onBlur={(e) => {
+                    if (!e.currentTarget.contains(e.relatedTarget)) setOpenDropdown(null);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") {
+                      setOpenDropdown(null);
+                      restoringDropdownFocus.current = true;
+                      e.currentTarget.querySelector<HTMLButtonElement>("button")?.focus();
+                      restoringDropdownFocus.current = false;
+                    }
+                  }}
+                >
                   <button
                     type="button"
                     onClick={() => setOpenDropdown(isOpen ? null : item.label)}
-                    onMouseEnter={() => setOpenDropdown(item.label)}
+                    onFocus={(e) => {
+                      if (!restoringDropdownFocus.current && e.currentTarget.matches(":focus-visible")) setOpenDropdown(item.label);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "ArrowDown") {
+                        e.preventDefault();
+                        setOpenDropdown(item.label);
+                        const container = e.currentTarget.parentElement;
+                        requestAnimationFrame(() => {
+                          container?.querySelector<HTMLAnchorElement>("a")?.focus();
+                        });
+                      }
+                    }}
                     aria-expanded={isOpen}
                     aria-haspopup="true"
+                    aria-controls={`marketing-dropdown-${item.label.toLowerCase()}`}
                     className={`flex items-center gap-1 text-sm font-bold transition ${
                       isDark
                         ? active
@@ -109,8 +141,8 @@ export default function MarketingNav({ variant = "light" }: { variant?: "light" 
                   </button>
                   {isOpen && (
                     <div
-                      onMouseLeave={() => setOpenDropdown(null)}
-                      className={`absolute left-0 top-full mt-2 min-w-[240px] rounded-xl border shadow-lg overflow-hidden ${
+                      id={`marketing-dropdown-${item.label.toLowerCase()}`}
+                      className={`absolute left-0 top-full mt-2 min-w-[240px] rounded-xl border shadow-lg before:absolute before:inset-x-0 before:-top-2 before:h-2 ${
                         isDark
                           ? "bg-[#3a2617] border-white/10"
                           : "bg-white border-[#e8e0d8]"
@@ -120,7 +152,7 @@ export default function MarketingNav({ variant = "light" }: { variant?: "light" 
                         <Link
                           key={sub.href}
                           to={sub.href}
-                          className={`block px-4 py-3 transition ${
+                          className={`block px-4 py-3 transition first:rounded-t-xl last:rounded-b-xl ${
                             isDark
                               ? "text-white/90 hover:bg-white/5"
                               : "text-black hover:bg-[#fdf8f4]"
