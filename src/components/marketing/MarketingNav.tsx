@@ -114,8 +114,9 @@ export default function MarketingNav({ variant = "light" }: { variant?: "light" 
                       if (e.key === "ArrowDown") {
                         e.preventDefault();
                         setOpenDropdown(item.label);
+                        const container = e.currentTarget.parentElement;
                         requestAnimationFrame(() => {
-                          e.currentTarget.parentElement?.querySelector<HTMLAnchorElement>("a")?.focus();
+                          container?.querySelector<HTMLAnchorElement>("a")?.focus();
                         });
                       }
                     }}
@@ -148,7 +149,7 @@ export default function MarketingNav({ variant = "light" }: { variant?: "light" 
                         <Link
                           key={sub.href}
                           to={sub.href}
-                          className={`block px-4 py-3 transition ${
+                          className={`block px-4 py-3 transition first:rounded-t-xl last:rounded-b-xl ${
                             isDark
                               ? "text-white/90 hover:bg-white/5"
                               : "text-black hover:bg-[#fdf8f4]"
