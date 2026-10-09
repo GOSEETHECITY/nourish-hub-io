@@ -62,7 +62,7 @@ export default function MarketingFooter() {
             </div>
           </div>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs text-white/50">
-            <p>&copy; {new Date().getFullYear()} Hariet.AI. All rights reserved.</p>
+            <p>{`© ${new Date().getFullYear()} Hariet.AI. All rights reserved.`}</p>
             <div className="flex gap-6">
               <Link to="/privacy" className="hover:text-white transition">Privacy</Link>
               <Link to="/terms" className="hover:text-white transition">Terms</Link>
