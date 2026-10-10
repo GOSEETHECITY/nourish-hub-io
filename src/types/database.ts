@@ -237,6 +237,7 @@ export interface HarietEvent {
   status: EventStatus;
   attendee_count: number;
   offer_badge: string | null;
+  freebee_eligible?: boolean;
   share_url: string | null;
   share_count: number;
   flyer_url: string | null;
