@@ -6,6 +6,7 @@ import ConsumerMobileLayout from "@/components/consumer/ConsumerMobileLayout";
 import ConsumerAppHeader from "@/components/consumer/ConsumerAppHeader";
 import ConsumerBottomNav from "@/components/consumer/ConsumerBottomNav";
 import ConsumerMapView from "@/components/consumer/ConsumerMapView";
+import { useCityCenter } from "@/lib/cityCenter";
 
 interface MapLocation {
   id: string;
@@ -24,92 +25,12 @@ async function reservedFlashIds(ids: string[]): Promise<Set<string>> {
   return new Set(((data as any[]) || []).map((r: any) => (typeof r === "string" ? r : r.reserved_flash_listing_ids)));
 }
 
-// Nominatim usage policy: identify the app and cache results to limit requests.
-// Browsers forbid overriding User-Agent from page scripts, so we also send the
-// Referer (origin) which Nominatim accepts as identification.
-const GEOCODE_CACHE_KEY = "gstc_geocode_cache_v1";
-const GEOCODE_CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
-const geocodeMemory = new Map<string, Promise<{ lat: number; lng: number } | null>>();
-
-function readGeocodeCache(): Record<string, { lat: number; lng: number; t: number } | { miss: true; t: number }> {
-  try { return JSON.parse(localStorage.getItem(GEOCODE_CACHE_KEY) || "{}"); } catch { return {}; }
-}
-
-async function geocode(address: string): Promise<{ lat: number; lng: number } | null> {
-  const key = address.trim().toLowerCase();
-  if (!key) return null;
-  const cache = readGeocodeCache();
-  const hit = cache[key];
-  if (hit && Date.now() - hit.t < GEOCODE_CACHE_TTL_MS) return "miss" in hit ? null : { lat: hit.lat, lng: hit.lng };
-  if (geocodeMemory.has(key)) return geocodeMemory.get(key)!;
-
-  const p = (async () => {
-    try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(address)}`,
-        {
-          headers: { "User-Agent": "GOSeeTheCity/1.0 (https://goseethecity.com; hello@goseethecity.com)", Accept: "application/json" },
-          referrerPolicy: "strict-origin-when-cross-origin",
-        }
-      );
-      if (!res.ok) return null;
-      const data = await res.json();
-      const result = data?.[0] ? { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) } : null;
-      const next = readGeocodeCache();
-      next[key] = result ? { ...result, t: Date.now() } : { miss: true, t: Date.now() };
-      try { localStorage.setItem(GEOCODE_CACHE_KEY, JSON.stringify(next)); } catch {}
-      return result;
-    } catch {
-      return null;
-    }
-  })();
-  geocodeMemory.set(key, p);
-  return p;
-}
-
-// Pre-built city center coordinates so we don't need to geocode the selected city on every render
-const CITY_CENTERS: Record<string, [number, number]> = {
-  "Atlanta, GA": [33.749, -84.388],
-  "Orlando, FL": [28.5383, -81.3792],
-  "Miami, FL": [25.7617, -80.1918],
-  "Jacksonville, FL": [30.3322, -81.6557],
-  "St. Petersburg, FL": [27.7676, -82.6403],
-  "Hernando, FL": [28.8946, -82.3760],
-  "Dunedin, FL": [28.0197, -82.7723],
-  "Rogers, AR": [36.3320, -94.1185],
-  "Lowell, AR": [36.2562, -94.1316],
-  "Ashland, OH": [40.8689, -82.3187],
-  "Hampton, GA": [33.3879, -84.2828],
-  "Seattle, WA": [47.6062, -122.3321],
-  "St. Louis, MO": [38.6270, -90.1994],
-  "Minneapolis, MN": [44.9778, -93.2650],
-  "Albuquerque, NM": [35.0844, -106.6504],
-};
-
 const ConsumerHome = () => {
   const navigate = useNavigate();
   const { city, state, ready } = useLocation();
-  const cityKey = `${city}, ${state}`;
-  const [center, setCenter] = useState<[number, number] | null>(() => {
-    if (ready && CITY_CENTERS[cityKey]) return CITY_CENTERS[cityKey];
-    return null;
-  });
+  const center = useCityCenter(city, state, ready);
   const [markers, setMarkers] = useState<MapLocation[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // Update map center whenever the user changes their selected city.
-  // Never fall back to Atlanta — wait for LocationContext to become ready.
-  useEffect(() => {
-    if (!ready) return;
-    const known = CITY_CENTERS[cityKey];
-    if (known) {
-      setCenter(known);
-      return;
-    }
-    geocode(`${city}, ${state}, USA`).then((coords) => {
-      if (coords) setCenter([coords.lat, coords.lng]);
-    });
-  }, [city, state, cityKey, ready]);
 
   useEffect(() => {
     const load = async () => {

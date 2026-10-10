@@ -1,38 +1,16 @@
-import { useEffect, useState, Component, ReactNode } from "react";
+import { useMemo, useState, Component, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { formatTime, formatDateShort } from "@/lib/formatters";
 import Map, { Marker, Popup, NavigationControl } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { getMapStyle } from "@/lib/mapConfig";
-
-// City center coordinates for initial map view
-const CITY_CENTERS: Record<string, [number, number]> = {
-  Atlanta: [33.749, -84.388],
-  Orlando: [28.5383, -81.3792],
-  Miami: [25.7617, -80.1918],
-  Tampa: [27.9506, -82.4572],
-  Jacksonville: [30.3322, -81.6557],
-  "New York": [40.7128, -74.006],
-  "Los Angeles": [34.0522, -118.2437],
-  Chicago: [41.8781, -87.6298],
-  Houston: [29.7604, -95.3698],
-  Dallas: [32.7767, -96.797],
-  Charlotte: [35.2271, -80.8431],
-  "San Francisco": [37.7749, -122.4194],
-  Seattle: [47.6062, -122.3321],
-  Denver: [39.7392, -104.9903],
-  Nashville: [36.1627, -86.7816],
-  Austin: [30.2672, -97.7431],
-  Phoenix: [33.4484, -112.074],
-  "Washington DC": [38.9072, -77.0369],
-  Philadelphia: [39.9526, -75.1652],
-  "San Antonio": [29.4241, -98.4936],
-  Detroit: [42.3314, -83.0458],
-};
+import { useCityCenter } from "@/lib/cityCenter";
+import MapCredit from "@/components/consumer/MapCredit";
 
 interface EventsMapProps {
   events: any[];
   city: string;
+  state?: string;
 }
 
 interface GeocodedEvent {
@@ -139,64 +117,24 @@ function EventsMapInner({
   );
 }
 
-/* ── Public wrapper: geocodes events, loads MapLibre ── */
-export default function EventsMap({ events, city }: EventsMapProps) {
-  const [geocoded, setGeocoded] = useState<GeocodedEvent[]>([]);
+/* ── Public wrapper: uses each event's stored coordinates ── */
+export default function EventsMap({ events, city, state = "" }: EventsMapProps) {
+  const center = useCityCenter(city, state);
 
-  const center: [number, number] = CITY_CENTERS[city] || [33.749, -84.388];
+  const geocoded = useMemo<GeocodedEvent[]>(
+    () =>
+      events
+        .filter((ev) => ev.latitude != null && ev.longitude != null)
+        .map((ev) => ({ event: ev, lat: Number(ev.latitude), lng: Number(ev.longitude) })),
+    [events]
+  );
 
-  // Geocode event addresses
-  useEffect(() => {
-    let cancelled = false;
-
-    const geocodeEvents = async () => {
-      const results: GeocodedEvent[] = [];
-
-      for (const ev of events) {
-        if (cancelled) break;
-        const addr = [ev.address, ev.city, ev.state]
-          .filter(Boolean)
-          .join(", ");
-        if (!addr) continue;
-
-        try {
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addr)}&limit=1`
-          );
-          const data = await res.json();
-          if (data && data.length > 0) {
-            results.push({
-              event: ev,
-              lat: parseFloat(data[0].lat),
-              lng: parseFloat(data[0].lon),
-            });
-          }
-        } catch {
-          // skip failed geocodes
-        }
-
-        // Respect Nominatim rate limit (1 req/sec)
-        await new Promise((r) => setTimeout(r, 1100));
-      }
-
-      if (!cancelled) setGeocoded(results);
-    };
-
-    if (events.length > 0) {
-      geocodeEvents();
-    } else {
-      setGeocoded([]);
-    }
-
-    return () => {
-      cancelled = true;
-    };
-  }, [events]);
+  if (!center) return <div className="w-full h-48 rounded-xl bg-gray-50 mb-4" aria-hidden />;
 
   return (
     <MapErrorBoundary>
-      <div className="w-full h-48 rounded-xl overflow-hidden shadow-md mb-4">
-        <EventsMapInner center={center} geocoded={geocoded} />
+      <div className="relative w-full h-48 rounded-xl overflow-hidden shadow-md mb-4">
+        <EventsMapInner key={`${center[0]},${center[1]}`} center={center} geocoded={geocoded} />
       </div>
     </MapErrorBoundary>
   );
