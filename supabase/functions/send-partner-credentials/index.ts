@@ -44,26 +44,21 @@ Deno.serve(async (req) => {
         const contactName = (row as any).primary_contact_name || "there";
         if (!email) { results.push({ id: t.id, status: "failed", reason: "missing contact email" }); continue; }
 
-        // Each organization gets its own random temp password.
-        const { data: cred } = await admin.from("partner_credentials")
-          .select("temp_password").eq("entity_kind", t.kind).eq("entity_id", t.id).maybeSingle();
-        let password: string | null = cred?.temp_password ?? null;
-        if (!password) {
-          password = generateTempPassword();
-          const { data: prof } = await admin.from("profiles").select("id").eq("email", email).maybeSingle();
-          if (prof?.id) {
-            await admin.auth.admin.updateUserById(prof.id, { password });
-          } else {
-            const { error: createErr } = await admin.auth.admin.createUser({ email, password, email_confirm: true });
-            if (createErr && !/already/i.test(createErr.message)) {
-              results.push({ id: t.id, status: "failed", reason: createErr.message }); continue;
-            }
-          }
-          await admin.from("partner_credentials").upsert(
-            { entity_kind: t.kind, entity_id: t.id, temp_password: password },
-            { onConflict: "entity_kind,entity_id" },
-          );
+        // Fresh random temp password per send. It is emailed only and NEVER stored.
+        const password = generateTempPassword();
+        let userId: string | null = null;
+        const { data: prof } = await admin.from("profiles").select("id").eq("email", email).maybeSingle();
+        if (prof?.id) {
+          const { error: updErr } = await admin.auth.admin.updateUserById(prof.id, { password });
+          if (updErr) { results.push({ id: t.id, status: "failed", reason: updErr.message }); continue; }
+          userId = prof.id;
+        } else {
+          const { data: created, error: createErr } = await admin.auth.admin.createUser({ email, password, email_confirm: true });
+          if (createErr) { results.push({ id: t.id, status: "failed", reason: createErr.message }); continue; }
+          userId = created.user?.id ?? null;
         }
+        // Force a password change on first sign-in (service role bypasses the user-side guard).
+        if (userId) await admin.from("profiles").update({ must_change_password: true }).eq("id", userId);
 
 
         const dashboardUrl = t.kind === "nonprofit"

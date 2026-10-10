@@ -14,15 +14,13 @@ export default function AccountsList() {
 
   useEffect(() => {
     (async () => {
-      const [{ data: profiles }, { data: roles }, { data: orgs }, { data: nps }, { data: consumers }, { data: creds }] = await Promise.all([
+      const [{ data: profiles }, { data: roles }, { data: orgs }, { data: nps }, { data: consumers }] = await Promise.all([
         supabase.from("profiles").select("id, email, organization_id, nonprofit_id"),
         supabase.from("user_roles").select("user_id, role"),
         supabase.from("organizations").select("id, name, join_code"),
         supabase.from("nonprofits").select("id, organization_name, join_code"),
         supabase.from("consumers").select("email"),
-        supabase.from("partner_credentials").select("entity_kind, entity_id, temp_password"),
       ]);
-      const credMap = new Map((creds ?? []).map((c) => [`${c.entity_kind}:${c.entity_id}`, c.temp_password]));
       const roleMap = new Map<string, string[]>();
       (roles ?? []).forEach((r) => { const arr = roleMap.get(r.user_id) ?? []; arr.push(r.role); roleMap.set(r.user_id, arr); });
       const orgMap = new Map((orgs ?? []).map((o) => [o.id, o]));
@@ -36,7 +34,7 @@ export default function AccountsList() {
           role,
           org: org?.name || np?.organization_name || "—",
           join_code: org?.join_code || np?.join_code || "",
-          password_hint: (org ? credMap.get(`org:${org.id}`) : null) || (np ? credMap.get(`nonprofit:${np.id}`) : null) || "reset required",
+          password_hint: "emailed only (not stored)",
 
           login_url: role.includes("admin") ? "https://hariet.ai/login" : (np ? "https://hariet.ai/login" : "https://hariet.ai/login"),
         };

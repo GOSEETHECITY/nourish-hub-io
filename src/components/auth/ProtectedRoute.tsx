@@ -136,6 +136,11 @@ export default function ProtectedRoute({ children, allowedRoles }: ProtectedRout
     return <Navigate to="/login" replace />;
   }
 
+  // Partners given a temporary password must set a new one before anything else.
+  if ((profile as { must_change_password?: boolean } | null)?.must_change_password) {
+    return <Navigate to="/reset-password?required=1" replace />;
+  }
+
   if ((requiresOrgApproval || requiresNonprofitApproval) && !profile) {
     return <Navigate to="/login" replace />;
   }
