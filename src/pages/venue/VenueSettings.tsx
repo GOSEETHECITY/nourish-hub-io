@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { ORG_PUBLIC_COLUMNS, withOrgPrivateOne } from "@/lib/privateFields";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { validatePassword } from "@/lib/validatePassword";
 import { useAuth } from "@/contexts/AuthContext";
@@ -50,9 +51,9 @@ export default function VenueSettings() {
   const { data: org } = useQuery({
     queryKey: ["venue-org", profile?.organization_id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("organizations").select("*").eq("id", profile!.organization_id!).single();
+      const { data, error } = await supabase.from("organizations").select(ORG_PUBLIC_COLUMNS).eq("id", profile!.organization_id!).single();
       if (error) throw error;
-      return data as unknown as Organization & {
+      return (await withOrgPrivateOne(data)) as unknown as Organization & {
         business_bio: string | null;
         hours_of_operation: HoursOfOperation | null;
         logo_url: string | null;

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ORG_PUBLIC_COLUMNS, withOrgPrivateOne } from "@/lib/privateFields";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,7 +27,7 @@ export default function CouponDetail() {
 
   const { data: org } = useQuery({
     queryKey: ["org-coupon", coupon?.organization_id],
-    queryFn: async () => { const { data } = await supabase.from("organizations").select("*").eq("id", coupon!.organization_id).single(); return data as Organization; },
+    queryFn: async () => { const { data } = await supabase.from("organizations").select(ORG_PUBLIC_COLUMNS).eq("id", coupon!.organization_id).single(); return (await withOrgPrivateOne(data)) as Organization; },
     enabled: !!coupon?.organization_id,
   });
 

@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { ORG_PUBLIC_COLUMNS, withOrgPrivate } from "@/lib/privateFields";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -54,9 +55,9 @@ export default function Organizations() {
   const { data: orgs = [], isLoading } = useQuery({
     queryKey: ["organizations"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("organizations").select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("organizations").select(ORG_PUBLIC_COLUMNS).order("created_at", { ascending: false });
       if (error) throw error;
-      return data as Organization[];
+      return (await withOrgPrivate(data)) as Organization[];
     },
   });
 
@@ -95,7 +96,7 @@ export default function Organizations() {
         const { error } = await supabase.from("organizations").update(form).eq("id", editingOrg.id);
         if (error) throw error;
       } else {
-        const { data: newOrg, error } = await supabase.from("organizations").insert([{ ...form, approval_status: "pending" as ApprovalStatus }]).select().single();
+        const { data: newOrg, error } = await supabase.from("organizations").insert([{ ...form, approval_status: "pending" as ApprovalStatus }]).select(ORG_PUBLIC_COLUMNS).single();
         if (error) throw error;
         if (showBaseline && baseline.generates_surplus) {
           const { data: loc, error: locError } = await supabase.from("locations").insert({

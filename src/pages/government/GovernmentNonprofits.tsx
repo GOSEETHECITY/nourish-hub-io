@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { ORG_PUBLIC_COLUMNS, withOrgPrivateOne } from "@/lib/privateFields";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,10 +18,10 @@ export default function GovernmentNonprofits() {
     queryFn: async () => {
       const { data } = await supabase
         .from("organizations")
-        .select("*")
+        .select(ORG_PUBLIC_COLUMNS)
         .eq("id", profile!.organization_id!)
         .single();
-      return data as (Organization & { government_regions?: any }) | null;
+      return (await withOrgPrivateOne(data)) as (Organization & { government_regions?: any }) | null;
     },
     enabled: !!profile?.organization_id,
   });

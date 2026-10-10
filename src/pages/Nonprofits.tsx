@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { NONPROFIT_PUBLIC_COLUMNS, withNonprofitPrivate } from "@/lib/privateFields";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -34,7 +35,7 @@ export default function Nonprofits() {
 
   const { data: nonprofits = [], isLoading } = useQuery({
     queryKey: ["nonprofits"],
-    queryFn: async () => { const { data, error } = await supabase.from("nonprofits").select("*").order("created_at", { ascending: false }); if (error) throw error; return data as Nonprofit[]; },
+    queryFn: async () => { const { data, error } = await supabase.from("nonprofits").select(NONPROFIT_PUBLIC_COLUMNS).order("created_at", { ascending: false }); if (error) throw error; return (await withNonprofitPrivate(data)) as Nonprofit[]; },
   });
 
   const saveNonprofit = useMutation({

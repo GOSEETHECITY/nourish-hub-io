@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { NONPROFIT_PUBLIC_COLUMNS, withNonprofitPrivateOne } from "@/lib/privateFields";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,7 +37,7 @@ export default function NonprofitDetail() {
 
   const { data: np } = useQuery({
     queryKey: ["nonprofit", id],
-    queryFn: async () => { const { data, error } = await supabase.from("nonprofits").select("*").eq("id", id!).single(); if (error) throw error; return data as Nonprofit; },
+    queryFn: async () => { const { data, error } = await supabase.from("nonprofits").select(NONPROFIT_PUBLIC_COLUMNS).eq("id", id!).single(); if (error) throw error; return (await withNonprofitPrivateOne(data)) as Nonprofit; },
     enabled: !!id,
   });
 

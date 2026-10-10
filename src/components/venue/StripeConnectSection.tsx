@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { withOrgPrivateOne } from "@/lib/privateFields";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -27,9 +28,9 @@ export default function StripeConnectSection() {
       const { data: profile } = await supabase.from("profiles").select("organization_id").eq("id", user.id).maybeSingle();
       if (!profile?.organization_id) return;
       const { data } = await supabase.from("organizations")
-        .select("id, name, stripe_account_id, stripe_charges_enabled, stripe_payouts_enabled, stripe_details_submitted, platform_fee_percentage")
+        .select("id, name, stripe_charges_enabled, stripe_payouts_enabled, stripe_details_submitted, platform_fee_percentage")
         .eq("id", profile.organization_id).single();
-      setOrg(data as Org);
+      setOrg((await withOrgPrivateOne(data)) as Org);
     })();
   }, [user]);
 

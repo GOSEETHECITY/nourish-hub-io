@@ -3153,7 +3153,27 @@ export type Database = {
         Args: { _nonprofit_id: string }
         Returns: string
       }
+      get_nonprofit_private: {
+        Args: { p_ids: string[] }
+        Returns: {
+          ein: string
+          id: string
+          primary_contact_email: string
+          primary_contact_phone: string
+          proof_of_insurance_url: string
+          signed_agreement_url: string
+        }[]
+      }
       get_org_join_code: { Args: { _org_id: string }; Returns: string }
+      get_organization_private: {
+        Args: { p_ids: string[] }
+        Returns: {
+          id: string
+          primary_contact_email: string
+          primary_contact_phone: string
+          stripe_account_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

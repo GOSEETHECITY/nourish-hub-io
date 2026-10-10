@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ORG_PUBLIC_COLUMNS, NONPROFIT_PUBLIC_COLUMNS, withOrgPrivateOne, withNonprofitPrivateOne } from "@/lib/privateFields";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,7 +32,7 @@ export default function DonationDetail() {
 
   const { data: org } = useQuery({
     queryKey: ["org-for-listing", listing?.organization_id],
-    queryFn: async () => { const { data } = await supabase.from("organizations").select("*").eq("id", listing!.organization_id).single(); return data as Organization; },
+    queryFn: async () => { const { data } = await supabase.from("organizations").select(ORG_PUBLIC_COLUMNS).eq("id", listing!.organization_id).single(); return (await withOrgPrivateOne(data)) as Organization; },
     enabled: !!listing?.organization_id,
   });
 
@@ -43,7 +44,7 @@ export default function DonationDetail() {
 
   const { data: nonprofit } = useQuery({
     queryKey: ["nonprofit-for-listing", listing?.nonprofit_claimed_id],
-    queryFn: async () => { const { data } = await supabase.from("nonprofits").select("*").eq("id", listing!.nonprofit_claimed_id!).single(); return data as Nonprofit; },
+    queryFn: async () => { const { data } = await supabase.from("nonprofits").select(NONPROFIT_PUBLIC_COLUMNS).eq("id", listing!.nonprofit_claimed_id!).single(); return (await withNonprofitPrivateOne(data)) as Nonprofit; },
     enabled: !!listing?.nonprofit_claimed_id,
   });
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { withOrgPrivate, withNonprofitPrivate } from "@/lib/privateFields";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,8 +21,8 @@ export default function SendInvites() {
   const load = async () => {
     setLoading(true);
     const [{ data: orgs }, { data: nps }, { data: creds }] = await Promise.all([
-      supabase.from("organizations").select("id, name, primary_contact_email, primary_contact_name, join_code, credentials_sent_at").not("primary_contact_email", "is", null),
-      supabase.from("nonprofits").select("id, organization_name, primary_contact_email, primary_contact_name, join_code, credentials_sent_at").not("primary_contact_email", "is", null),
+      supabase.from("organizations").select("id, name, primary_contact_name, join_code, credentials_sent_at").then(async (r) => ({ ...r, data: (await withOrgPrivate(r.data)).filter((o) => o.primary_contact_email) })),
+      supabase.from("nonprofits").select("id, organization_name, primary_contact_name, join_code, credentials_sent_at").then(async (r) => ({ ...r, data: (await withNonprofitPrivate(r.data)).filter((n) => n.primary_contact_email) })),
       supabase.from("partner_credentials").select("entity_kind, entity_id, temp_password"),
     ]);
     const credMap = new Map((creds ?? []).map((c) => [`${c.entity_kind}:${c.entity_id}`, c.temp_password]));
