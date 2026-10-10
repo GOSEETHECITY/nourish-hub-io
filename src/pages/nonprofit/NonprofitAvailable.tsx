@@ -37,10 +37,14 @@ export default function NonprofitAvailable() {
 
   const claimDonation = useMutation({
     mutationFn: async (listingId: string) => {
-      const { error } = await supabase.from("food_listings").update({
+      const { data, error } = await supabase.from("food_listings").update({
         nonprofit_claimed_id: profile!.nonprofit_id!, status: "claimed" as const,
-      }).eq("id", listingId);
+      }).eq("id", listingId).eq("status", "posted").is("nonprofit_claimed_id", null).select("id");
       if (error) throw error;
+      if (!data || data.length === 0) {
+        queryClient.invalidateQueries({ queryKey: ["available-donations"] });
+        throw new Error("Sorry, this donation was already claimed by another nonprofit.");
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["available-donations"] });

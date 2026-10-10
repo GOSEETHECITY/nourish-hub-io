@@ -49,7 +49,15 @@ Deno.serve(async (req) => {
     if (!pickup_code || String(pickup_code).trim().toUpperCase() !== order.pickup_code) {
       return json({ error: "Pickup code did not match" }, 400);
     }
-    await admin.from("consumer_orders").update({ status: "picked_up", picked_up_at: new Date().toISOString() }).eq("id", order_id);
+    if (order.status !== "paid" && order.status !== "ready") {
+      return json({ error: `This order can't be marked picked up because its status is "${order.status ?? "unknown"}". Only paid or ready orders can be picked up.` }, 409);
+    }
+    const { data: updated } = await admin.from("consumer_orders")
+      .update({ status: "picked_up", picked_up_at: new Date().toISOString() })
+      .eq("id", order_id).in("status", ["paid", "ready"]).select("id");
+    if (!updated || updated.length === 0) {
+      return json({ error: "This order's status changed and it can no longer be marked picked up." }, 409);
+    }
     const { data: c } = await admin.from("consumers").select("user_id").eq("id", order.consumer_id).maybeSingle();
     if (c?.user_id) {
       await admin.from("notifications").insert({
