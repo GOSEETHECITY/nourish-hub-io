@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.locations_enforce_insert_approval() FROM PUBLIC, anon, authenticated;
