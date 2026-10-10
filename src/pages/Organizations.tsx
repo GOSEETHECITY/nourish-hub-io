@@ -96,7 +96,7 @@ export default function Organizations() {
         const { error } = await supabase.from("organizations").update(form).eq("id", editingOrg.id);
         if (error) throw error;
       } else {
-        const { data: newOrg, error } = await supabase.from("organizations").insert([{ ...form, approval_status: "pending" as ApprovalStatus }]).select().single();
+        const { data: newOrg, error } = await supabase.from("organizations").insert([{ ...form, approval_status: "pending" as ApprovalStatus }]).select(ORG_PUBLIC_COLUMNS).single();
         if (error) throw error;
         if (showBaseline && baseline.generates_surplus) {
           const { data: loc, error: locError } = await supabase.from("locations").insert({

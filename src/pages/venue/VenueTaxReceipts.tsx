@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { fetchNonprofitPrivate } from "@/lib/privateFields";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,11 +27,12 @@ export default function VenueTaxReceipts() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("tax_receipts")
-        .select("id, pdf_path, receipt_type, submitted_at, nonprofit_id, food_listing_id, nonprofits(organization_name, ein), food_listings(food_type, pounds, estimated_donation_value, created_at)")
+        .select("id, pdf_path, receipt_type, submitted_at, nonprofit_id, food_listing_id, nonprofits(organization_name), food_listings(food_type, pounds, estimated_donation_value, created_at)")
         .eq("venue_organization_id", orgId!)
         .order("submitted_at", { ascending: false });
       if (error) throw error;
-      return data as any[];
+      const eins = await fetchNonprofitPrivate((data ?? []).map((r: any) => r.nonprofit_id));
+      return (data ?? []).map((r: any) => ({ ...r, nonprofits: r.nonprofits ? { ...r.nonprofits, ein: eins.get(r.nonprofit_id)?.ein ?? null } : r.nonprofits })) as any[];
     },
     enabled: !!orgId,
   });
