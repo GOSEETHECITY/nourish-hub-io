@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import StatusChip, { toStateAbbr } from "@/components/admin/StatusChip";
 import ActionsMenu from "@/components/admin/ActionsMenu";
@@ -24,6 +25,7 @@ const emptyForm = {
   address: "", city: "", state: "", county: "", external_link: "", status: "draft" as EventStatus,
   image_url: "", offer_badge: "", flyer_url: "",
   business_name: "", category: "",
+  freebee_eligible: false,
 };
 
 export default function Events() {
@@ -135,6 +137,7 @@ export default function Events() {
         flyer_url: form.flyer_url || null,
         business_name: form.business_name || null,
         category: form.category || null,
+        freebee_eligible: form.freebee_eligible,
         latitude: lat,
         longitude: lng,
       };
@@ -187,6 +190,15 @@ export default function Events() {
     return data?.approved ?? ids.length;
   };
 
+  const setFreebee = useMutation({
+    mutationFn: async ({ id, value }: { id: string; value: boolean }) => {
+      const { error } = await supabase.from("events").update({ freebee_eligible: value } as any).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["events"] }),
+    onError: (e: any) => toast.error(e.message),
+  });
+
   const approveOne = useMutation({
     mutationFn: (id: string) => approveEvents([id]),
     onSuccess: () => toast.success("Event approved and published"),
@@ -216,6 +228,7 @@ export default function Events() {
       external_link: ev.external_link || "", status: ev.status, image_url: ev.image_url || "",
       offer_badge: ev.offer_badge || "", flyer_url: ev.flyer_url || "",
       business_name: ev.business_name || "", category: ev.category || "",
+      freebee_eligible: !!(ev as any).freebee_eligible,
     });
     setDialogOpen(true);
   };
@@ -396,14 +409,15 @@ export default function Events() {
                   <TableHead>Category</TableHead>
                   <TableHead>Source</TableHead>
                   <TableHead>Media</TableHead>
+                  <TableHead>Freebee ride available</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow><TableCell colSpan={8} className="text-center py-12 text-muted-foreground">Loading...</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={9} className="text-center py-12 text-muted-foreground">Loading...</TableCell></TableRow>
                 ) : pendingList.length === 0 ? (
-                  <TableRow><TableCell colSpan={8} className="text-center py-12 text-muted-foreground">No pending events</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={9} className="text-center py-12 text-muted-foreground">No pending events</TableCell></TableRow>
                 ) : pendingList.map((ev) => {
                   const hasMedia = !!(ev.image_url || ev.flyer_url);
                   return (
@@ -418,6 +432,13 @@ export default function Events() {
                         {hasMedia
                           ? <Badge variant="secondary">Photo</Badge>
                           : <Badge variant="outline">Needs AI flyer</Badge>}
+                      </TableCell>
+                      <TableCell>
+                        <Switch
+                          aria-label="Freebee ride available"
+                          checked={!!(ev as any).freebee_eligible}
+                          onCheckedChange={(v) => setFreebee.mutate({ id: ev.id, value: v })}
+                        />
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
@@ -475,6 +496,13 @@ export default function Events() {
               <Label>Offer Badge Text</Label>
               <Input value={form.offer_badge} onChange={(e) => setForm({ ...form, offer_badge: e.target.value.slice(0, 40) })} placeholder="e.g. First 100 Free Tacos" maxLength={40} />
               <p className="text-xs text-muted-foreground mt-1">A short highlight pulled from the event description. Shown as a badge on the event card in the consumer app to increase conversions. ({form.offer_badge.length}/40)</p>
+            </div>
+            <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
+              <div>
+                <Label htmlFor="freebee-toggle">Freebee ride available</Label>
+                <p className="text-xs text-muted-foreground mt-1">Turn on only if this address is inside a Freebee service zone. Set manually per event.</p>
+              </div>
+              <Switch id="freebee-toggle" checked={form.freebee_eligible} onCheckedChange={(v) => setForm({ ...form, freebee_eligible: v })} />
             </div>
             <div>
               <Label>Event Image</Label>

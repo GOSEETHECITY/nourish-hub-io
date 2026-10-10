@@ -20,6 +20,7 @@ import {
 } from "@/lib/formatters";
 import ConsumerMobileLayout from "@/components/consumer/ConsumerMobileLayout";
 import { haversineMeters } from "@/lib/geo";
+import FreebeeBadge from "@/components/consumer/FreebeeBadge";
 
 const CHECKIN_RADIUS_METERS = 805; // ~0.5 miles
 
@@ -238,6 +239,9 @@ const ConsumerEventDetail = () => {
               <span>{fullAddress}</span>
               <Navigation className="w-3 h-3 shrink-0" />
             </a>
+          )}
+          {(event as any).freebee_eligible && (
+            <div><FreebeeBadge size="lg" /></div>
           )}
 
           {/* Date — formatted */}
