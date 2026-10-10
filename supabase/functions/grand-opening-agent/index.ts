@@ -263,22 +263,35 @@ async function fetchWebSearch(): Promise<SourcedEvent[]> {
 // No public API or feed exists, so we read its sitemap and public listing pages
 // (robots.txt allows this). Each listing cites the original publisher; we keep it.
 const WO_UA = "HarietGrandOpeningBot/1.0 (+https://hariet.ai)";
+// Major US metro city pages on whatsopening.com (all verified to exist in its sitemap).
+const WO_CITY_SLUGS = [
+  "fl/orlando","fl/tampa","fl/miami","tx/austin","fl/jacksonville","fl/st-petersburg","fl/fort-lauderdale",
+  "ga/atlanta","nc/charlotte","nc/raleigh","tn/nashville","tx/houston","tx/dallas","tx/san-antonio","tx/fort-worth",
+  "ny/new-york","ny/brooklyn","ca/los-angeles","ca/san-diego","ca/san-francisco","ca/san-jose","ca/sacramento",
+  "il/chicago","pa/philadelphia","pa/pittsburgh","dc/washington","az/phoenix","az/scottsdale","co/denver",
+  "wa/seattle","or/portland","nv/las-vegas","ma/boston","mn/minneapolis","mi/detroit","oh/columbus","oh/cleveland",
+  "mo/st-louis","mo/kansas-city","la/new-orleans","md/baltimore","ut/salt-lake-city","in/indianapolis",
+  "wi/milwaukee","nj/newark","va/richmond","sc/charleston",
+];
 const MONTHS = ["january","february","march","april","may","june","july","august","september","october","november","december"];
 async function fetchWhatsOpening(): Promise<SourcedEvent[]> {
   // City pages list every opening in that city; read the same target cities as web search.
   const links = new Set<string>();
-  for (const { city, state } of TARGET_CITIES) {
-    const slug = `${state.toLowerCase()}/${city.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
-    const r = await fetch(`https://www.whatsopening.com/${slug}`, { headers: { "User-Agent": WO_UA } });
-    if (!r.ok) continue;
-    for (const m of (await r.text()).matchAll(/href="(\/opening\/[^"]+)"/g)) links.add(`https://www.whatsopening.com${m[1]}`);
+  for (let i = 0; i < WO_CITY_SLUGS.length; i += 8) {
+    await Promise.all(WO_CITY_SLUGS.slice(i, i + 8).map(async (slug) => {
+      try {
+        const r = await fetch(`https://www.whatsopening.com/${slug}`, { headers: { "User-Agent": WO_UA }, signal: AbortSignal.timeout(10000) });
+        if (!r.ok) return;
+        for (const m of (await r.text()).matchAll(/href="(\/opening\/[^"]+)"/g)) links.add(`https://www.whatsopening.com${m[1]}`);
+      } catch { /* skip city */ }
+    }));
   }
   const out: SourcedEvent[] = [];
-  const list = [...links].slice(0, 800);
-  for (let i = 0; i < list.length; i += 8) {
-    const batch = await Promise.all(list.slice(i, i + 8).map(async (u) => {
+  const list = [...links].slice(0, 1500);
+  for (let i = 0; i < list.length; i += 16) {
+    const batch = await Promise.all(list.slice(i, i + 16).map(async (u) => {
       try {
-        const r = await fetch(u, { headers: { "User-Agent": WO_UA } });
+        const r = await fetch(u, { headers: { "User-Agent": WO_UA }, signal: AbortSignal.timeout(10000) });
         return r.ok ? { u, h: await r.text() } : null;
       } catch { return null; }
     }));
