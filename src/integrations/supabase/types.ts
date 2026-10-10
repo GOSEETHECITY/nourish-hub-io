@@ -3175,6 +3175,53 @@ export type Database = {
           stripe_account_id: string
         }[]
       }
+      gov_location_in_region: {
+        Args: { _location_id: string; _user_id: string }
+        Returns: boolean
+      }
+      gov_region_listings: {
+        Args: never
+        Returns: {
+          created_at: string
+          estimated_donation_value: number | null
+          flash_price_cents: number | null
+          food_type: Database["public"]["Enums"]["food_type"] | null
+          id: string
+          is_flash: boolean
+          is_free_to_public: boolean
+          latitude: number | null
+          listing_type: Database["public"]["Enums"]["listing_type"]
+          location_id: string
+          longitude: number | null
+          nonprofit_claimed_id: string | null
+          notes: string | null
+          organization_id: string
+          photo_urls: string[] | null
+          picked_up_at: string | null
+          pickup_address: string | null
+          pickup_window_end: string | null
+          pickup_window_start: string | null
+          pounds: number | null
+          status: Database["public"]["Enums"]["listing_status"]
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "food_listings"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      gov_region_locations: {
+        Args: never
+        Returns: {
+          city: string
+          county: string
+          id: string
+          organization_id: string
+          state: string
+        }[]
+      }
+      gov_state_code: { Args: { s: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
