@@ -19,25 +19,14 @@ export default function GovernmentListings() {
   });
 
   const regions = myOrg?.government_regions as any;
+  const hasRegions = !!regions && (
+    (regions.is_state_wide && !!regions.state) || (regions.cities?.length ?? 0) > 0 || (regions.counties?.length ?? 0) > 0
+  );
 
-  const { data: locs = [] } = useQuery({
-    queryKey: ["gov-locs"],
-    queryFn: async () => { const { data } = await supabase.from("locations_government").select("id, organization_id, city, state, county"); return data || []; },
-  });
-
-  const regionLocIds = useMemo(() => {
-    if (!regions) return new Set(locs.map((l: any) => l.id));
-    return new Set(locs.filter((l: any) => {
-      if (regions.is_state_wide && regions.state) return l.state?.toLowerCase() === regions.state.toLowerCase();
-      if (regions.cities?.length) return regions.cities.some((c: string) => l.city?.toLowerCase() === c.toLowerCase());
-      if (regions.counties?.length) return regions.counties.some((c: string) => l.county?.toLowerCase() === c.toLowerCase());
-      return true;
-    }).map((l: any) => l.id));
-  }, [locs, regions]);
-
+  // Server-side scoped: returns only listings inside the caller's configured regions (none if unconfigured).
   const { data: listings = [] } = useQuery({
-    queryKey: ["gov-listings"],
-    queryFn: async () => { const { data } = await supabase.from("food_listings").select("*").order("created_at", { ascending: false }); return (data || []) as FoodListing[]; },
+    queryKey: ["gov-region-listings"],
+    queryFn: async () => { const { data } = await supabase.rpc("gov_region_listings" as any); return ((data as any) || []) as FoodListing[]; },
   });
 
   const { data: orgs = [] } = useQuery({
@@ -46,7 +35,7 @@ export default function GovernmentListings() {
   });
 
   const orgMap = useMemo(() => Object.fromEntries(orgs.map((o: any) => [o.id, o.name])), [orgs]);
-  const filtered = listings.filter((l) => regionLocIds.has(l.location_id));
+  const filtered = hasRegions ? listings : [];
   const formatStatus = (s: string) => s.split("_").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
 
   return (
@@ -55,6 +44,11 @@ export default function GovernmentListings() {
         <h1 className="text-2xl font-bold text-foreground">Food Listings</h1>
         <p className="text-sm text-muted-foreground mt-1">All food listings in your assigned region (read only)</p>
       </div>
+      {myOrg && !hasRegions && (
+        <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-foreground">
+          No regions are configured for your account, so no listings or locations can be shown. Please contact an admin to set up your jurisdiction.
+        </div>
+      )}
       <div className="bg-card rounded-xl border">
         <Table>
           <TableHeader><TableRow><TableHead>Organization</TableHead><TableHead>Food Type</TableHead><TableHead>Pounds</TableHead><TableHead>Status</TableHead><TableHead>Date</TableHead></TableRow></TableHeader>
