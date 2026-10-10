@@ -1,5 +1,5 @@
 // Admin-only bulk organization import. Creates org + join code + auth user with a
-// UNIQUE random temp password stored in the admin-only partner_credentials table.
+// UNIQUE random temp password (never stored; a fresh one is emailed by send-partner-credentials).
 // Sends NO emails — send-partner-credentials is a separate admin-triggered step.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.98.0";
 import { restrictedCors, alertFatalError, generateTempPassword } from "../_shared/ops.ts";
@@ -196,7 +196,7 @@ Deno.serve(async (req) => {
 
           if (email) {
             await admin.from("partner_credentials").upsert(
-              { entity_kind: "nonprofit", entity_id: np.id, temp_password: password },
+              { entity_kind: "nonprofit", entity_id: np.id },
               { onConflict: "entity_kind,entity_id" },
             );
           }
@@ -230,7 +230,7 @@ Deno.serve(async (req) => {
 
           if (email) {
             await admin.from("partner_credentials").upsert(
-              { entity_kind: "org", entity_id: org.id, temp_password: password },
+              { entity_kind: "org", entity_id: org.id },
               { onConflict: "entity_kind,entity_id" },
             );
           }

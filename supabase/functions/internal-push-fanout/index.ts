@@ -16,7 +16,12 @@ const INTERNAL = Deno.env.get("PUSH_INTERNAL_SECRET") || "";
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
-    if (INTERNAL && req.headers.get("X-Internal-Secret") !== INTERNAL) {
+    if (!INTERNAL) {
+      return new Response(JSON.stringify({ error: "PUSH_INTERNAL_SECRET not configured" }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (req.headers.get("X-Internal-Secret") !== INTERNAL) {
       return new Response(JSON.stringify({ error: "Forbidden" }), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

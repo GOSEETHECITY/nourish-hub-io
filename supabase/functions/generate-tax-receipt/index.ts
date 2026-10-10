@@ -61,6 +61,28 @@ Deno.serve(async (req) => {
     const isNpMember = profile?.nonprofit_id === listing.nonprofit_claimed_id || !!nonprofitOwned;
     if (!isAdmin && !isNpMember) return json({ error: "forbidden" }, 403);
 
+    // Idempotency: return the existing receipt for this donation instead of creating a duplicate.
+    const { data: existingReceipt } = await admin.from("tax_receipts")
+      .select("id, pdf_path").eq("food_listing_id", food_listing_id)
+      .order("created_at", { ascending: true }).limit(1).maybeSingle();
+    if (existingReceipt) return json({ id: existingReceipt.id, pdf_path: existingReceipt.pdf_path, existing: true });
+
+    // Only issue a 501(c)(3) receipt for a nonprofit with a verified EIN and verified tax-exempt status.
+    const { data: npVerify } = await admin.from("nonprofits")
+      .select("ein, is_verified").eq("id", listing.nonprofit_claimed_id).maybeSingle();
+    const einDigits = String(npVerify?.ein ?? "").replace(/\D/g, "");
+    let exemptVerified = false;
+    if (npVerify?.is_verified === true && einDigits.length === 9) {
+      const { data: pub78 } = await admin.from("irs_pub78_orgs").select("ein").eq("ein", einDigits).maybeSingle();
+      exemptVerified = !!pub78;
+    }
+    if (!exemptVerified) {
+      return json({
+        error: "not_verified",
+        message: "A tax receipt can't be generated yet: this nonprofit's EIN and 501(c)(3) tax-exempt status haven't been verified. An admin must verify the nonprofit first.",
+      }, 422);
+    }
+
     const [{ data: np }, { data: org }, { data: loc }, { data: lineItems }] = await Promise.all([
       admin.from("nonprofits").select("id, organization_name, ein, address, city, state, zip_code, logo_url").eq("id", listing.nonprofit_claimed_id).maybeSingle(),
       admin.from("organizations").select("id, name, business_bio, logo_url").eq("id", listing.organization_id).maybeSingle(),

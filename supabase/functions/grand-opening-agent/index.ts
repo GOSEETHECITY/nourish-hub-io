@@ -4,7 +4,7 @@
 // exists, and post an admin summary notification.
 
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
-const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type" };
+const corsHeaders = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-cron-secret" };
 
 type Category =
   | "restaurant" | "retail" | "fitness" | "entertainment"
@@ -362,6 +362,26 @@ async function run() {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
+    // Auth: cron secret (scheduled runs) or a signed-in admin. Fails closed.
+    const cronSecret = Deno.env.get("CRON_SECRET");
+    const providedCron = req.headers.get("x-cron-secret") ?? "";
+    let authorized = !!cronSecret && providedCron === cronSecret;
+    if (!authorized) {
+      const authHeader = req.headers.get("Authorization") ?? "";
+      if (authHeader.startsWith("Bearer ")) {
+        const sb = createClient(SUPABASE_URL, SERVICE_ROLE);
+        const { data: { user } } = await sb.auth.getUser(authHeader.slice(7));
+        if (user) {
+          const { data: isAdmin } = await sb.rpc("has_role", { _user_id: user.id, _role: "admin" });
+          authorized = isAdmin === true;
+        }
+      }
+    }
+    if (!authorized) {
+      return new Response(JSON.stringify({ ok: false, error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     const result = await run();
     return new Response(JSON.stringify({ ok: true, ...result }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
