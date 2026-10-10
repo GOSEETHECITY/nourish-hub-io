@@ -37,15 +37,41 @@ const admin = createClient(SUPABASE_URL, SERVICE_ROLE, {
 });
 
 // --- Title filter + date window ---
-// Only events whose own title mentions one of these phrases are imported.
-const TITLE_PHRASES = ["grand opening", "grand openings", "launch", "launch party"];
+// Only events whose own title uses wording genuine new-business opening
+// announcements use. Generic events ("opening night", "open mic") are excluded.
+const TITLE_PATTERNS: RegExp[] = [
+  /\bgrand[\s-]+openings?\b/,
+  /\bsoft[\s-]+openings?\b/,
+  /\bnow[\s-]+open\b/,
+  /\bribbon[\s-]+cutting\b/,
+  /\blaunch[\s-]+party\b/,
+  /\blaunch(es|ed|ing)?\b/,
+  /\bdebut(s|ed|ing)?\b/,
+  /\bopens\b/,
+  /\bopening\b/,
+  /\b(to|will|set to|plans to) open\b/,
+  /\bcoming to\b/,
+];
+const TITLE_EXCLUDE: RegExp[] = [
+  /\bopening (night|reception|act|ceremony of the|day of the season|remarks|weekend of the season)\b/,
+  /\bopen (mic|house|call|enrollment|registration|auditions?)\b/,
+  /\b(art|gallery|exhibit(ion)?|film|movie|album|book|season) (opening|launch|debut)\b/,
+  /\b(product|app|podcast|book|album|campaign) launch\b/,
+];
 function titleMatches(...texts: (string | null | undefined)[]): boolean {
   const hay = texts.filter(Boolean).join(" ").toLowerCase();
-  return TITLE_PHRASES.some((p) => hay.includes(p));
+  if (!hay) return false;
+  if (TITLE_EXCLUDE.some((r) => r.test(hay))) return false;
+  return TITLE_PATTERNS.some((r) => r.test(hay));
 }
-// Only keep events dated today through 90 days out (stops stale/past events).
+// Only keep events with a concrete opening date, today through 90 days out.
+// Anything "TBA", "to be announced", "coming soon" with no date, or undated is skipped.
+const NO_DATE = /\b(tba|tbd|to be (announced|determined)|coming soon|date (pending|unknown))\b/i;
 function inWindow(dateStr: string): boolean {
+  if (!dateStr || NO_DATE.test(dateStr)) return false;
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return false;
+  const d = new Date(`${dateStr}T00:00:00Z`);
+  if (isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== dateStr) return false;
   const today = new Date().toISOString().slice(0, 10);
   const max = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10);
   return dateStr >= today && dateStr <= max;
