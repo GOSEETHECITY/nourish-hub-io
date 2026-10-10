@@ -24,6 +24,10 @@ Deno.serve(async (req) => {
 
     if (error) throw error;
 
+    // Cancel unpaid orders older than 30 minutes and release their flash holds.
+    const { data: expiredOrders, error: expErr } = await admin.rpc("expire_pending_orders");
+    if (expErr) throw expErr;
+
     // Notify consumers whose reservations expired.
     if (data && data.length) {
       const rows = data.map((r: any) => ({
@@ -43,7 +47,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ released: data?.length ?? 0 }), {
+    return new Response(JSON.stringify({ released: data?.length ?? 0, expired_orders: expiredOrders ?? 0 }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

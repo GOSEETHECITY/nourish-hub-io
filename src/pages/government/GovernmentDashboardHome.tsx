@@ -44,8 +44,8 @@ export default function GovernmentDashboardHome() {
   });
 
   const { data: reports = [] } = useQuery({
-    queryKey: ["gov-reports"],
-    queryFn: async () => { const { data } = await supabase.from("impact_reports").select("*"); return (data || []) as ImpactReport[]; },
+    queryKey: ["gov-region-reports"],
+    queryFn: async () => { const { data } = await supabase.rpc("gov_region_impact_reports" as any); return ((data as any) || []) as ImpactReport[]; },
   });
 
   const { data: orgs = [] } = useQuery({

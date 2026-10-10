@@ -7,8 +7,8 @@ export default function GovernmentImpactReports() {
   const { data: reports = [] } = useQuery({
     queryKey: ["gov-impact-reports"],
     queryFn: async () => {
-      const { data } = await supabase.from("impact_reports").select("*").order("created_at", { ascending: false });
-      return (data || []) as ImpactReport[];
+      const { data } = await supabase.rpc("gov_region_impact_reports" as any);
+      return ((data as any) || []) as ImpactReport[];
     },
   });
 
