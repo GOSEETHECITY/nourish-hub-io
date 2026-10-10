@@ -1,7 +1,7 @@
-<html><body style="margin:0"><div id="root" style="width:400px;height:600px"></div>
+<html><body style="margin:0"><div id="root" ></div>
 <script type="module">
 import React from "react"; import {createRoot} from "react-dom/client";
 import "/src/index.css";
 import M from "/src/components/consumer/ConsumerMapView.tsx";
-createRoot(document.getElementById("root")).render(React.createElement(M,{center:[28.54,-81.38],markers:[{id:"1",name:"X",lat:28.54,lng:-81.38,type:"event"}],onMarkerClick:()=>{}}));
+const h=React.createElement;createRoot(document.getElementById("root")).render(h("div",{className:"max-w-[430px] mx-auto min-h-screen bg-white relative"},h("div",{className:"flex flex-col overflow-hidden",style:{height:"calc(100dvh - 130px)"}},h("div",{style:{height:60}},"hdr"),h("div",{className:"flex-1 overflow-hidden"},h(M,{center:[28.54,-81.38],markers:[{id:"1",name:"X",lat:28.54,lng:-81.38,type:"event"}],onMarkerClick:()=>{}})))));
 </script></body></html>
