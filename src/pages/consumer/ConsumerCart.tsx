@@ -13,6 +13,7 @@ const ConsumerCart = () => {
   const { items, updateQuantity, removeItem, clearCart, subtotal } = useConsumerCart();
   const { consumer } = useConsumerAuth();
   const [ordering, setOrdering] = useState(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
 
   const tax = subtotal * TAX_RATE;
   const total = subtotal + tax;
@@ -22,15 +23,15 @@ const ConsumerCart = () => {
     setOrdering(true);
     // Prices are recomputed server-side from the coupon row via a SECURITY DEFINER
     // RPC. The client cannot manipulate unit_price, tax, or total.
-    for (const item of items) {
-      const { error } = await supabase.rpc("create_consumer_order", {
-        p_coupon_id: item.coupon_id,
-        p_quantity: item.quantity,
-      });
-      if (error) {
-        setOrdering(false);
-        return;
-      }
+    // All items are created in one database transaction: all succeed or none do.
+    setOrderError(null);
+    const { error } = await supabase.rpc("create_consumer_orders" as any, {
+      p_items: items.map((i) => ({ coupon_id: i.coupon_id, quantity: i.quantity })),
+    });
+    if (error) {
+      setOrderError(`We couldn't place your order, and nothing was charged or ordered. ${error.message}`);
+      setOrdering(false);
+      return;
     }
     clearCart();
     setOrdering(false);
