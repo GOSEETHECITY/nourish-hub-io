@@ -213,7 +213,7 @@ const App = () => (
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/accept-invitation" element={<AcceptInvitation />} />
-            <Route path="/fiu" element={<FIUDashboard />} />
+            <Route path="/fiu" element={<ProtectedRoute allowedRoles={["admin"]}><FIUDashboard /></ProtectedRoute>} />
             <Route path="/survey/:token" element={<ImpactSurvey />} />
 
             {/* Admin routes — moved from / to /dashboard */}
