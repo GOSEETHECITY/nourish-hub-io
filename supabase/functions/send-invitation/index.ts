@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
 
     const roleLabel = role.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
     const levelLabel = level === "organization" ? "Organization" : "Location";
-    const setupUrl = "https://nourish-hub-io.lovable.app";
+    const setupUrl = "https://hariet.ai";
 
     const emailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">

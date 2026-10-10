@@ -47,7 +47,7 @@ export default function PendingApprovals() {
       await supabase.from("onboarding_submissions").update({ status: "approved", reviewed_at: new Date().toISOString() }).eq("id", s.id);
       await supabase.functions.invoke("send-alert", {
         body: {
-          user_ids: await applicantUserIds(s), category: "onboarding_approved", urgent: false,
+          user_ids: await applicantUserIds(s), fallback_submission_id: s.id, category: "onboarding_approved", urgent: false,
           subject: "Your Hariet.AI application has been approved",
           text: `Hi ${s.contact_name}, ${s.organization_name} has been approved. You can now sign in with the account you created during signup.`,
         },
@@ -91,7 +91,7 @@ export default function PendingApprovals() {
     await supabase.from("onboarding_submissions").update({ status: "rejected", rejection_reason: reason, reviewed_at: new Date().toISOString() }).eq("id", rejectFor.id);
     await supabase.functions.invoke("send-alert", {
       body: {
-        user_ids: await applicantUserIds(rejectFor), category: "onboarding_rejected", urgent: false,
+        user_ids: await applicantUserIds(rejectFor), fallback_submission_id: rejectFor.id, category: "onboarding_rejected", urgent: false,
         subject: "Update on your Hariet.AI application",
         text: `Hi ${rejectFor.contact_name}, we reviewed your application for ${rejectFor.organization_name} and could not approve it at this time. Reason: ${reason}. You are welcome to reply and provide additional detail.`,
       },

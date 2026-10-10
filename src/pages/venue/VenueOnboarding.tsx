@@ -39,6 +39,7 @@ export default function VenueOnboarding() {
         pickup_instructions: locationForm.pickupInstructions,
         hours_of_operation: locationForm.hours_of_operation,
         estimated_surplus_frequency: locationForm.estimated_surplus_frequency,
+        approval_status: "pending",
       }).select().single();
       if (locError) throw locError;
 

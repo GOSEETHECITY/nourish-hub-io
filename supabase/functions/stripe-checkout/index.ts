@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
 
     // Free flash listing: skip Stripe entirely, just reserve.
     if (parsed.data.kind === "flash" && unitAmount === 0) {
-      const { data: resId, error: resErr } = await admin.rpc("reserve_flash_listing", { p_listing_id: parsed.data.flash_listing_id });
+      const { data: resId, error: resErr } = await supabase.rpc("reserve_flash_listing", { p_listing_id: parsed.data.flash_listing_id });
       if (resErr) throw resErr;
       return new Response(JSON.stringify({ free: true, reservation_id: resId }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

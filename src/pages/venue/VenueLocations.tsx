@@ -64,6 +64,7 @@ export default function VenueLocations() {
         pickup_instructions: form.pickup_instructions,
         hours_of_operation: form.hours_of_operation,
         estimated_surplus_frequency: form.estimated_surplus_frequency,
+        approval_status: "pending",
       });
       if (error) throw error;
     },
