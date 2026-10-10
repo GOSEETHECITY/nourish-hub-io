@@ -37,15 +37,41 @@ const admin = createClient(SUPABASE_URL, SERVICE_ROLE, {
 });
 
 // --- Title filter + date window ---
-// Only events whose own title mentions one of these phrases are imported.
-const TITLE_PHRASES = ["grand opening", "grand openings", "launch", "launch party"];
+// Only events whose own title uses wording genuine new-business opening
+// announcements use. Generic events ("opening night", "open mic") are excluded.
+const TITLE_PATTERNS: RegExp[] = [
+  /\bgrand[\s-]+openings?\b/,
+  /\bsoft[\s-]+openings?\b/,
+  /\bnow[\s-]+open\b/,
+  /\bribbon[\s-]+cutting\b/,
+  /\blaunch[\s-]+party\b/,
+  /\blaunch(es|ed|ing)?\b/,
+  /\bdebut(s|ed|ing)?\b/,
+  /\bopens\b/,
+  /\bopening\b/,
+  /\b(to|will|set to|plans to) open\b/,
+  /\bcoming to\b/,
+];
+const TITLE_EXCLUDE: RegExp[] = [
+  /\bopening (night|reception|act|ceremony of the|day of the season|remarks|weekend of the season)\b/,
+  /\bopen (mic|house|call|enrollment|registration|auditions?)\b/,
+  /\b(art|gallery|exhibit(ion)?|film|movie|album|book|season) (opening|launch|debut)\b/,
+  /\b(product|app|podcast|book|album|campaign) launch\b/,
+];
 function titleMatches(...texts: (string | null | undefined)[]): boolean {
   const hay = texts.filter(Boolean).join(" ").toLowerCase();
-  return TITLE_PHRASES.some((p) => hay.includes(p));
+  if (!hay) return false;
+  if (TITLE_EXCLUDE.some((r) => r.test(hay))) return false;
+  return TITLE_PATTERNS.some((r) => r.test(hay));
 }
-// Only keep events dated today through 90 days out (stops stale/past events).
+// Only keep events with a concrete opening date, today through 90 days out.
+// Anything "TBA", "to be announced", "coming soon" with no date, or undated is skipped.
+const NO_DATE = /\b(tba|tbd|to be (announced|determined)|coming soon|date (pending|unknown))\b/i;
 function inWindow(dateStr: string): boolean {
+  if (!dateStr || NO_DATE.test(dateStr)) return false;
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return false;
+  const d = new Date(`${dateStr}T00:00:00Z`);
+  if (isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== dateStr) return false;
   const today = new Date().toISOString().slice(0, 10);
   const max = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10);
   return dateStr >= today && dateStr <= max;
@@ -237,22 +263,35 @@ async function fetchWebSearch(): Promise<SourcedEvent[]> {
 // No public API or feed exists, so we read its sitemap and public listing pages
 // (robots.txt allows this). Each listing cites the original publisher; we keep it.
 const WO_UA = "HarietGrandOpeningBot/1.0 (+https://hariet.ai)";
+// Major US metro city pages on whatsopening.com (all verified to exist in its sitemap).
+const WO_CITY_SLUGS = [
+  "fl/orlando","fl/tampa","fl/miami","tx/austin","fl/jacksonville","fl/st-petersburg","fl/fort-lauderdale",
+  "ga/atlanta","nc/charlotte","nc/raleigh","tn/nashville","tx/houston","tx/dallas","tx/san-antonio","tx/fort-worth",
+  "ny/new-york","ny/brooklyn","ca/los-angeles","ca/san-diego","ca/san-francisco","ca/san-jose","ca/sacramento",
+  "il/chicago","pa/philadelphia","pa/pittsburgh","dc/washington","az/phoenix","az/scottsdale","co/denver",
+  "wa/seattle","or/portland","nv/las-vegas","ma/boston","mn/minneapolis","mi/detroit","oh/columbus","oh/cleveland",
+  "mo/st-louis","mo/kansas-city","la/new-orleans","md/baltimore","ut/salt-lake-city","in/indianapolis",
+  "wi/milwaukee","nj/newark","va/richmond","sc/charleston",
+];
 const MONTHS = ["january","february","march","april","may","june","july","august","september","october","november","december"];
 async function fetchWhatsOpening(): Promise<SourcedEvent[]> {
   // City pages list every opening in that city; read the same target cities as web search.
   const links = new Set<string>();
-  for (const { city, state } of TARGET_CITIES) {
-    const slug = `${state.toLowerCase()}/${city.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
-    const r = await fetch(`https://www.whatsopening.com/${slug}`, { headers: { "User-Agent": WO_UA } });
-    if (!r.ok) continue;
-    for (const m of (await r.text()).matchAll(/href="(\/opening\/[^"]+)"/g)) links.add(`https://www.whatsopening.com${m[1]}`);
+  for (let i = 0; i < WO_CITY_SLUGS.length; i += 8) {
+    await Promise.all(WO_CITY_SLUGS.slice(i, i + 8).map(async (slug) => {
+      try {
+        const r = await fetch(`https://www.whatsopening.com/${slug}`, { headers: { "User-Agent": WO_UA }, signal: AbortSignal.timeout(10000) });
+        if (!r.ok) return;
+        for (const m of (await r.text()).matchAll(/href="(\/opening\/[^"]+)"/g)) links.add(`https://www.whatsopening.com${m[1]}`);
+      } catch { /* skip city */ }
+    }));
   }
   const out: SourcedEvent[] = [];
-  const list = [...links].slice(0, 800);
-  for (let i = 0; i < list.length; i += 8) {
-    const batch = await Promise.all(list.slice(i, i + 8).map(async (u) => {
+  const list = [...links].slice(0, 1500);
+  for (let i = 0; i < list.length; i += 16) {
+    const batch = await Promise.all(list.slice(i, i + 16).map(async (u) => {
       try {
-        const r = await fetch(u, { headers: { "User-Agent": WO_UA } });
+        const r = await fetch(u, { headers: { "User-Agent": WO_UA }, signal: AbortSignal.timeout(10000) });
         return r.ok ? { u, h: await r.text() } : null;
       } catch { return null; }
     }));
