@@ -10,11 +10,14 @@ Deno.serve(async (req) => {
   const body = await req.text();
   const sig = req.headers.get("stripe-signature") ?? "";
 
+  if (!webhookSecret) {
+    console.error("STRIPE_WEBHOOK_SECRET is not configured; rejecting webhook");
+    return new Response("webhook secret not configured", { status: 400 });
+  }
+
   let event: Stripe.Event;
   try {
-    event = webhookSecret
-      ? await stripe.webhooks.constructEventAsync(body, sig, webhookSecret)
-      : JSON.parse(body) as Stripe.Event; // dev fallback only
+    event = await stripe.webhooks.constructEventAsync(body, sig, webhookSecret);
   } catch (err) {
     console.error("bad signature", err);
     return new Response("bad signature", { status: 400 });
@@ -40,6 +43,15 @@ Deno.serve(async (req) => {
         const meta = s.metadata ?? {};
         const pi = typeof s.payment_intent === "string" ? s.payment_intent : s.payment_intent?.id ?? null;
         const amountTotal = s.amount_total ?? 0;
+        // Idempotency: Stripe may redeliver this event; skip if already recorded.
+        if (pi) {
+          const { data: existing } = await admin.from("consumer_orders")
+            .select("id").eq("stripe_payment_intent_id", pi).limit(1);
+          if (existing && existing.length > 0) {
+            console.log("checkout.session.completed already processed", { pi });
+            break;
+          }
+        }
         // Compute fee/payout from PI
         let appFee = 0;
         if (pi) {
