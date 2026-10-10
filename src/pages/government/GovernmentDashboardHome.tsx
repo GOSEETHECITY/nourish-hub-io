@@ -24,27 +24,23 @@ export default function GovernmentDashboardHome() {
   });
 
   const regions = (myOrg?.government_regions as GovernmentRegions) ?? null;
+  const hasRegions = !!regions && (
+    (!!regions.is_state_wide && !!regions.state) || (regions.cities?.length ?? 0) > 0 || (regions.counties?.length ?? 0) > 0
+  );
 
-  const { data: locs = [] } = useQuery({
-    queryKey: ["gov-locs"],
-    queryFn: async () => { const { data } = await supabase.from("locations_government").select("id, organization_id, city, state, county"); return data || []; },
+  // Server-side scoped lookups: only rows inside the caller's configured regions (none if unconfigured).
+  const { data: locsRaw = [] } = useQuery({
+    queryKey: ["gov-region-locs"],
+    queryFn: async () => { const { data } = await supabase.rpc("gov_region_locations" as any); return ((data as any) || []) as any[]; },
   });
-
-  const regionFilteredLocs = useMemo(() => {
-    if (!regions) return locs;
-    return locs.filter((l: any) => {
-      if (regions.is_state_wide && regions.state) return l.state?.toLowerCase() === regions.state.toLowerCase();
-      if (regions.cities?.length) return regions.cities.some((c: string) => l.city?.toLowerCase() === c.toLowerCase());
-      if (regions.counties?.length) return regions.counties.some((c: string) => l.county?.toLowerCase() === c.toLowerCase());
-      return true;
-    });
-  }, [locs, regions]);
+  const locs = hasRegions ? locsRaw : [];
+  const regionFilteredLocs = locs;
 
   const regionLocIds = useMemo(() => new Set(regionFilteredLocs.map((l: any) => l.id)), [regionFilteredLocs]);
 
   const { data: listings = [] } = useQuery({
-    queryKey: ["gov-listings"],
-    queryFn: async () => { const { data } = await supabase.from("food_listings").select("*"); return (data || []) as FoodListing[]; },
+    queryKey: ["gov-region-listings"],
+    queryFn: async () => { const { data } = await supabase.rpc("gov_region_listings" as any); return ((data as any) || []) as FoodListing[]; },
   });
 
   const { data: reports = [] } = useQuery({
@@ -116,6 +112,11 @@ export default function GovernmentDashboardHome() {
         <p className="text-sm text-muted-foreground mt-1">Regional impact metrics and food diversion data</p>
         <p className="text-xs text-primary font-medium mt-2 bg-primary/10 px-3 py-1.5 rounded-lg inline-block">{regionLabel}</p>
       </div>
+      {myOrg && !hasRegions && (
+        <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-foreground">
+          No regions are configured for your account, so no listings or locations can be shown. Please contact an admin to set up your jurisdiction.
+        </div>
+      )}
 
       <div className="flex gap-3">
         <Select value={filterCity} onValueChange={setFilterCity}>
