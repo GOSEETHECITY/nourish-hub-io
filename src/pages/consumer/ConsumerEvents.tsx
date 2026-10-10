@@ -7,6 +7,7 @@ import { formatTime, formatDateShort } from "@/lib/formatters";
 import { haversineMiles, formatDistance } from "@/lib/geo";
 import ConsumerMobileLayout from "@/components/consumer/ConsumerMobileLayout";
 import ConsumerAppHeader from "@/components/consumer/ConsumerAppHeader";
+import FreebeeBadge from "@/components/consumer/FreebeeBadge";
 import ConsumerBottomNav from "@/components/consumer/ConsumerBottomNav";
 
 const ConsumerEvents = () => {
@@ -126,6 +127,9 @@ const ConsumerEvents = () => {
                     <span className="absolute bottom-2 left-2 bg-[#F97316] text-white text-xs font-bold px-3 py-1 rounded-full">
                       {ev.offer_badge}
                     </span>
+                  )}
+                  {(ev as any).freebee_eligible && (
+                    <FreebeeBadge className="absolute bottom-2 right-2" />
                   )}
                   {ev.category && (
                     <span className="absolute top-2 left-2 bg-white/90 text-[#1B2A4A] text-xs font-semibold px-2 py-1 rounded-full">
