@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Heart } from "lucide-react";
+import { Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useLocation } from "@/contexts/LocationContext";
 import ConsumerMobileLayout from "@/components/consumer/ConsumerMobileLayout";
 import ConsumerAppHeader from "@/components/consumer/ConsumerAppHeader";
 import ConsumerBottomNav from "@/components/consumer/ConsumerBottomNav";
@@ -18,16 +19,28 @@ interface RestaurantCard {
 
 const ConsumerRestaurants = () => {
   const navigate = useNavigate();
+  const { city, state, ready } = useLocation();
   const [restaurants, setRestaurants] = useState<RestaurantCard[]>([]);
   const [search, setSearch] = useState("");
 
   useEffect(() => {
+    if (!ready) return;
+    let cancelled = false;
     const load = async () => {
+      // Only deals from locations in the selected city.
+      const { data: locs } = await (supabase as any)
+        .from("locations_public")
+        .select("id")
+        .eq("city", city)
+        .eq("state", state);
+      const ids = (locs || []).map((l: any) => l.id);
+      if (!ids.length) { if (!cancelled) setRestaurants([]); return; }
       const { data } = await supabase
         .from("coupons")
         .select("id, title, price, original_price, photo_url, organization_id, organizations(name, address)")
-        .eq("status", "active");
-      if (data) {
+        .eq("status", "active")
+        .in("location_id", ids);
+      if (data && !cancelled) {
         setRestaurants(data.map((c: any) => ({
           id: c.id,
           org_name: c.organizations?.name || "Restaurant",
@@ -40,7 +53,8 @@ const ConsumerRestaurants = () => {
       }
     };
     load();
-  }, []);
+    return () => { cancelled = true; };
+  }, [city, state, ready]);
 
   const discount = (orig: number, price: number) => orig > 0 ? Math.round(((orig - price) / orig) * 100) : 0;
   const filtered = restaurants.filter((r) => r.org_name.toLowerCase().includes(search.toLowerCase()));
@@ -56,7 +70,7 @@ const ConsumerRestaurants = () => {
               className="flex-1 bg-transparent outline-none text-sm" />
           </div>
         </div>
-        <h2 className="text-lg font-bold text-[#1B2A4A] mb-3">Restaurants</h2>
+        <h2 className="text-lg font-bold text-[#1B2A4A] mb-3">Restaurants in {city}</h2>
         <div className="flex flex-col gap-4">
           {filtered.map((r) => (
             <button key={r.id} onClick={() => navigate(`/app/coupon/${r.id}`)}
@@ -68,10 +82,6 @@ const ConsumerRestaurants = () => {
                     {discount(r.original_price, r.price)}% OFF
                   </span>
                 )}
-                <button className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/80 flex items-center justify-center"
-                  onClick={(e) => e.stopPropagation()}>
-                  <Heart className="w-4 h-4 text-gray-400" />
-                </button>
               </div>
               <div className="p-3">
                 <p className="font-semibold text-[#1B2A4A]">{r.org_name}</p>

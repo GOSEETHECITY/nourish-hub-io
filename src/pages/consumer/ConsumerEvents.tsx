@@ -38,6 +38,7 @@ const ConsumerEvents = () => {
       .select("*")
       .eq("status", "published")
       .eq("city", city)
+      .eq("state", state)
       .gte("event_date", today)
       .order("event_date", { ascending: true })
       .then(({ data, error: err }) => {

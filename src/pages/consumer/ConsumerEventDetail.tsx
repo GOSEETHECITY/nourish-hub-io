@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
-  Heart,
   MapPin,
   Calendar,
   Clock,
@@ -198,9 +197,6 @@ const ConsumerEventDetail = () => {
           className="absolute top-4 left-4 w-9 h-9 rounded-full bg-white/80 flex items-center justify-center"
         >
           <ArrowLeft className="w-5 h-5" />
-        </button>
-        <button className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/80 flex items-center justify-center">
-          <Heart className="w-5 h-5 text-gray-400" />
         </button>
       </div>
 

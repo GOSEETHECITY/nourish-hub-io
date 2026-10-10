@@ -4,12 +4,25 @@ import { useNavigate } from "react-router-dom";
 import { useConsumerAuth } from "@/contexts/ConsumerAuthContext";
 import ConsumerMobileLayout from "@/components/consumer/ConsumerMobileLayout";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const ConsumerInviteFriends = () => {
   const navigate = useNavigate();
   const { consumer } = useConsumerAuth();
-  const code = (consumer as any)?.referral_code || "";
+  const [generated, setGenerated] = useState("");
+  const [generating, setGenerating] = useState(false);
+  const [genError, setGenError] = useState<string | null>(null);
+  const code = generated || ((consumer as any)?.referral_code || "").trim();
   const [copied, setCopied] = useState(false);
+
+  const handleGenerate = async () => {
+    setGenerating(true);
+    setGenError(null);
+    const { data, error } = await supabase.rpc("ensure_own_referral_code" as any);
+    setGenerating(false);
+    if (error || !data) { setGenError("We couldn't create your code. Please try again."); return; }
+    setGenerated(String(data));
+  };
 
   const handleCopy = () => {
     if (!code) return;
@@ -33,9 +46,19 @@ const ConsumerInviteFriends = () => {
       </header>
       <div className="px-6 flex flex-col items-center gap-6 pt-12">
         <p className="text-gray-600 text-center">Share your personal referral code with friends. You'll earn a badge for your first friend who joins.</p>
-        <div className="bg-gray-100 rounded-2xl px-8 py-4 text-center">
-          <p className="text-2xl font-bold tracking-widest text-[#1B2A4A]">{code || "…"}</p>
-        </div>
+        {code ? (
+          <div className="bg-gray-100 rounded-2xl px-8 py-4 text-center">
+            <p className="text-2xl font-bold tracking-widest text-[#1B2A4A]">{code}</p>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-2">
+            <button onClick={handleGenerate} disabled={generating}
+              className="px-6 py-3 rounded-full bg-[#F97316] text-white font-semibold disabled:opacity-60">
+              {generating ? "Generating…" : "Generate my code"}
+            </button>
+            {genError && <p className="text-sm text-red-600">{genError}</p>}
+          </div>
+        )}
         <div className="flex gap-3 w-full">
           <button onClick={handleCopy}
             className="flex-1 flex items-center justify-center gap-2 py-3 rounded-full border-2 border-[#F97316] text-[#F97316] font-semibold">
