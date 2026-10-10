@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { ORG_PUBLIC_COLUMNS, withOrgPrivateOne } from "@/lib/privateFields";
 import { validatePassword } from "@/lib/validatePassword";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,9 +22,9 @@ export default function GovernmentSettings() {
   const { data: org } = useQuery({
     queryKey: ["gov-org", profile?.organization_id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("organizations").select("*").eq("id", profile!.organization_id!).single();
+      const { data, error } = await supabase.from("organizations").select(ORG_PUBLIC_COLUMNS).eq("id", profile!.organization_id!).single();
       if (error) throw error;
-      return data as Organization & { government_regions?: any };
+      return (await withOrgPrivateOne(data)) as Organization & { government_regions?: any };
     },
     enabled: !!profile?.organization_id,
   });

@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { ORG_PUBLIC_COLUMNS, withOrgPrivate } from "@/lib/privateFields";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -54,9 +55,9 @@ export default function Organizations() {
   const { data: orgs = [], isLoading } = useQuery({
     queryKey: ["organizations"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("organizations").select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("organizations").select(ORG_PUBLIC_COLUMNS).order("created_at", { ascending: false });
       if (error) throw error;
-      return data as Organization[];
+      return (await withOrgPrivate(data)) as Organization[];
     },
   });
 

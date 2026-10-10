@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { ORG_PUBLIC_COLUMNS, NONPROFIT_PUBLIC_COLUMNS, withOrgPrivate, withNonprofitPrivate } from "@/lib/privateFields";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -88,18 +89,18 @@ export default function Dashboard() {
   const { data: orgs = [] } = useQuery({
     queryKey: ["dashboard-orgs"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("organizations").select("*");
+      const { data, error } = await supabase.from("organizations").select(ORG_PUBLIC_COLUMNS);
       if (error) throw error;
-      return data as Organization[];
+      return (await withOrgPrivate(data)) as Organization[];
     },
   });
 
   const { data: nonprofits = [] } = useQuery({
     queryKey: ["dashboard-nonprofits"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("nonprofits").select("*");
+      const { data, error } = await supabase.from("nonprofits").select(NONPROFIT_PUBLIC_COLUMNS);
       if (error) throw error;
-      return data as Nonprofit[];
+      return (await withNonprofitPrivate(data)) as Nonprofit[];
     },
   });
 

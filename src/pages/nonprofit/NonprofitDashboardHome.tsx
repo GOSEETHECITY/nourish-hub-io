@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { NONPROFIT_PUBLIC_COLUMNS, withNonprofitPrivateOne } from "@/lib/privateFields";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Package, Heart, BarChart3, CheckCircle } from "lucide-react";
@@ -10,9 +11,9 @@ export default function NonprofitDashboardHome() {
   const { data: nonprofit } = useQuery({
     queryKey: ["my-nonprofit", profile?.nonprofit_id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("nonprofits").select("*").eq("id", profile!.nonprofit_id!).single();
+      const { data, error } = await supabase.from("nonprofits").select(NONPROFIT_PUBLIC_COLUMNS).eq("id", profile!.nonprofit_id!).single();
       if (error) throw error;
-      return data as Nonprofit;
+      return (await withNonprofitPrivateOne(data)) as Nonprofit;
     },
     enabled: !!profile?.nonprofit_id,
   });

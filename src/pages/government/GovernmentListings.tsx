@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { ORG_PUBLIC_COLUMNS, withOrgPrivateOne } from "@/lib/privateFields";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,8 +12,8 @@ export default function GovernmentListings() {
   const { data: myOrg } = useQuery({
     queryKey: ["my-gov-org", profile?.organization_id],
     queryFn: async () => {
-      const { data } = await supabase.from("organizations").select("*").eq("id", profile!.organization_id!).single();
-      return data as Organization & { government_regions?: any };
+      const { data } = await supabase.from("organizations").select(ORG_PUBLIC_COLUMNS).eq("id", profile!.organization_id!).single();
+      return (await withOrgPrivateOne(data)) as Organization & { government_regions?: any };
     },
     enabled: !!profile?.organization_id,
   });

@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { ORG_PUBLIC_COLUMNS, withOrgPrivate } from "@/lib/privateFields";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -26,9 +27,9 @@ export default function Marketplace() {
     queryKey: ["marketplace-orgs", orgIds],
     queryFn: async () => {
       if (!orgIds.length) return [];
-      const { data, error } = await supabase.from("organizations").select("*").in("id", orgIds);
+      const { data, error } = await supabase.from("organizations").select(ORG_PUBLIC_COLUMNS).in("id", orgIds);
       if (error) throw error;
-      return data as Organization[];
+      return (await withOrgPrivate(data)) as Organization[];
     },
     enabled: orgIds.length > 0,
   });

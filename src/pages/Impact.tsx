@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { ORG_PUBLIC_COLUMNS, NONPROFIT_PUBLIC_COLUMNS, withOrgPrivate, withNonprofitPrivate } from "@/lib/privateFields";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Leaf, Trophy, Droplets, TreeDeciduous, Car, Trash2 } from "lucide-react";
@@ -27,12 +28,12 @@ export default function Impact() {
 
   const { data: orgs = [] } = useQuery({
     queryKey: ["organizations"],
-    queryFn: async () => { const { data } = await supabase.from("organizations").select("*"); return (data || []) as Organization[]; },
+    queryFn: async () => { const { data } = await supabase.from("organizations").select(ORG_PUBLIC_COLUMNS); return (await withOrgPrivate(data)) as Organization[]; },
   });
 
   const { data: nonprofits = [] } = useQuery({
     queryKey: ["nonprofits"],
-    queryFn: async () => { const { data } = await supabase.from("nonprofits").select("*"); return (data || []) as Nonprofit[]; },
+    queryFn: async () => { const { data } = await supabase.from("nonprofits").select(NONPROFIT_PUBLIC_COLUMNS); return (await withNonprofitPrivate(data)) as Nonprofit[]; },
   });
 
   const { data: locs = [] } = useQuery({

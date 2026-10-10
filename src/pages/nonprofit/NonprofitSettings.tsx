@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { NONPROFIT_PUBLIC_COLUMNS, withNonprofitPrivateOne } from "@/lib/privateFields";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { validatePassword } from "@/lib/validatePassword";
 import { useAuth } from "@/contexts/AuthContext";
@@ -31,9 +32,9 @@ export default function NonprofitSettings() {
   const { data: nonprofit } = useQuery({
     queryKey: ["my-nonprofit", profile?.nonprofit_id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("nonprofits").select("*").eq("id", profile!.nonprofit_id!).single();
+      const { data, error } = await supabase.from("nonprofits").select(NONPROFIT_PUBLIC_COLUMNS).eq("id", profile!.nonprofit_id!).single();
       if (error) throw error;
-      return data as Nonprofit & { logo_url: string | null };
+      return (await withNonprofitPrivateOne(data)) as Nonprofit & { logo_url: string | null };
     },
     enabled: !!profile?.nonprofit_id,
   });

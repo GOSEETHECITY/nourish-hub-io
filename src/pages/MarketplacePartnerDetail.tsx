@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { ORG_PUBLIC_COLUMNS, withOrgPrivateOne } from "@/lib/privateFields";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, AlertTriangle, Mail } from "lucide-react";
@@ -17,7 +18,7 @@ export default function MarketplacePartnerDetail() {
 
   const { data: org } = useQuery({
     queryKey: ["mp-org", orgId],
-    queryFn: async () => { const { data } = await supabase.from("organizations").select("*").eq("id", orgId!).single(); return data as Organization; },
+    queryFn: async () => { const { data } = await supabase.from("organizations").select(ORG_PUBLIC_COLUMNS).eq("id", orgId!).single(); return (await withOrgPrivateOne(data)) as Organization; },
     enabled: !!orgId,
   });
 
