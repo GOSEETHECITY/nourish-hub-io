@@ -815,6 +815,7 @@ export type Database = {
           event_date: string | null
           external_link: string | null
           flyer_url: string | null
+          freebee_eligible: boolean
           id: string
           image_url: string | null
           import_batch_id: string | null
@@ -844,6 +845,7 @@ export type Database = {
           event_date?: string | null
           external_link?: string | null
           flyer_url?: string | null
+          freebee_eligible?: boolean
           id?: string
           image_url?: string | null
           import_batch_id?: string | null
@@ -873,6 +875,7 @@ export type Database = {
           event_date?: string | null
           external_link?: string | null
           flyer_url?: string | null
+          freebee_eligible?: boolean
           id?: string
           image_url?: string | null
           import_batch_id?: string | null
