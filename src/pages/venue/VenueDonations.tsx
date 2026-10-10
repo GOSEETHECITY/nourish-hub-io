@@ -207,9 +207,19 @@ export default function VenueDonations() {
       const uniqueTypes = Array.from(new Set(validItems.map((li) => li.food_type)));
       const finalFoodType: FoodType = uniqueTypes.length > 1 ? ("mixed" as FoodType) : uniqueTypes[0];
 
-      const flashPriceCents = isFlash && !form.is_free_to_public && form.flash_price
-        ? Math.round(Number(form.flash_price) * 100)
-        : (isFlash && form.is_free_to_public ? 0 : null);
+      if (form.pickup_window_start && form.pickup_window_end
+        && new Date(form.pickup_window_end).getTime() <= new Date(form.pickup_window_start).getTime()) {
+        throw new Error("Pickup end time must be after the pickup start time");
+      }
+
+      let flashPriceCents: number | null = isFlash && form.is_free_to_public ? 0 : null;
+      if (isFlash && !form.is_free_to_public) {
+        const price = Number(form.flash_price);
+        if (!form.flash_price || !Number.isFinite(price) || price <= 0) {
+          throw new Error("Enter a valid rescue price greater than $0");
+        }
+        flashPriceCents = Math.round(price * 100);
+      }
 
       setUploading(true);
       // Upload photos first — we don't have listing id yet, so use a temp folder
@@ -249,7 +259,11 @@ export default function VenueDonations() {
           unit_value: Number(li.unit_value),
         }));
         const { error: liErr } = await supabase.from("donation_line_items").insert(rows);
-        if (liErr) throw liErr;
+        if (liErr) {
+          // Roll back so a listing is never left without its items.
+          await supabase.from("food_listings").delete().eq("id", inserted.id);
+          throw new Error(`Could not save donation items, so the donation was not posted: ${liErr.message}`);
+        }
       }
     },
     onSuccess: () => {

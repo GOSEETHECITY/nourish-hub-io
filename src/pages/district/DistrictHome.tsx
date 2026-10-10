@@ -20,6 +20,9 @@ export default function DistrictHome() {
 
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto">
+      <div role="status" className="rounded-xl border border-border bg-muted px-4 py-3 text-sm text-foreground">
+        <span className="font-semibold">Demo data.</span> This dashboard shows sample figures for illustration only. They are not real district results.
+      </div>
       {/* Header */}
       <Card className="p-5 md:p-6 rounded-2xl border-0 shadow-sm bg-card">
         <div className="flex items-center gap-4 flex-wrap">

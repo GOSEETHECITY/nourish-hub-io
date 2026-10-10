@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Heart, Leaf, Minus, Plus } from "lucide-react";
+import { ArrowLeft, Leaf, Minus, Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useConsumerCart } from "@/contexts/ConsumerCartContext";
 import ConsumerMobileLayout from "@/components/consumer/ConsumerMobileLayout";
@@ -44,9 +44,6 @@ const ConsumerCouponDetail = () => {
         <button onClick={() => navigate(-1)} className="absolute top-4 left-4 w-9 h-9 rounded-full bg-white/80 flex items-center justify-center">
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <button className="absolute top-4 right-4 w-9 h-9 rounded-full bg-white/80 flex items-center justify-center">
-          <Heart className="w-5 h-5 text-gray-400" />
-        </button>
       </div>
       <div className="px-4 pt-4 pb-24">
         <h1 className="text-xl font-bold text-[#1B2A4A]">{coupon.title}</h1>
@@ -75,9 +72,6 @@ const ConsumerCouponDetail = () => {
         <button onClick={handleBuy}
           className="w-full py-3 rounded-full bg-[#F97316] text-white font-bold text-lg shadow-lg hover:bg-[#EA6C10] transition-colors mt-6">
           Buy Now
-        </button>
-        <button className="w-full py-3 rounded-full border-2 border-[#F97316] text-[#F97316] font-bold text-lg mt-3">
-          Claim Deal
         </button>
       </div>
     </ConsumerMobileLayout>
