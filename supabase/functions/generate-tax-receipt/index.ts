@@ -71,11 +71,7 @@ Deno.serve(async (req) => {
     const { data: npVerify } = await admin.from("nonprofits")
       .select("ein, is_verified").eq("id", listing.nonprofit_claimed_id).maybeSingle();
     const einDigits = String(npVerify?.ein ?? "").replace(/\D/g, "");
-    let exemptVerified = false;
-    if (npVerify?.is_verified === true && einDigits.length === 9) {
-      const { data: pub78 } = await admin.from("irs_pub78_orgs").select("ein").eq("ein", einDigits).maybeSingle();
-      exemptVerified = !!pub78;
-    }
+    const exemptVerified = npVerify?.is_verified === true && einDigits.length === 9;
     if (!exemptVerified) {
       return json({
         error: "not_verified",
