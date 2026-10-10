@@ -3140,6 +3140,7 @@ export type Database = {
         Args: { p_body: Json; p_trigger: string }
         Returns: undefined
       }
+      ensure_own_referral_code: { Args: never; Returns: string }
       expire_pending_orders: { Args: never; Returns: number }
       gen_pickup_code: { Args: never; Returns: string }
       gen_referral_code: { Args: never; Returns: string }

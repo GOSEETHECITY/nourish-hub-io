@@ -16,6 +16,9 @@ const BADGE_CATALOG: { key: string; name: string; icon: string }[] = [
   { key: "checkins_10", name: "City Regular", icon: "🏆" },
   { key: "first_referral", name: "First friend referred", icon: "🎁" },
   { key: "first_order", name: "First rescue order", icon: "🥡" },
+  { key: "freebee_rider", name: "Freebee Rider", icon: "🛺" },
+  { key: "early_bird", name: "Early Bird", icon: "🐦" },
+  { key: "three_new_favorites", name: "Three New Favorites", icon: "⭐" },
 ];
 
 const ConsumerProfile = () => {
