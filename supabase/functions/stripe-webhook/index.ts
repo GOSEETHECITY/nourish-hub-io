@@ -60,6 +60,23 @@ Deno.serve(async (req) => {
         }
         const payout = amountTotal - appFee;
 
+        // No one is ever charged without getting their order: refund in full and tell them.
+        const refundAndNotify = async (reason: string) => {
+          if (pi) {
+            await stripe.refunds.create({ payment_intent: pi, reverse_transfer: true, refund_application_fee: true });
+          }
+          if (meta.user_id) {
+            await admin.from("notifications").insert({
+              user_id: meta.user_id,
+              type: "order_refunded",
+              title: "Your payment was refunded",
+              body: "Sorry! Your items were snapped up before your payment finished, so we've refunded you in full. It may take a few days to show on your statement.",
+              link_path: "/app/orders",
+              metadata: { payment_intent: pi, reason },
+            });
+          }
+        };
+
         if (meta.kind === "coupon" && meta.coupon_id && meta.user_id) {
           const { data: consumer } = await admin.from("consumers").select("id").eq("user_id", meta.user_id).maybeSingle();
           const { data: coupon } = await admin.from("coupons").select("organization_id, price").eq("id", meta.coupon_id).single();
@@ -70,7 +87,8 @@ Deno.serve(async (req) => {
           const { data: ok, error: incErr } = await admin.rpc("increment_coupon_sold", { p_coupon_id: meta.coupon_id, p_qty: qty });
           const oversold = !!incErr || ok !== true;
           if (oversold) {
-            console.error("OVERSOLD coupon — order flagged for manual review", { coupon_id: meta.coupon_id, qty, pi, incErr });
+            console.error("Coupon sold out before payment completed — refunding", { coupon_id: meta.coupon_id, qty, pi, incErr });
+            await refundAndNotify("sold_out");
           }
           await admin.from("consumer_orders").insert({
             consumer_id: consumer?.id,
@@ -80,7 +98,9 @@ Deno.serve(async (req) => {
             unit_price: Number(coupon.price),
             tax_amount: 0,
             total_price: amountTotal / 100,
-            status: oversold ? "needs_review" : "paid",
+            status: oversold ? "refunded" : "paid",
+            refunded_at: oversold ? new Date().toISOString() : null,
+            refund_reason: oversold ? "Sold out before payment completed" : null,
             application_fee_cents: appFee,
             venue_payout_cents: payout,
             stripe_payment_intent_id: pi,
@@ -90,15 +110,18 @@ Deno.serve(async (req) => {
           const { data: listing } = await admin.from("food_listings")
             .select("pickup_window_end, organization_id").eq("id", meta.flash_listing_id).single();
           if (consumer?.id && listing) {
+            const paidFields = {
+              stripe_payment_intent_id: pi,
+              amount_paid_cents: amountTotal,
+              application_fee_cents: appFee,
+              // Paid: hold until the pickup window closes, not the 5-minute checkout hold.
+              expires_at: listing.pickup_window_end,
+            };
             // Confirm the reservation created at checkout instead of inserting a new one.
             let confirmed = false;
             if (meta.reservation_id) {
               const { data: upd } = await admin.from("flash_reservations")
-                .update({
-                  stripe_payment_intent_id: pi,
-                  amount_paid_cents: amountTotal,
-                  application_fee_cents: appFee,
-                })
+                .update(paidFields)
                 .eq("id", meta.reservation_id)
                 .eq("consumer_id", consumer.id)
                 .eq("food_listing_id", meta.flash_listing_id)
@@ -106,9 +129,18 @@ Deno.serve(async (req) => {
                 .select("id");
               confirmed = (upd?.length ?? 0) > 0;
             }
-            if (!confirmed) {
-              console.error("Flash reservation missing or no longer active — order flagged for manual review", { reservation_id: meta.reservation_id, pi });
+            // Late payment: the hold expired. Restore it if nobody else took the listing.
+            if (!confirmed && new Date(listing.pickup_window_end) > new Date()) {
+              const { error: insErr } = await admin.from("flash_reservations").insert({
+                food_listing_id: meta.flash_listing_id,
+                consumer_id: consumer.id,
+                status: "reserved",
+                ...paidFields,
+              });
+              confirmed = !insErr;
+              if (insErr) console.log("Late flash payment could not be restored", { pi, insErr });
             }
+            if (!confirmed) await refundAndNotify("released");
             await admin.from("consumer_orders").insert({
               consumer_id: consumer.id,
               food_listing_id: meta.flash_listing_id,
@@ -117,7 +149,9 @@ Deno.serve(async (req) => {
               unit_price: amountTotal / 100,
               tax_amount: 0,
               total_price: amountTotal / 100,
-              status: confirmed ? "paid" : "needs_review",
+              status: confirmed ? "paid" : "refunded",
+              refunded_at: confirmed ? null : new Date().toISOString(),
+              refund_reason: confirmed ? null : "Released before payment completed",
               application_fee_cents: appFee,
               venue_payout_cents: payout,
               stripe_payment_intent_id: pi,

@@ -121,12 +121,19 @@ Deno.serve(async (req) => {
       }
       reservationId = resId as string;
       metadata.reservation_id = reservationId;
+      // Unpaid checkout holds last 5 minutes (or until the window closes, if sooner).
+      const { data: lst } = await admin.from("food_listings").select("pickup_window_end").eq("id", parsed.data.flash_listing_id).single();
+      const holdEnd = Math.min(Date.now() + 5 * 60 * 1000, new Date(lst!.pickup_window_end).getTime());
+      await admin.from("flash_reservations").update({ expires_at: new Date(holdEnd).toISOString() })
+        .eq("id", reservationId).eq("status", "reserved");
     }
 
     let session;
     try {
       session = await stripe.checkout.sessions.create({
         mode: "payment",
+        // Stripe's shortest allowed session is 30 minutes; late payments are handled in the webhook.
+        expires_at: Math.floor(Date.now() / 1000) + 30 * 60 + 60,
         customer_email: consumer.email ?? undefined,
         line_items: [{
           price_data: {

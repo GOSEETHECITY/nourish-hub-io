@@ -4,7 +4,8 @@ import { useConsumerCart } from "@/contexts/ConsumerCartContext";
 import { useConsumerAuth } from "@/contexts/ConsumerAuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import ConsumerMobileLayout from "@/components/consumer/ConsumerMobileLayout";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import CheckoutCountdown, { startCheckoutHold } from "@/components/consumer/CheckoutCountdown";
 
 const TAX_RATE = 0.065;
 
@@ -14,6 +15,13 @@ const ConsumerCart = () => {
   const { consumer } = useConsumerAuth();
   const [ordering, setOrdering] = useState(false);
   const [orderError, setOrderError] = useState<string | null>(null);
+  const [holdActive, setHoldActive] = useState(() => !!localStorage.getItem("gstc_checkout_hold"));
+  const [justStarted, setJustStarted] = useState(false);
+  useEffect(() => {
+    const sync = () => setHoldActive(!!localStorage.getItem("gstc_checkout_hold"));
+    window.addEventListener("gstc-hold", sync);
+    return () => window.removeEventListener("gstc-hold", sync);
+  }, []);
 
   const tax = subtotal * TAX_RATE;
   const total = subtotal + tax;
@@ -25,7 +33,7 @@ const ConsumerCart = () => {
     // RPC. The client cannot manipulate unit_price, tax, or total.
     // All items are created in one database transaction: all succeed or none do.
     setOrderError(null);
-    const { error } = await supabase.rpc("create_consumer_orders" as any, {
+    const { data, error } = await supabase.rpc("create_consumer_orders" as any, {
       p_items: items.map((i) => ({ coupon_id: i.coupon_id, quantity: i.quantity })),
     });
     if (error) {
@@ -33,9 +41,10 @@ const ConsumerCart = () => {
       setOrdering(false);
       return;
     }
-    clearCart();
+    // Start the 5-minute hold; items stay in the cart so the shopper can retry if it runs out.
+    startCheckoutHold((data as string[] | null) ?? []);
+    setJustStarted(true);
     setOrdering(false);
-    navigate("/app/orders");
   };
 
   return (
@@ -49,6 +58,7 @@ const ConsumerCart = () => {
           <p className="text-center text-gray-400 py-12">Your cart is empty</p>
         ) : (
           <>
+            <CheckoutCountdown justStarted={justStarted} />
             {items.map((item) => (
               <div key={item.id} className="flex items-center gap-3 py-3 border-b border-gray-100">
                 <div className="w-16 h-16 rounded-lg bg-gray-200 overflow-hidden flex-shrink-0">
@@ -82,10 +92,17 @@ const ConsumerCart = () => {
             {orderError && (
               <p role="alert" className="mt-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm p-3">{orderError}</p>
             )}
+            {holdActive ? (
+              <button onClick={() => { clearCart(); navigate("/app/orders"); }}
+                className="w-full py-3 rounded-full bg-[#F97316] text-white font-bold text-lg shadow-lg hover:bg-[#EA6C10] transition-colors mt-4">
+                View my orders
+              </button>
+            ) : (
             <button onClick={handleBuy} disabled={ordering}
               className="w-full py-3 rounded-full bg-[#F97316] text-white font-bold text-lg shadow-lg hover:bg-[#EA6C10] disabled:opacity-50 transition-colors mt-4">
               {ordering ? "Processing..." : "Buy Now"}
             </button>
+            )}
           </>
         )}
       </div>

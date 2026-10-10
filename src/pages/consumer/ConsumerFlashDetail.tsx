@@ -4,6 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useConsumerAuth } from "@/contexts/ConsumerAuthContext";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type Listing = {
   id: string;
@@ -94,8 +98,11 @@ export default function ConsumerFlashDetail() {
     } finally { setBusy(false); }
   }
 
+  const [holdNotice, setHoldNotice] = useState(false);
+
   async function reservePaid() {
     if (!listing) return;
+    setHoldNotice(false);
     setBusy(true);
     try {
       const { data, error } = await supabase.functions.invoke("stripe-checkout", {
@@ -138,10 +145,27 @@ export default function ConsumerFlashDetail() {
       <Button
         className="w-full mt-6 h-14 text-lg bg-orange-500 hover:bg-orange-600 text-white"
         disabled={busy || reservedByMe}
-        onClick={isFree ? reserveFree : reservePaid}
+        onClick={isFree ? reserveFree : () => setHoldNotice(true)}
       >
         {reservedByMe ? "You reserved this" : busy ? "Working…" : isFree ? "Reserve free pickup" : `Pay & reserve`}
       </Button>
+
+      <AlertDialog open={holdNotice} onOpenChange={setHoldNotice}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>We'll hold this for you!</AlertDialogTitle>
+            <AlertDialogDescription>
+              Once you start checkout, this rescue is saved just for you for 5 minutes. If payment isn't completed
+              in time, it goes back up for grabs. If your payment finishes after that and it's already gone,
+              you'll get a full refund automatically.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Not yet</AlertDialogCancel>
+            <AlertDialogAction className="bg-orange-500 hover:bg-orange-600" onClick={reservePaid}>Continue to payment</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <p className="mt-4 text-xs text-white/60">
         First-come, first-served. If you don't confirm pickup before the window closes, the reservation is released

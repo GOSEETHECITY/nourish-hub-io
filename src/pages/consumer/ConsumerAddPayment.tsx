@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
 import ConsumerMobileLayout from "@/components/consumer/ConsumerMobileLayout";
+import CheckoutCountdown from "@/components/consumer/CheckoutCountdown";
 
 // Payments are not yet wired to a PCI-compliant processor.
 // Collecting raw PAN / CCV in HTML inputs is a PCI DSS violation, so this
@@ -18,6 +19,7 @@ const ConsumerAddPayment = () => {
         <h1 className="text-lg font-bold text-[#1B2A4A]">Add Payment</h1>
       </header>
       <div className="px-6 pb-8">
+        <CheckoutCountdown />
         <div className="rounded-2xl border border-gray-200 bg-white p-6 text-center">
           <ShieldCheck className="w-10 h-10 text-[#F97316] mx-auto mb-3" />
           <p className="font-semibold text-[#1B2A4A] mb-1">Payments coming soon</p>

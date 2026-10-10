@@ -3293,6 +3293,7 @@ export type Database = {
         Args: { p_reason?: string; p_reservation_id: string }
         Returns: undefined
       }
+      release_own_pending_orders: { Args: { p_ids: string[] }; Returns: number }
       reserve_flash_listing: { Args: { p_listing_id: string }; Returns: string }
       reserved_flash_listing_ids: {
         Args: { p_ids: string[] }
