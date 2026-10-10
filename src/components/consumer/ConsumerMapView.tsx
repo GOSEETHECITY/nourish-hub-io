@@ -3,6 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import Map, { Marker, Popup, NavigationControl } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { getMapStyle } from "@/lib/mapConfig";
+import FreebeeBadge from "@/components/consumer/FreebeeBadge";
 
 interface MapLocation {
   id: string;
@@ -11,6 +12,7 @@ interface MapLocation {
   lng: number;
   type: "restaurant" | "event" | "flash";
   subtitle?: string;
+  freebee?: boolean;
 }
 
 interface MapViewProps {
@@ -118,6 +120,9 @@ function ConsumerMap({ center, markers, onMarkerClick }: MapViewProps) {
             <div className="text-center min-w-[140px]">
               <p className="font-semibold text-sm">{selected.name}</p>
               <p className="text-xs text-gray-500">{selected.subtitle ?? labelFor(selected.type)}</p>
+              {selected.type === "event" && selected.freebee && (
+                <div className="mt-1.5"><FreebeeBadge /></div>
+              )}
               <button
                 onClick={() => onMarkerClick(selected.id)}
                 className={`mt-2 px-3 py-1 text-white rounded-full text-xs font-semibold ${btnClassFor(selected.type)}`}

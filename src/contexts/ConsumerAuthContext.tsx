@@ -26,6 +26,7 @@ interface ConsumerAuthContextType {
   loading: boolean;
   signOut: () => Promise<void>;
   refreshConsumer: () => Promise<void>;
+  consumerError: string | null;
 }
 
 const ConsumerAuthContext = createContext<ConsumerAuthContextType>({
@@ -35,6 +36,7 @@ const ConsumerAuthContext = createContext<ConsumerAuthContextType>({
   loading: true,
   signOut: async () => {},
   refreshConsumer: async () => {},
+  consumerError: null,
 });
 
 export const useConsumerAuth = () => useContext(ConsumerAuthContext);
@@ -44,6 +46,8 @@ export const ConsumerAuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [consumer, setConsumer] = useState<Consumer | null>(null);
   const [loading, setLoading] = useState(true);
+  const [consumerError, setConsumerError] = useState<string | null>(null);
+  const [retrying, setRetrying] = useState(false);
 
   const fetchProfileFallback = async (authUser: User) => {
     const userMeta = authUser.user_metadata ?? {};
@@ -71,6 +75,7 @@ export const ConsumerAuthProvider = ({ children }: { children: ReactNode }) => {
         .eq("user_id", userId)
         .maybeSingle();
       if (data) {
+        setConsumerError(null);
         const nextConsumer = {
           ...(data as Consumer),
           first_name: data.first_name || fallbackFields?.first_name || "",
@@ -87,21 +92,9 @@ export const ConsumerAuthProvider = ({ children }: { children: ReactNode }) => {
       await new Promise((r) => setTimeout(r, 1000));
     }
 
-    if (authUser?.id === userId) {
-      const fallbackConsumer: Consumer = {
-        id: `fallback-${authUser.id}`,
-        user_id: authUser.id,
-        first_name: fallbackFields?.first_name || "",
-        last_name: fallbackFields?.last_name || "",
-        email: fallbackFields?.email || authUser.email || "",
-        phone: fallbackFields?.phone,
-        money_saved: 0,
-        pounds_rescued: 0,
-      };
-      setConsumer(fallbackConsumer);
-      return fallbackConsumer;
-    }
-
+    // Never fabricate a consumer id — surface the failure with a retry option.
+    setConsumer(null);
+    setConsumerError("We couldn't load your account. Please check your connection and try again.");
     return null;
   };
 
@@ -119,6 +112,7 @@ export const ConsumerAuthProvider = ({ children }: { children: ReactNode }) => {
         void fetchConsumer(nextSession.user.id, nextSession.user);
       } else {
         setConsumer(null);
+        setConsumerError(null);
       }
     };
 
@@ -140,11 +134,28 @@ export const ConsumerAuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
     setSession(null);
     setConsumer(null);
+    setConsumerError(null);
+  };
+
+  const retry = async () => {
+    if (!user) return;
+    setRetrying(true);
+    setConsumerError(null);
+    await fetchConsumer(user.id, user);
+    setRetrying(false);
   };
 
   return (
-    <ConsumerAuthContext.Provider value={{ user, session, consumer, loading, signOut, refreshConsumer }}>
+    <ConsumerAuthContext.Provider value={{ user, session, consumer, loading, signOut, refreshConsumer, consumerError }}>
       {children}
+      {consumerError && user && (
+        <div role="alert" className="fixed bottom-4 left-4 right-4 z-[100] mx-auto max-w-md rounded-2xl bg-white border border-red-200 shadow-lg p-4 flex items-center gap-3">
+          <p className="text-sm text-[#1B2A4A] flex-1">{consumerError}</p>
+          <button onClick={retry} disabled={retrying} className="px-4 py-2 rounded-full bg-[#F97316] text-white text-sm font-bold disabled:opacity-50">
+            {retrying ? "Retrying..." : "Retry"}
+          </button>
+        </div>
+      )}
     </ConsumerAuthContext.Provider>
   );
 };

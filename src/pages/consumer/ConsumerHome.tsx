@@ -14,6 +14,14 @@ interface MapLocation {
   lng: number;
   type: "restaurant" | "event" | "flash";
   subtitle?: string;
+  freebee?: boolean;
+}
+
+// Flash listings already held by someone are hidden from the map.
+async function reservedFlashIds(ids: string[]): Promise<Set<string>> {
+  if (!ids.length) return new Set();
+  const { data } = await supabase.rpc("reserved_flash_listing_ids" as any, { p_ids: ids });
+  return new Set(((data as any[]) || []).map((r: any) => (typeof r === "string" ? r : r.reserved_flash_listing_ids)));
 }
 
 // Nominatim usage policy: identify the app and cache results to limit requests.
@@ -128,7 +136,7 @@ const ConsumerHome = () => {
         const today = new Date().toISOString().split("T")[0];
         const { data: events } = await supabase
           .from("events")
-          .select("id, title, latitude, longitude")
+          .select("id, title, latitude, longitude, freebee_eligible")
           .eq("status", "published")
           .gte("event_date", today)
           .eq("city", city)
@@ -142,6 +150,7 @@ const ConsumerHome = () => {
             lat: ev.latitude,
             lng: ev.longitude,
             type: "event" as const,
+            freebee: !!ev.freebee_eligible,
           }));
 
         // Flash rescue listings: active window, in this city.
@@ -159,8 +168,9 @@ const ConsumerHome = () => {
             .eq("is_flash", true)
             .in("location_id", cityLocIds)
             .gt("pickup_window_end", new Date().toISOString());
+          const held = await reservedFlashIds((flash || []).map((f: any) => f.id));
           flashMarkers = (flash || [])
-            .filter((f: any) => f.latitude != null && f.longitude != null)
+            .filter((f: any) => f.latitude != null && f.longitude != null && !held.has(f.id))
             .map((f: any) => {
               const price = Number(f.flash_price_cents ?? 0);
               const isFree = f.is_free_to_public || price === 0;
@@ -211,10 +221,11 @@ const ConsumerHome = () => {
             .eq("is_flash", true)
             .in("location_id", ids)
             .gt("pickup_window_end", new Date().toISOString());
+          const held = await reservedFlashIds((flash || []).map((f: any) => f.id));
           setMarkers((prev) => {
             const nonFlash = prev.filter((m) => m.type !== "flash");
             const flashMarkers: MapLocation[] = (flash || [])
-              .filter((f: any) => f.latitude != null && f.longitude != null)
+              .filter((f: any) => f.latitude != null && f.longitude != null && !held.has(f.id))
               .map((f: any) => {
                 const price = Number(f.flash_price_cents ?? 0);
                 const isFree = f.is_free_to_public || price === 0;
