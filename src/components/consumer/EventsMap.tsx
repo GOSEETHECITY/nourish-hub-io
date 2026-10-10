@@ -69,10 +69,12 @@ function EventsMapInner({
       }}
       style={{ width: "100%", height: "100%" }}
       mapStyle={style}
+      attributionControl={false}
       scrollZoom={false}
       onError={(e) => console.error("Events map error:", e?.error?.message || e)}
     >
       <NavigationControl showCompass={false} position="top-right" />
+      <MapCredit />
       {geocoded.map((g) => (
         <Marker
           key={g.event.id}
