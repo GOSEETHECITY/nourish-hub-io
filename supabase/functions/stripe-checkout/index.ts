@@ -57,14 +57,21 @@ Deno.serve(async (req) => {
     if (parsed.data.kind === "coupon") {
       if (!parsed.data.coupon_id || !parsed.data.quantity) throw new Error("Missing coupon fields");
       const { data: coupon } = await admin.from("coupons")
-        .select("id, title, price, organization_id, status")
+        .select("id, title, price, organization_id, status, quantity_remaining")
         .eq("id", parsed.data.coupon_id).single();
       if (coupon.status !== "active") throw new Error("Coupon inactive");
+      const remaining = Number(coupon.quantity_remaining ?? 0);
+      if (remaining < parsed.data.quantity) {
+        throw new Error(remaining <= 0
+          ? "This deal is sold out"
+          : `Only ${remaining} left. Please reduce your quantity.`);
+      }
       unitAmount = Math.round(Number(coupon.price) * 100);
       quantity = parsed.data.quantity;
       orgId = coupon.organization_id;
       title = coupon.title;
       metadata.coupon_id = coupon.id;
+      metadata.quantity = String(quantity);
     } else {
       if (!parsed.data.flash_listing_id) throw new Error("Missing flash_listing_id");
       const { data: listing } = await admin.from("food_listings")
@@ -100,26 +107,53 @@ Deno.serve(async (req) => {
       throw new Error("Venue has not completed Stripe onboarding");
     }
 
-    const session = await stripe.checkout.sessions.create({
-      mode: "payment",
-      customer_email: consumer.email ?? undefined,
-      line_items: [{
-        price_data: {
-          currency: "usd",
-          product_data: { name: title },
-          unit_amount: unitAmount,
+    // Paid flash: atomically reserve for this user BEFORE any payment is created.
+    let reservationId: string | null = null;
+    if (parsed.data.kind === "flash") {
+      const { data: resId, error: resErr } = await supabase.rpc("reserve_flash_listing", { p_listing_id: parsed.data.flash_listing_id });
+      if (resErr) {
+        if (/already reserved/i.test(resErr.message ?? "")) {
+          return new Response(JSON.stringify({ error: "This flash listing has already been claimed" }), {
+            status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        throw resErr;
+      }
+      reservationId = resId as string;
+      metadata.reservation_id = reservationId;
+    }
+
+    let session;
+    try {
+      session = await stripe.checkout.sessions.create({
+        mode: "payment",
+        customer_email: consumer.email ?? undefined,
+        line_items: [{
+          price_data: {
+            currency: "usd",
+            product_data: { name: title },
+            unit_amount: unitAmount,
+          },
+          quantity,
+        }],
+        payment_intent_data: {
+          application_fee_amount: appFee,
+          transfer_data: { destination: org.stripe_account_id },
+          metadata,
         },
-        quantity,
-      }],
-      payment_intent_data: {
-        application_fee_amount: appFee,
-        transfer_data: { destination: org.stripe_account_id },
         metadata,
-      },
-      metadata,
-      success_url: `${origin}/app/orders?session={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/app/marketplace?cancelled=1`,
-    });
+        success_url: `${origin}/app/orders?session={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${origin}/app/marketplace?cancelled=1`,
+      });
+    } catch (stripeErr) {
+      // Release the hold so the listing isn't stuck if Stripe fails.
+      if (reservationId) {
+        await admin.from("flash_reservations")
+          .update({ status: "released", released_at: new Date().toISOString() })
+          .eq("id", reservationId).eq("status", "reserved");
+      }
+      throw stripeErr;
+    }
 
     return new Response(JSON.stringify({ url: session.url, id: session.id }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

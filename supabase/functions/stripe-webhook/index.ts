@@ -51,7 +51,15 @@ Deno.serve(async (req) => {
         if (meta.kind === "coupon" && meta.coupon_id && meta.user_id) {
           const { data: consumer } = await admin.from("consumers").select("id").eq("user_id", meta.user_id).maybeSingle();
           const { data: coupon } = await admin.from("coupons").select("organization_id, price").eq("id", meta.coupon_id).single();
-          const qty = Math.max(1, Math.round(amountTotal / Math.max(1, Math.round(Number(coupon.price) * 100))));
+          const qty = Number(meta.quantity) > 0
+            ? Number(meta.quantity)
+            : Math.max(1, Math.round(amountTotal / Math.max(1, Math.round(Number(coupon.price) * 100))));
+          // Atomically decrement inventory; refuses if it would oversell.
+          const { data: ok, error: incErr } = await admin.rpc("increment_coupon_sold", { p_coupon_id: meta.coupon_id, p_qty: qty });
+          const oversold = !!incErr || ok !== true;
+          if (oversold) {
+            console.error("OVERSOLD coupon — order flagged for manual review", { coupon_id: meta.coupon_id, qty, pi, incErr });
+          }
           await admin.from("consumer_orders").insert({
             consumer_id: consumer?.id,
             coupon_id: meta.coupon_id,
@@ -60,27 +68,35 @@ Deno.serve(async (req) => {
             unit_price: Number(coupon.price),
             tax_amount: 0,
             total_price: amountTotal / 100,
-            status: "paid",
+            status: oversold ? "needs_review" : "paid",
             application_fee_cents: appFee,
             venue_payout_cents: payout,
             stripe_payment_intent_id: pi,
           });
-          // decrement inventory
-          await admin.rpc("noop_stub", {}).then(() => {}, () => {});
         } else if (meta.kind === "flash" && meta.flash_listing_id && meta.user_id) {
           const { data: consumer } = await admin.from("consumers").select("id").eq("user_id", meta.user_id).maybeSingle();
-          // Reserve via RPC (SECURITY DEFINER) — call directly with service role bypassing auth check
           const { data: listing } = await admin.from("food_listings")
             .select("pickup_window_end, organization_id").eq("id", meta.flash_listing_id).single();
           if (consumer?.id && listing) {
-            await admin.from("flash_reservations").insert({
-              food_listing_id: meta.flash_listing_id,
-              consumer_id: consumer.id,
-              expires_at: listing.pickup_window_end,
-              stripe_payment_intent_id: pi,
-              amount_paid_cents: amountTotal,
-              application_fee_cents: appFee,
-            });
+            // Confirm the reservation created at checkout instead of inserting a new one.
+            let confirmed = false;
+            if (meta.reservation_id) {
+              const { data: upd } = await admin.from("flash_reservations")
+                .update({
+                  stripe_payment_intent_id: pi,
+                  amount_paid_cents: amountTotal,
+                  application_fee_cents: appFee,
+                })
+                .eq("id", meta.reservation_id)
+                .eq("consumer_id", consumer.id)
+                .eq("food_listing_id", meta.flash_listing_id)
+                .eq("status", "reserved")
+                .select("id");
+              confirmed = (upd?.length ?? 0) > 0;
+            }
+            if (!confirmed) {
+              console.error("Flash reservation missing or no longer active — order flagged for manual review", { reservation_id: meta.reservation_id, pi });
+            }
             await admin.from("consumer_orders").insert({
               consumer_id: consumer.id,
               food_listing_id: meta.flash_listing_id,
@@ -89,7 +105,7 @@ Deno.serve(async (req) => {
               unit_price: amountTotal / 100,
               tax_amount: 0,
               total_price: amountTotal / 100,
-              status: "paid",
+              status: confirmed ? "paid" : "needs_review",
               application_fee_cents: appFee,
               venue_payout_cents: payout,
               stripe_payment_intent_id: pi,
