@@ -23,6 +23,7 @@ interface SourcedEvent {
   photo_url: string | null;
   source_url: string;
   source: string;
+  title?: string;           // the source's own event title, used by the title filter
 }
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -34,6 +35,21 @@ const GOOGLE_PLACES_API_KEY = Deno.env.get("GOOGLE_PLACES_API_KEY");
 const admin = createClient(SUPABASE_URL, SERVICE_ROLE, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
+
+// --- Title filter + date window ---
+// Only events whose own title mentions one of these phrases are imported.
+const TITLE_PHRASES = ["grand opening", "grand openings", "launch", "launch party"];
+function titleMatches(...texts: (string | null | undefined)[]): boolean {
+  const hay = texts.filter(Boolean).join(" ").toLowerCase();
+  return TITLE_PHRASES.some((p) => hay.includes(p));
+}
+// Only keep events dated today through 90 days out (stops stale/past events).
+function inWindow(dateStr: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return false;
+  const today = new Date().toISOString().slice(0, 10);
+  const max = new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10);
+  return dateStr >= today && dateStr <= max;
+}
 
 // --- Category inference ---
 const KEYWORDS: Record<Category, string[]> = {
@@ -75,11 +91,11 @@ function parseUsAddress(address: string): { street: string; city: string; state:
 
 // --- Source: Eventbrite ---
 async function fetchEventbrite(): Promise<SourcedEvent[]> {
-  if (!EVENTBRITE_API_KEY) return [];
+  if (!EVENTBRITE_API_KEY) throw new Error("EVENTBRITE_API_KEY is not set, so Eventbrite was skipped");
   const url = new URL("https://www.eventbriteapi.com/v3/events/search/");
   url.searchParams.set("q", "grand opening");
   url.searchParams.set("expand", "venue");
-  url.searchParams.set("start_date.range_start", new Date().toISOString().slice(0, 19));
+  url.searchParams.set("start_date.range_start", new Date().toISOString().slice(0, 19) + "Z");
   const res = await fetch(url.toString(), {
     headers: { Authorization: `Bearer ${EVENTBRITE_API_KEY}` },
   });
@@ -104,6 +120,7 @@ async function fetchEventbrite(): Promise<SourcedEvent[]> {
       photo_url: e.logo?.url ?? null,
       source_url: e.url,
       source: "eventbrite",
+      title: name,
     } as SourcedEvent;
   }).filter((e) => e.event_date && e.city && e.state);
 }
@@ -163,10 +180,11 @@ async function fetchWebSearch(): Promise<SourcedEvent[]> {
   for (const { city, state } of TARGET_CITIES) {
     try {
       const prompt =
-        `Search the web for upcoming grand opening events in ${city}, ${state} within the next 60 days. ` +
+        `Today is ${today}. Search the web for upcoming grand opening or launch party events in ${city}, ${state} ` +
+        `dated between ${today} and 60 days from today. Never include events dated before ${today}. ` +
         `Queries to consider: "${city} grand opening events", "${city} new business opening", "grand opening near ${city}". ` +
         `Return ONLY a JSON array (no prose, no markdown fences) where each item has: ` +
-        `business_name, address, city, state, zip_code (nullable), event_date (YYYY-MM-DD), event_time (HH:MM or null), ` +
+        `event_title (the event's own published title), business_name, address, city, state, zip_code (nullable), event_date (YYYY-MM-DD), event_time (HH:MM or null), ` +
         `category (one of: restaurant, retail, fitness, entertainment, beauty, medical, other), description, source_url. ` +
         `Only include real, verifiable openings with a specific date. If nothing found, return [].`;
       const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -198,6 +216,7 @@ async function fetchWebSearch(): Promise<SourcedEvent[]> {
           photo_url: null,
           source_url: String(it.source_url ?? "https://hariet.ai"),
           source: "web_search",
+          title: String(it.event_title ?? ""),
         });
       }
     } catch (e) {
@@ -205,6 +224,80 @@ async function fetchWebSearch(): Promise<SourcedEvent[]> {
     }
   }
   return out;
+}
+
+// --- Source: WhatsOpening (whatsopening.com) ---
+// No public API or feed exists, so we read its sitemap and public listing pages
+// (robots.txt allows this). Each listing cites the original publisher; we keep it.
+const WO_UA = "HarietGrandOpeningBot/1.0 (+https://hariet.ai)";
+const MONTHS = ["january","february","march","april","may","june","july","august","september","october","november","december"];
+async function fetchWhatsOpening(): Promise<SourcedEvent[]> {
+  const idx = await fetch("https://www.whatsopening.com/sitemap.xml", { headers: { "User-Agent": WO_UA } });
+  if (!idx.ok) throw new Error(`WhatsOpening sitemap ${idx.status}`);
+  const maps = [...(await idx.text()).matchAll(/<loc>([^<]*\/openings\/\d+\.xml)<\/loc>/g)].map((m) => m[1]);
+  const since = Date.now() - 21 * 86400000;
+  const urls: string[] = [];
+  for (const m of maps) {
+    const r = await fetch(m, { headers: { "User-Agent": WO_UA } });
+    if (!r.ok) continue;
+    for (const e of (await r.text()).matchAll(/<loc>([^<]+)<\/loc>\s*<lastmod>([^<]+)<\/lastmod>/g)) {
+      if (new Date(e[2]).getTime() >= since) urls.push(e[1]);
+    }
+  }
+  const out: SourcedEvent[] = [];
+  const list = urls.slice(0, 400);
+  for (let i = 0; i < list.length; i += 8) {
+    const batch = await Promise.all(list.slice(i, i + 8).map(async (u) => {
+      try {
+        const r = await fetch(u, { headers: { "User-Agent": WO_UA } });
+        return r.ok ? { u, h: await r.text() } : null;
+      } catch { return null; }
+    }));
+    for (const b of batch) {
+      if (!b) continue;
+      const ev = parseWhatsOpening(b.u, b.h);
+      if (ev) out.push(ev);
+    }
+  }
+  return out;
+}
+function decode(s: string) {
+  return s.replace(/&amp;/g, "&").replace(/&#39;|&rsquo;|’/g, "'").replace(/&quot;/g, '"').replace(/\s+/g, " ").trim();
+}
+function parseWhatsOpening(url: string, html: string): SourcedEvent | null {
+  let biz: any = null;
+  for (const m of html.matchAll(/<script[^>]*ld\+json[^>]*>([\s\S]*?)<\/script>/g)) {
+    try { const j = JSON.parse(m[1]); if (j?.address && j?.name) { biz = j; break; } } catch { /* skip */ }
+  }
+  if (!biz) return null;
+  const desc: string = biz.description ?? "";
+  // Only upcoming openings with an exact day, e.g. "expected Thu, October 29, 2026".
+  const dm = desc.match(/opening soon[\s\S]*expected \w{3}, (\w+) (\d{1,2}), (\d{4})/i);
+  if (!dm) return null;
+  const mi = MONTHS.indexOf(dm[1].toLowerCase());
+  if (mi < 0) return null;
+  const date = `${dm[3]}-${String(mi + 1).padStart(2, "0")}-${dm[2].padStart(2, "0")}`;
+  // Original publisher attribution (first cited source).
+  const src = html.match(/class="source-item">[\s\S]*?class="pub">([^<]+)<[\s\S]*?class="hl">\s*<a[^>]*href="([^"]+)"[^>]*>([^<]+)<\/a>/);
+  const headlines = [...html.matchAll(/class="hl">\s*<a[^>]*>([^<]+)<\/a>/g)].map((m) => decode(m[1]));
+  const publisher = src ? decode(src[1]) : null;
+  const a = biz.address ?? {};
+  const name = decode(String(biz.name));
+  return {
+    business_name: name.slice(0, 200),
+    address: decode(a.streetAddress ?? ""),
+    city: decode(a.addressLocality ?? ""),
+    state: decode(a.addressRegion ?? ""),
+    zip_code: a.postalCode ?? null,
+    event_date: date,
+    event_time: null,
+    category: inferCategory(name, `${biz["@type"] ?? ""} ${desc}`),
+    description: decode(desc),
+    photo_url: null,
+    source_url: src ? src[2] : url,
+    source: publisher ? `whatsopening (original: ${publisher})`.slice(0, 200) : "whatsopening",
+    title: headlines.join(" | "),
+  };
 }
 
 // --- AI flyer generation ---
@@ -299,9 +392,10 @@ async function run() {
     eventbrite: fetchEventbrite,
     google_places: fetchGooglePlaces,
     web_search: fetchWebSearch,
+    whatsopening: fetchWhatsOpening,
   })) {
     try {
-      const items = await fn();
+      const items = (await fn()).filter((e) => titleMatches(e.title) && inWindow(e.event_date));
       breakdown.by_source[name] = items.length;
       sources.push(...items);
     } catch (e) {
