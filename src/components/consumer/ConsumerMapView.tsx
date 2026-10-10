@@ -1,9 +1,10 @@
-import { useMemo, useState, Component, ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, Component, ReactNode } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import Map, { Marker, Popup, NavigationControl } from "react-map-gl/maplibre";
+import Map, { Marker, Popup, NavigationControl, type MapRef } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { getMapStyle } from "@/lib/mapConfig";
 import FreebeeBadge from "@/components/consumer/FreebeeBadge";
+import MapCredit from "@/components/consumer/MapCredit";
 
 interface MapLocation {
   id: string;
@@ -70,10 +71,17 @@ class MapErrorBoundary extends Component<
 function ConsumerMap({ center, markers, onMarkerClick }: MapViewProps) {
   const [selected, setSelected] = useState<MapLocation | null>(null);
   const style = useMemo(() => getMapStyle(), []);
+  const mapRef = useRef<MapRef | null>(null);
+
+  // initialViewState is only read once; follow later city changes explicitly.
+  useEffect(() => {
+    mapRef.current?.jumpTo({ center: [center[1], center[0]] });
+  }, [center]);
 
   return (
     <div className="consumer-static-map h-full w-full overflow-hidden rounded-[28px] bg-muted">
       <Map
+        ref={mapRef}
         initialViewState={{
           latitude: center[0],
           longitude: center[1],
@@ -81,16 +89,18 @@ function ConsumerMap({ center, markers, onMarkerClick }: MapViewProps) {
         }}
         style={{ width: "100%", height: "100%" }}
         mapStyle={style}
-        dragPan={false}
-        scrollZoom={false}
-        doubleClickZoom={false}
-        touchZoomRotate={false}
+        attributionControl={false}
         dragRotate={false}
-        boxZoom={false}
-        keyboard={false}
+        touchPitch={false}
+        onLoad={(e) => {
+          // If the map was created before its box had a size, tiles never draw.
+          e.target.resize();
+          e.target.touchZoomRotate.disableRotation();
+        }}
         onError={(e) => console.error("Map error:", e?.error?.message || e)}
       >
         <NavigationControl showCompass={false} position="top-left" />
+        <MapCredit />
         {markers.map((m) => (
           <Marker
             key={`${m.type}-${m.id}`}
