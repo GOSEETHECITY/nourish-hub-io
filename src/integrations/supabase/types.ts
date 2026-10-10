@@ -2119,7 +2119,6 @@ export type Database = {
           entity_id: string
           entity_kind: string
           id: string
-          temp_password: string | null
           updated_at: string
         }
         Insert: {
@@ -2127,7 +2126,6 @@ export type Database = {
           entity_id: string
           entity_kind: string
           id?: string
-          temp_password?: string | null
           updated_at?: string
         }
         Update: {
@@ -2135,7 +2133,6 @@ export type Database = {
           entity_id?: string
           entity_kind?: string
           id?: string
-          temp_password?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -2198,6 +2195,7 @@ export type Database = {
           id: string
           last_name: string | null
           location_id: string | null
+          must_change_password: boolean
           nonprofit_id: string | null
           nonprofit_location_id: string | null
           organization_id: string | null
@@ -2212,6 +2210,7 @@ export type Database = {
           id: string
           last_name?: string | null
           location_id?: string | null
+          must_change_password?: boolean
           nonprofit_id?: string | null
           nonprofit_location_id?: string | null
           organization_id?: string | null
@@ -2226,6 +2225,7 @@ export type Database = {
           id?: string
           last_name?: string | null
           location_id?: string | null
+          must_change_password?: boolean
           nonprofit_id?: string | null
           nonprofit_location_id?: string | null
           organization_id?: string | null
@@ -3121,6 +3121,7 @@ export type Database = {
           referral_count: number
         }[]
       }
+      clear_own_must_change_password: { Args: never; Returns: undefined }
       consume_government_invitation_code: {
         Args: { p_code: string }
         Returns: {
