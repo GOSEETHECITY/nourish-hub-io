@@ -13,6 +13,7 @@ export default function ResetPassword() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [isRecovery, setIsRecovery] = useState(false);
+  const [forced, setForced] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -20,7 +21,18 @@ export default function ResetPassword() {
     const hash = window.location.hash;
     if (hash.includes("type=recovery")) {
       setIsRecovery(true);
+      return;
     }
+    // Forced first-login change: signed-in user whose profile requires a new password.
+    (async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const { data } = await supabase.from("profiles").select("must_change_password").eq("id", session.user.id).maybeSingle();
+      if ((data as { must_change_password?: boolean } | null)?.must_change_password) {
+        setIsRecovery(true);
+        setForced(true);
+      }
+    })();
   }, []);
 
   const handleUpdate = async (e: React.FormEvent) => {
@@ -44,8 +56,13 @@ export default function ResetPassword() {
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
+      await (supabase.rpc as any)("clear_own_must_change_password");
       toast({ title: "Success", description: "Password updated successfully" });
-      navigate("/login");
+      if (forced) {
+        window.location.assign("/login");
+      } else {
+        navigate("/login");
+      }
     }
 
     setLoading(false);

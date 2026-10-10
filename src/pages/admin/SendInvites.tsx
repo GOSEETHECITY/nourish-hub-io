@@ -20,15 +20,13 @@ export default function SendInvites() {
 
   const load = async () => {
     setLoading(true);
-    const [{ data: orgs }, { data: nps }, { data: creds }] = await Promise.all([
+    const [{ data: orgs }, { data: nps }] = await Promise.all([
       supabase.from("organizations").select("id, name, primary_contact_name, join_code, credentials_sent_at").then(async (r) => ({ ...r, data: (await withOrgPrivate(r.data)).filter((o) => o.primary_contact_email) })),
       supabase.from("nonprofits").select("id, organization_name, primary_contact_name, join_code, credentials_sent_at").then(async (r) => ({ ...r, data: (await withNonprofitPrivate(r.data)).filter((n) => n.primary_contact_email) })),
-      supabase.from("partner_credentials").select("entity_kind, entity_id, temp_password"),
     ]);
-    const credMap = new Map((creds ?? []).map((c) => [`${c.entity_kind}:${c.entity_id}`, c.temp_password]));
     const merged: Target[] = [
-      ...(orgs ?? []).map((o) => ({ kind: "org" as const, id: o.id, name: o.name, email: o.primary_contact_email, contact_name: o.primary_contact_name, join_code: o.join_code, temp_password_hint: credMap.get(`org:${o.id}`) ?? null, credentials_sent_at: o.credentials_sent_at })),
-      ...(nps ?? []).map((n) => ({ kind: "nonprofit" as const, id: n.id, name: n.organization_name, email: n.primary_contact_email, contact_name: n.primary_contact_name, join_code: n.join_code, temp_password_hint: credMap.get(`nonprofit:${n.id}`) ?? null, credentials_sent_at: n.credentials_sent_at })),
+      ...(orgs ?? []).map((o) => ({ kind: "org" as const, id: o.id, name: o.name, email: o.primary_contact_email, contact_name: o.primary_contact_name, join_code: o.join_code, temp_password_hint: null, credentials_sent_at: o.credentials_sent_at })),
+      ...(nps ?? []).map((n) => ({ kind: "nonprofit" as const, id: n.id, name: n.organization_name, email: n.primary_contact_email, contact_name: n.primary_contact_name, join_code: n.join_code, temp_password_hint: null, credentials_sent_at: n.credentials_sent_at })),
     ];
 
     setTargets(merged.sort((a, b) => (a.credentials_sent_at ? 1 : 0) - (b.credentials_sent_at ? 1 : 0) || a.name.localeCompare(b.name)));
@@ -120,7 +118,7 @@ export default function SendInvites() {
               <div className="border-t border-[#3a2812] pt-3">
                 <p>Welcome, {preview.contact_name || "there"}.</p>
                 <p className="mt-2">Login email: {preview.email}</p>
-                <p>Temporary password: <code className="bg-black/40 px-2 rounded">{preview.temp_password_hint || "(missing)"}</code></p>
+                <p>Temporary password: <code className="bg-black/40 px-2 rounded">{preview.temp_password_hint || "(generated when sent, never stored)"}</code></p>
                 <p>Location join code: <code className="bg-black/40 px-2 rounded">{preview.join_code}</code></p>
                 <p className="mt-3 text-xs text-[#c9a97a]">Please change your password on first login.</p>
               </div>
