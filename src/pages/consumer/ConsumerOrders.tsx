@@ -36,6 +36,9 @@ const ConsumerOrders = () => {
       paid: "bg-blue-50 text-blue-700",
       ready: "bg-green-50 text-green-700",
       picked_up: "bg-[#8DC63F]/20 text-[#5a8a2a]",
+      cancelled: "bg-red-50 text-red-700",
+      refunded: "bg-purple-50 text-purple-700",
+      expired: "bg-amber-50 text-amber-700",
     };
     return map[s] || "bg-gray-100 text-gray-700";
   };
