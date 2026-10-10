@@ -3135,10 +3135,12 @@ export type Database = {
         Args: { p_coupon_id: string; p_quantity: number }
         Returns: string
       }
+      create_consumer_orders: { Args: { p_items: Json }; Returns: string[] }
       dispatch_push: {
         Args: { p_body: Json; p_trigger: string }
         Returns: undefined
       }
+      expire_pending_orders: { Args: never; Returns: number }
       gen_pickup_code: { Args: never; Returns: string }
       gen_referral_code: { Args: never; Returns: string }
       get_impact_survey_by_token: {
@@ -3181,6 +3183,25 @@ export type Database = {
       gov_location_in_region: {
         Args: { _location_id: string; _user_id: string }
         Returns: boolean
+      }
+      gov_region_impact_reports: {
+        Args: never
+        Returns: {
+          created_at: string
+          date_distributed: string | null
+          food_listing_id: string
+          id: string
+          meals_served: number | null
+          nonprofit_id: string
+          notes: string | null
+          photo_url: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "impact_reports"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       gov_region_listings: {
         Args: never
@@ -3273,6 +3294,10 @@ export type Database = {
         Returns: undefined
       }
       reserve_flash_listing: { Args: { p_listing_id: string }; Returns: string }
+      reserved_flash_listing_ids: {
+        Args: { p_ids: string[] }
+        Returns: string[]
+      }
       set_own_location: { Args: { p_location_id: string }; Returns: undefined }
       set_own_nonprofit_location: {
         Args: { p_location_id: string }
