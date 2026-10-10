@@ -3162,6 +3162,10 @@ export type Database = {
         Returns: boolean
       }
       increment_attendee_count: { Args: { eid: string }; Returns: undefined }
+      increment_coupon_sold: {
+        Args: { p_coupon_id: string; p_qty: number }
+        Returns: boolean
+      }
       increment_share_count: { Args: { event_id: string }; Returns: undefined }
       invoke_scheduled_function: {
         Args: { p_body?: Json; p_name: string }
