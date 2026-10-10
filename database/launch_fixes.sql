@@ -59,8 +59,9 @@ WHERE u.email = 'venue.independent@test.hariet.ai';
 --   1. Go to https://supabase.com/dashboard/project/yaicfjdquvfifwtfpmbm/auth/users
 --   2. Click "Add user" → "Create new user"
 --   3. For each of:
---        - Email: venue.multloc@test.hariet.ai      Password: TestHariet2026!
---        - Email: venue.franchise@test.hariet.ai    Password: TestHariet2026!
+--        NOTE: Test passwords must NEVER be committed to the repo. Values redacted; rotate them outside source control.
+--        - Email: venue.multloc@test.hariet.ai      Password: [REDACTED]
+--        - Email: venue.franchise@test.hariet.ai    Password: [REDACTED]
 --      Check "Auto Confirm User" so you don't need to verify email
 --
 -- Then run the linking queries below to associate each user with the

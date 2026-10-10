@@ -269,8 +269,9 @@ Deno.serve(async (req) => {
     // Tell the admins an application is waiting. Never fail signup on this.
     try {
       await admin.functions.invoke("send-alert", {
+        headers: { "x-internal-secret": Deno.env.get("CRON_SECRET") ?? "" },
         body: {
-          to_email: "hello@goseethecity.com",
+          audience: "admins",
           category: "new_partner_application",
           urgent: false,
           subject: `New partner application: ${body.org.name}`,

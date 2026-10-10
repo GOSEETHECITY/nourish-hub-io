@@ -1,6 +1,9 @@
 // Unified email + SMS alert dispatcher. Called from DB triggers and app code.
-// Body: { user_ids?: string[], to_email?: string, to_phone?: string, category: string,
+// Body: { user_ids?: string[], audience?: "admins", category: string,
 //         subject: string, html?: string, text: string, urgent?: boolean }
+// Auth: caller must be an admin (JWT + has_role) OR present X-Internal-Secret
+// matching CRON_SECRET. Recipients are resolved server side from user ids only;
+// arbitrary email/phone values are never accepted.
 // Respects per-user notification_preferences. Uses Resend for email and Twilio
 // (gateway) for SMS. Only sends SMS when { urgent: true }.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.98.0";
@@ -8,13 +11,12 @@ import { alertFatalError } from "../_shared/ops.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-internal-secret",
 };
 
 interface AlertBody {
   user_ids?: string[];
-  to_email?: string;
-  to_phone?: string;
+  audience?: "admins";
   category: string;
   subject: string;
   html?: string;
@@ -22,21 +24,55 @@ interface AlertBody {
   urgent?: boolean;
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
+    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+
+    // ---- Authentication: internal secret OR admin user ----
+    const internalExpected = Deno.env.get("CRON_SECRET") ?? "";
+    const internalProvided = req.headers.get("x-internal-secret") ?? "";
+    let authorized = !!internalExpected && internalProvided === internalExpected;
+    if (!authorized) {
+      const authHeader = req.headers.get("Authorization");
+      if (!authHeader?.startsWith("Bearer ")) return json({ error: "Unauthorized" }, 401);
+      const anon = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!,
+        { global: { headers: { Authorization: authHeader } } });
+      const { data: claims } = await anon.auth.getClaims(authHeader.replace("Bearer ", ""));
+      const sub = claims?.claims?.sub;
+      if (!sub) return json({ error: "Unauthorized" }, 401);
+      const { data: isAdmin } = await admin.rpc("has_role", { _user_id: sub, _role: "admin" });
+      if (!isAdmin) return json({ error: "Forbidden" }, 403);
+      authorized = true;
+    }
+
     const body = await req.json() as AlertBody;
     if (!body.category || !body.subject || !body.text) return json({ error: "category, subject, text required" }, 400);
 
-    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    // ---- Resolve recipient user ids server side ----
+    const ids = new Set<string>();
+    if (Array.isArray(body.user_ids)) {
+      for (const id of body.user_ids) {
+        if (typeof id !== "string" || !UUID_RE.test(id)) return json({ error: "user_ids must be UUIDs" }, 400);
+        ids.add(id);
+      }
+    }
+    if (body.audience === "admins") {
+      const { data: admins } = await admin.from("user_roles").select("user_id").eq("role", "admin");
+      for (const a of admins ?? []) ids.add(a.user_id);
+    }
+    const userIds = [...ids];
+    if (!userIds.length) return json({ error: "user_ids or audience required" }, 400);
 
     type Recipient = { email?: string; phone?: string; email_enabled: boolean; sms_enabled: boolean };
     const recipients: Recipient[] = [];
 
-    if (body.user_ids?.length) {
-      const { data: profiles } = await admin.from("profiles").select("id, email, phone").in("id", body.user_ids);
+    {
+      const { data: profiles } = await admin.from("profiles").select("id, email, phone").in("id", userIds);
       const { data: prefs } = await admin.from("notification_preferences").select("user_id, email_enabled, sms_enabled")
-        .in("user_id", body.user_ids).eq("category", body.category);
+        .in("user_id", userIds).eq("category", body.category);
       const prefMap = new Map((prefs ?? []).map((p) => [p.user_id, p]));
       for (const p of profiles ?? []) {
         const pref = prefMap.get(p.id);
@@ -47,9 +83,6 @@ Deno.serve(async (req) => {
           sms_enabled: pref ? pref.sms_enabled : true,
         });
       }
-    }
-    if (body.to_email || body.to_phone) {
-      recipients.push({ email: body.to_email, phone: body.to_phone, email_enabled: true, sms_enabled: true });
     }
 
     let email_sent = 0, sms_sent = 0, email_failed = 0, sms_failed = 0;

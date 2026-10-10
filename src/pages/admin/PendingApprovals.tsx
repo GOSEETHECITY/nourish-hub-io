@@ -8,6 +8,14 @@ import { toast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 
+async function applicantUserIds(s: { created_organization_id?: string | null; created_nonprofit_id?: string | null }) {
+  const col = s.created_nonprofit_id ? "nonprofit_id" : "organization_id";
+  const val = s.created_nonprofit_id ?? s.created_organization_id;
+  if (!val) return [];
+  const { data } = await supabase.from("profiles").select("id").eq(col, val);
+  return (data ?? []).map((r: { id: string }) => r.id);
+}
+
 export default function PendingApprovals() {
   const [subs, setSubs] = useState<any[]>([]);
   const [rejectFor, setRejectFor] = useState<any | null>(null);
@@ -39,7 +47,7 @@ export default function PendingApprovals() {
       await supabase.from("onboarding_submissions").update({ status: "approved", reviewed_at: new Date().toISOString() }).eq("id", s.id);
       await supabase.functions.invoke("send-alert", {
         body: {
-          to_email: s.contact_email, category: "onboarding_approved", urgent: false,
+          user_ids: await applicantUserIds(s), category: "onboarding_approved", urgent: false,
           subject: "Your Hariet.AI application has been approved",
           text: `Hi ${s.contact_name}, ${s.organization_name} has been approved. You can now sign in with the account you created during signup.`,
         },
@@ -83,7 +91,7 @@ export default function PendingApprovals() {
     await supabase.from("onboarding_submissions").update({ status: "rejected", rejection_reason: reason, reviewed_at: new Date().toISOString() }).eq("id", rejectFor.id);
     await supabase.functions.invoke("send-alert", {
       body: {
-        to_email: rejectFor.contact_email, category: "onboarding_rejected", urgent: false,
+        user_ids: await applicantUserIds(rejectFor), category: "onboarding_rejected", urgent: false,
         subject: "Update on your Hariet.AI application",
         text: `Hi ${rejectFor.contact_name}, we reviewed your application for ${rejectFor.organization_name} and could not approve it at this time. Reason: ${reason}. You are welcome to reply and provide additional detail.`,
       },
