@@ -17,6 +17,9 @@ const corsHeaders = {
 interface AlertBody {
   user_ids?: string[];
   audience?: "admins";
+  // Fallback: when no user_ids resolve, email the contact_email stored on this
+  // onboarding_submissions row (read server side; never accepted from the caller).
+  fallback_submission_id?: string;
   category: string;
   subject: string;
   html?: string;
@@ -64,12 +67,22 @@ Deno.serve(async (req) => {
       for (const a of admins ?? []) ids.add(a.user_id);
     }
     const userIds = [...ids];
-    if (!userIds.length) return json({ error: "user_ids or audience required" }, 400);
+    const fallbackId = body.fallback_submission_id;
+    if (fallbackId !== undefined && (typeof fallbackId !== "string" || !UUID_RE.test(fallbackId))) {
+      return json({ error: "fallback_submission_id must be a UUID" }, 400);
+    }
+    if (!userIds.length && !fallbackId) return json({ error: "user_ids or audience required" }, 400);
 
     type Recipient = { email?: string; phone?: string; email_enabled: boolean; sms_enabled: boolean };
     const recipients: Recipient[] = [];
 
-    {
+    if (!userIds.length && fallbackId) {
+      const { data: sub } = await admin.from("onboarding_submissions").select("contact_email").eq("id", fallbackId).maybeSingle();
+      const email = sub?.contact_email?.trim();
+      if (email) recipients.push({ email, email_enabled: true, sms_enabled: false });
+    }
+
+    if (userIds.length) {
       const { data: profiles } = await admin.from("profiles").select("id, email, phone").in("id", userIds);
       const { data: prefs } = await admin.from("notification_preferences").select("user_id, email_enabled, sms_enabled")
         .in("user_id", userIds).eq("category", body.category);
