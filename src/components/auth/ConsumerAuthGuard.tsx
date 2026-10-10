@@ -16,10 +16,12 @@ export default function ConsumerAuthGuard({ children }: Props) {
   const location = useLocation();
   const [timedOut, setTimedOut] = useState(false);
 
+  // Safety net only: wait up to 8s for the session check before giving up.
   useEffect(() => {
-    const t = setTimeout(() => setTimedOut(true), 2000);
+    if (!loading) return;
+    const t = setTimeout(() => setTimedOut(true), 8000);
     return () => clearTimeout(t);
-  }, []);
+  }, [loading]);
 
   if (loading && !timedOut) {
     return (

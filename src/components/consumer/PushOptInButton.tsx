@@ -28,14 +28,14 @@ const PushOptInButton = () => {
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as BufferSource,
       });
       const json = sub.toJSON();
-      const { error } = await supabase.from("push_subscriptions").insert({
+      const { error } = await supabase.from("push_subscriptions").upsert({
         consumer_id: consumer.id,
         endpoint: sub.endpoint,
         p256dh: json.keys?.p256dh || "",
         auth: json.keys?.auth || "",
         user_agent: navigator.userAgent,
-      });
-      if (error && !error.message.includes("duplicate")) throw error;
+      }, { onConflict: "endpoint" });
+      if (error) throw error;
       setState("granted");
       toast.success("Push notifications enabled");
     } catch (e: any) {

@@ -5,7 +5,19 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.98.0";
 import { restrictedCors, alertFatalError, generateTempPassword } from "../_shared/ops.ts";
 
 const CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-const genJoinCode = () => Array.from({ length: 8 }, () => CHARS[Math.floor(Math.random() * CHARS.length)]).join("");
+const genJoinCode = () => {
+  // Rejection sampling avoids modulo bias.
+  const out: string[] = [];
+  const limit = 256 - (256 % CHARS.length);
+  while (out.length < 8) {
+    const buf = new Uint8Array(16);
+    crypto.getRandomValues(buf);
+    for (const b of buf) {
+      if (b < limit && out.length < 8) out.push(CHARS[b % CHARS.length]);
+    }
+  }
+  return out.join("");
+};
 
 
 interface Row {
@@ -115,7 +127,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "No rows found. Provide csv_text, a file upload, or rows[]." }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const results: Array<{ row: number; organization_name: string; status: "created" | "failed"; id?: string; join_code?: string; reason?: string }> = [];
+    const results: Array<{ row: number; organization_name: string; status: "created" | "failed" | "skipped"; id?: string; join_code?: string; reason?: string }> = [];
 
     // Process nonprofit rows differently from other org types.
     for (let i = 0; i < rows.length; i++) {
@@ -127,6 +139,20 @@ Deno.serve(async (req) => {
         if (!orgName || !orgType) throw new Error("organization_name and organization_type required");
 
         const isNonprofit = orgType === "nonprofit";
+
+        // Skip rows that would duplicate an existing organization (same name + address).
+        {
+          const addr = r.address != null ? String(r.address).trim() : "";
+          const table = isNonprofit ? "nonprofits" : "organizations";
+          const nameCol = isNonprofit ? "organization_name" : "name";
+          let q = admin.from(table).select("id").ilike(nameCol, orgName.replace(/[%_\\]/g, (c) => "\\" + c));
+          q = addr ? q.ilike("address", addr.replace(/[%_\\]/g, (c) => "\\" + c)) : q.is("address", null);
+          const { data: dup } = await q.limit(1);
+          if (dup && dup.length) {
+            results.push({ row: rowNum, organization_name: orgName, status: "skipped", id: dup[0].id, reason: "Organization with the same name and address already exists" });
+            continue;
+          }
+        }
         const password = generateTempPassword();
         const email = r.contact_email ? String(r.contact_email).trim().toLowerCase() : null;
         const joinCode = genJoinCode();

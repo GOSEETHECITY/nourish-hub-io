@@ -35,6 +35,7 @@ export default function VenueSettings() {
 
   const [profileForm, setProfileForm] = useState({ first_name: "", last_name: "", email: "", phone: "" });
   const [newPassword, setNewPassword] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
 
   const [orgForm, setOrgForm] = useState({
@@ -108,9 +109,14 @@ export default function VenueSettings() {
   const changePassword = async () => {
     const pwError = validatePassword(newPassword || "");
     if (pwError) { toast.error(pwError); return; }
+    if (!currentPassword) { toast.error("Enter your current password"); return; }
+    const { data: { user: authUser } } = await supabase.auth.getUser();
+    if (!authUser?.email) { toast.error("Could not verify your account. Please sign in again."); return; }
+    const { error: reauthError } = await supabase.auth.signInWithPassword({ email: authUser.email, password: currentPassword });
+    if (reauthError) { toast.error("Current password is incorrect"); return; }
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     if (error) toast.error(error.message);
-    else { toast.success("Password updated"); setNewPassword(""); }
+    else { toast.success("Password updated"); setNewPassword(""); setCurrentPassword(""); }
   };
 
   const saveOrgProfile = async () => {
@@ -328,8 +334,9 @@ export default function VenueSettings() {
         <Separator />
         <h3 className="text-sm font-semibold text-foreground">Change Password</h3>
         <div className="flex gap-4">
+          <PasswordInput placeholder="Current password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="max-w-xs" />
           <PasswordInput placeholder="New password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="max-w-xs" />
-          <Button variant="outline" onClick={changePassword}>Update Password</Button>
+          <Button variant="outline" onClick={changePassword} disabled={!currentPassword || !newPassword}>Update Password</Button>
         </div>
       </section>
     </div>

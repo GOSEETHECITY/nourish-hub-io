@@ -16,15 +16,47 @@ interface MapLocation {
   subtitle?: string;
 }
 
+// Nominatim usage policy: identify the app and cache results to limit requests.
+// Browsers forbid overriding User-Agent from page scripts, so we also send the
+// Referer (origin) which Nominatim accepts as identification.
+const GEOCODE_CACHE_KEY = "gstc_geocode_cache_v1";
+const GEOCODE_CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+const geocodeMemory = new Map<string, Promise<{ lat: number; lng: number } | null>>();
+
+function readGeocodeCache(): Record<string, { lat: number; lng: number; t: number } | { miss: true; t: number }> {
+  try { return JSON.parse(localStorage.getItem(GEOCODE_CACHE_KEY) || "{}"); } catch { return {}; }
+}
+
 async function geocode(address: string): Promise<{ lat: number; lng: number } | null> {
-  try {
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(address)}`
-    );
-    const data = await res.json();
-    if (data?.[0]) return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
-  } catch {}
-  return null;
+  const key = address.trim().toLowerCase();
+  if (!key) return null;
+  const cache = readGeocodeCache();
+  const hit = cache[key];
+  if (hit && Date.now() - hit.t < GEOCODE_CACHE_TTL_MS) return "miss" in hit ? null : { lat: hit.lat, lng: hit.lng };
+  if (geocodeMemory.has(key)) return geocodeMemory.get(key)!;
+
+  const p = (async () => {
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(address)}`,
+        {
+          headers: { "User-Agent": "GOSeeTheCity/1.0 (https://goseethecity.com; hello@goseethecity.com)", Accept: "application/json" },
+          referrerPolicy: "strict-origin-when-cross-origin",
+        }
+      );
+      if (!res.ok) return null;
+      const data = await res.json();
+      const result = data?.[0] ? { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) } : null;
+      const next = readGeocodeCache();
+      next[key] = result ? { ...result, t: Date.now() } : { miss: true, t: Date.now() };
+      try { localStorage.setItem(GEOCODE_CACHE_KEY, JSON.stringify(next)); } catch {}
+      return result;
+    } catch {
+      return null;
+    }
+  })();
+  geocodeMemory.set(key, p);
+  return p;
 }
 
 // Pre-built city center coordinates so we don't need to geocode the selected city on every render

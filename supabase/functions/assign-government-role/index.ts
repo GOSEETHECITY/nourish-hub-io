@@ -93,7 +93,18 @@ Deno.serve(async (req) => {
       .from("user_roles")
       .insert({ user_id: user.id, role: "government_partner" });
 
-    if (insertError) throw insertError;
+    if (insertError) {
+      // Refund the consumed code use so a failed role insert never loses it.
+      const codeId = Array.isArray(consumed) ? consumed[0]?.id : (consumed as { id?: string })?.id;
+      if (codeId) {
+        const { data: codeRow } = await adminClient.from("invitation_codes").select("times_used").eq("id", codeId).maybeSingle();
+        if (codeRow && codeRow.times_used > 0) {
+          await adminClient.from("invitation_codes").update({ times_used: codeRow.times_used - 1 })
+            .eq("id", codeId).eq("times_used", codeRow.times_used);
+        }
+      }
+      throw insertError;
+    }
 
 
     return new Response(

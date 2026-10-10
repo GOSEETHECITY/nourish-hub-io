@@ -81,6 +81,15 @@ export default function OrganizationDetail() {
     enabled: locations.length > 0,
   });
 
+  const approveLocation = useMutation({
+    mutationFn: async (locationId: string) => {
+      const { error } = await supabase.from("locations").update({ approval_status: "approved" }).eq("id", locationId);
+      if (error) throw error;
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["org-locations", id] }); toast.success("Location approved"); },
+    onError: (e: any) => toast.error(e.message),
+  });
+
   const updateStatus = useMutation({
     mutationFn: async (status: ApprovalStatus) => { const { error } = await supabase.from("organizations").update({ approval_status: status }).eq("id", id!); if (error) throw error; },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["organization", id] }); toast.success("Status updated"); },
@@ -221,7 +230,7 @@ export default function OrganizationDetail() {
             <TableHeader>
               <TableRow>
                 <TableHead>Location Name</TableHead><TableHead>Type</TableHead><TableHead>Address</TableHead>
-                <TableHead>County</TableHead><TableHead>Hours</TableHead><TableHead>Marketplace</TableHead><TableHead>Actions</TableHead>
+                <TableHead>County</TableHead><TableHead>Hours</TableHead><TableHead>Marketplace</TableHead><TableHead>Approval</TableHead><TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -233,8 +242,12 @@ export default function OrganizationDetail() {
                   <TableCell>{loc.county || "—"}</TableCell>
                   <TableCell>{loc.hours_of_operation || "—"}</TableCell>
                   <TableCell><span className={`px-2 py-0.5 rounded text-xs font-medium ${loc.marketplace_enabled ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>{loc.marketplace_enabled ? "Enabled" : "Disabled"}</span></TableCell>
+                  <TableCell><span className={`px-2 py-0.5 rounded text-xs font-medium capitalize ${(loc as any).approval_status === "approved" ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>{(loc as any).approval_status || "—"}</span></TableCell>
                   <TableCell>
                     <div className="flex gap-1">
+                      {(loc as any).approval_status === "pending" && (
+                        <Button size="sm" onClick={(e) => { e.stopPropagation(); approveLocation.mutate(loc.id); }} disabled={approveLocation.isPending} className="bg-success hover:bg-success/90 text-success-foreground">Approve</Button>
+                      )}
                       <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); openEditLocation(loc); }}><Pencil className="w-3 h-3" /></Button>
                       <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); openAddLocUser(loc.id); }}><UserPlus className="w-3 h-3" /></Button>
                     </div>
