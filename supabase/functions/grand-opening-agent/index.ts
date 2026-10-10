@@ -223,7 +223,14 @@ async function fetchWebSearch(): Promise<SourcedEvent[]> {
       console.error("web_search error", city, e);
     }
   }
-  return out;
+  // Drop results whose source link doesn't load (the model sometimes invents them).
+  const checked = await Promise.all(out.map(async (e) => {
+    try {
+      const r = await fetch(e.source_url, { method: "GET", redirect: "follow", signal: AbortSignal.timeout(8000) });
+      return r.status < 400 ? e : null;
+    } catch { return null; }
+  }));
+  return checked.filter((e): e is SourcedEvent => e !== null);
 }
 
 // --- Source: WhatsOpening (whatsopening.com) ---
@@ -232,20 +239,16 @@ async function fetchWebSearch(): Promise<SourcedEvent[]> {
 const WO_UA = "HarietGrandOpeningBot/1.0 (+https://hariet.ai)";
 const MONTHS = ["january","february","march","april","may","june","july","august","september","october","november","december"];
 async function fetchWhatsOpening(): Promise<SourcedEvent[]> {
-  const idx = await fetch("https://www.whatsopening.com/sitemap.xml", { headers: { "User-Agent": WO_UA } });
-  if (!idx.ok) throw new Error(`WhatsOpening sitemap ${idx.status}`);
-  const maps = [...(await idx.text()).matchAll(/<loc>([^<]*\/openings\/\d+\.xml)<\/loc>/g)].map((m) => m[1]);
-  const since = Date.now() - 21 * 86400000;
-  const urls: string[] = [];
-  for (const m of maps) {
-    const r = await fetch(m, { headers: { "User-Agent": WO_UA } });
+  // City pages list every opening in that city; read the same target cities as web search.
+  const links = new Set<string>();
+  for (const { city, state } of TARGET_CITIES) {
+    const slug = `${state.toLowerCase()}/${city.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+    const r = await fetch(`https://www.whatsopening.com/${slug}`, { headers: { "User-Agent": WO_UA } });
     if (!r.ok) continue;
-    for (const e of (await r.text()).matchAll(/<loc>([^<]+)<\/loc>\s*<lastmod>([^<]+)<\/lastmod>/g)) {
-      if (new Date(e[2]).getTime() >= since) urls.push(e[1]);
-    }
+    for (const m of (await r.text()).matchAll(/href="(\/opening\/[^"]+)"/g)) links.add(`https://www.whatsopening.com${m[1]}`);
   }
   const out: SourcedEvent[] = [];
-  const list = urls.slice(0, 400);
+  const list = [...links].slice(0, 800);
   for (let i = 0; i < list.length; i += 8) {
     const batch = await Promise.all(list.slice(i, i + 8).map(async (u) => {
       try {
