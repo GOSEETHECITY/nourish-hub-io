@@ -22,7 +22,7 @@ export default function ShareButton({
   return (
     <button type="button" onClick={go} disabled={busy} aria-label={label}
       className={`inline-flex items-center gap-1 text-xs font-semibold text-[#F97316] px-2 py-1 rounded-lg hover:bg-[#F97316]/10 ${className}`}>
-      <Share2 className="w-4 h-4" />{label !== "Share" || !className.includes("icon-only") ? label : null}
+      <Share2 className="w-4 h-4" />{label}
     </button>
   );
 }

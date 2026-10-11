@@ -1,3 +1,4 @@
+import ShareButton from "@/components/consumer/ShareButton";
 import { useEffect, useState } from "react";
 import { ArrowLeft, MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -62,9 +63,10 @@ const ConsumerCheckIns = () => {
           <ul className="divide-y divide-gray-100">
             {items.map((c) => (
               <li key={c.id}>
+                <div className="flex items-center gap-2">
                 <button
                   onClick={() => c.events?.id && navigate(`/app/event/${c.events.id}`)}
-                  className="w-full flex items-center gap-3 py-3 text-left"
+                  className="flex-1 flex items-center gap-3 py-3 text-left"
                 >
                   <MapPin className="w-5 h-5 text-[#F97316] shrink-0" />
                   <div>
@@ -74,6 +76,10 @@ const ConsumerCheckIns = () => {
                     </p>
                   </div>
                 </button>
+                {c.events?.id && (
+                  <ShareButton emoji="📍" title={`I checked in at ${c.events.title || "an event"}`} subtitle="Come with me next time!" text={`I checked in at ${c.events.title || "an event"} on GO See The City — bring a friend and come with me!`} path={`/app/event/${c.events.id}`} label="Bring a friend" />
+                )}
+                </div>
               </li>
             ))}
           </ul>

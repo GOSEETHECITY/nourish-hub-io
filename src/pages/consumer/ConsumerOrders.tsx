@@ -1,3 +1,4 @@
+import ShareButton from "@/components/consumer/ShareButton";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Copy, CheckCircle2 } from "lucide-react";
@@ -63,6 +64,11 @@ const ConsumerOrders = () => {
                 {o.status?.replace("_", " ")}
               </span>
             </div>
+            {o.coupon_id && ["paid", "ready", "picked_up"].includes(o.status) && (
+              <div className="mb-2 -mt-1">
+                <ShareButton emoji="🥡" title="I rescued food today!" subtitle="Grab a deal and pick up with me" text="I rescued surplus food on GO See The City — grab one and come pick up with me!" path={`/app/coupon/${o.coupon_id}`} label="Bring a friend" />
+              </div>
+            )}
             {o.pickup_code && o.status !== "picked_up" && (
               <div className="bg-[#F97316]/5 border border-[#F97316]/20 rounded-xl p-3 mb-3 flex items-center justify-between">
                 <div>
