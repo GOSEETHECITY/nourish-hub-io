@@ -3134,13 +3134,6 @@ export type Database = {
           id: string
         }[]
       }
-      coupon_tax_rates: {
-        Args: { p_coupon_ids: string[] }
-        Returns: {
-          coupon_id: string
-          tax_rate: number
-        }[]
-      }
       create_consumer_order: {
         Args: { p_coupon_id: string; p_quantity: number }
         Returns: string
