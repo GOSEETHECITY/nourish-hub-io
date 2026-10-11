@@ -9,12 +9,15 @@ import { toast } from "sonner";
 import type { FoodListing } from "@/types/database";
 import { geocode } from "@/lib/cityCenter";
 import { haversineMiles, formatDistance } from "@/lib/geo";
+import PickupMethodDialog from "@/components/nonprofit/PickupMethodDialog";
 
 export default function NonprofitAvailable() {
   const { profile } = useAuth();
   const queryClient = useQueryClient();
   const [filterFoodType, setFilterFoodType] = useState("all");
   const [radius, setRadius] = useState("25");
+  const [choosing, setChoosing] = useState<string | null>(null);
+  const [claimedForDriver, setClaimedForDriver] = useState(false);
 
   // The nonprofit's saved address is the origin for distance filtering and sorting.
   const { data: origin, isFetched: originFetched } = useQuery({
@@ -65,7 +68,6 @@ export default function NonprofitAvailable() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["available-donations"] });
       queryClient.invalidateQueries({ queryKey: ["my-claims"] });
-      toast.success("Donation claimed!");
     },
     onError: (e) => toast.error(e.message),
   });
@@ -149,13 +151,31 @@ export default function NonprofitAvailable() {
                 <TableCell className="max-w-[200px] truncate">{d.pickup_address || "—"}</TableCell>
                 <TableCell>{d.miles != null ? formatDistance(d.miles) : "—"}</TableCell>
                 <TableCell>
-                  <Button size="sm" onClick={() => claimDonation.mutate(d.id)} disabled={claimDonation.isPending}>Claim</Button>
+                  <Button size="sm" onClick={() => { setClaimedForDriver(false); setChoosing(d.id); }} disabled={claimDonation.isPending}>Claim</Button>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table></div>
       </div>
+      <PickupMethodDialog
+        open={!!choosing}
+        onOpenChange={(o) => { if (!o) setChoosing(null); }}
+        listingId={choosing}
+        busy={claimDonation.isPending}
+        onSelfPickup={async () => {
+          try {
+            if (!claimedForDriver) await claimDonation.mutateAsync(choosing!);
+            toast.success("Donation claimed! Track pickup under Claimed Donations.");
+            setChoosing(null);
+          } catch { setChoosing(null); }
+        }}
+        onBeforeDriver={async () => {
+          if (claimedForDriver) return true;
+          try { await claimDonation.mutateAsync(choosing!); setClaimedForDriver(true); toast.success("Donation claimed — now book your driver."); return true; }
+          catch { setChoosing(null); return false; }
+        }}
+      />
     </div>
   );
 }

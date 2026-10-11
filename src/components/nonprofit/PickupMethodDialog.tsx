@@ -15,10 +15,10 @@ type Mode = "choose" | "driver";
  * Bulk: pass bulk=true to schedule a monthly bulk driver pickup with a date.
  */
 export default function PickupMethodDialog({
-  open, onOpenChange, listingId, bulk = false, onSelfPickup, busy,
+  open, onOpenChange, listingId, bulk = false, onSelfPickup, onBeforeDriver, busy,
 }: {
   open: boolean; onOpenChange: (o: boolean) => void; listingId?: string | null; bulk?: boolean;
-  onSelfPickup?: () => Promise<void> | void; busy?: boolean;
+  onSelfPickup?: () => Promise<void> | void; onBeforeDriver?: () => Promise<boolean>; busy?: boolean;
 }) {
   const [mode, setMode] = useState<Mode>(bulk ? "driver" : "choose");
   const [provider, setProvider] = useState<"uber" | "doordash">("uber");
@@ -67,7 +67,7 @@ export default function PickupMethodDialog({
             <Button variant="outline" className="h-auto py-5 flex-col gap-2" disabled={busy} onClick={async () => { await onSelfPickup?.(); }}>
               <Users className="w-5 h-5" /> Pick up ourselves
             </Button>
-            <Button variant="outline" className="h-auto py-5 flex-col gap-2" onClick={() => setMode("driver")}>
+            <Button variant="outline" className="h-auto py-5 flex-col gap-2" disabled={busy} onClick={async () => { if (onBeforeDriver && !(await onBeforeDriver())) return; setMode("driver"); }}>
               <Truck className="w-5 h-5" /> Order a driver
             </Button>
           </div>
