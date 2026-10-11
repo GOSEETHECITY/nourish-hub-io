@@ -33,6 +33,7 @@ const mainNav = [
   {
     icon: Users, label: "Onboarding", path: "/admin/organizations-pending",
     children: [
+      { label: "Applications", path: "/admin/onboarding" },
       { label: "Pending Approvals", path: "/admin/organizations-pending" },
       { label: "New Leads", path: "/admin/leads" },
       { label: "Bulk Import", path: "/admin/organizations-bulk-import" },
