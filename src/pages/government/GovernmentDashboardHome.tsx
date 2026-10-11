@@ -87,8 +87,8 @@ export default function GovernmentDashboardHome() {
   const regionLabel = regions
     ? regions.is_state_wide ? `Statewide: ${regions.state || "All"}`
       : regions.cities?.length ? `Cities: ${regions.cities.join(", ")}`
-        : regions.counties?.length ? `Counties: ${regions.counties.join(", ")}` : "All Regions"
-    : "All Regions";
+        : regions.counties?.length ? `Counties: ${regions.counties.join(", ")}` : "No regions configured"
+    : "No regions configured";
 
   const orgRanking = useMemo(() => {
     const map: Record<string, number> = {};

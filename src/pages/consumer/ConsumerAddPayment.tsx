@@ -20,14 +20,19 @@ const ConsumerAddPayment = () => {
       </header>
       <div className="px-6 pb-8">
         <CheckoutCountdown />
-        <div className="rounded-2xl border border-gray-200 bg-white p-6 text-center">
+        <div aria-disabled="true" className="rounded-2xl border border-gray-200 bg-gray-50 p-6 text-center opacity-60 grayscale pointer-events-none select-none">
           <ShieldCheck className="w-10 h-10 text-[#F97316] mx-auto mb-3" />
           <p className="font-semibold text-[#1B2A4A] mb-1">Payments coming soon</p>
           <p className="text-sm text-gray-500">
             Card payments will be handled through our PCI-compliant processor.
             We never store raw card numbers in the app.
           </p>
+          <div className="mt-4 space-y-2 text-left">
+            <input disabled placeholder="Card number" className="w-full rounded-lg border border-gray-200 bg-gray-100 px-3 py-2 text-sm cursor-not-allowed" />
+            <button disabled className="w-full py-2 rounded-full bg-gray-300 text-gray-500 font-semibold cursor-not-allowed">Save payment method</button>
+          </div>
         </div>
+        <p className="text-center text-xs text-gray-400 mt-3">Coming soon — adding a payment method isn't available yet.</p>
         <button
           onClick={() => navigate(-1)}
           className="w-full py-3 rounded-full bg-[#F97316] text-white font-bold text-lg shadow-lg hover:bg-[#EA6C10] transition-colors mt-6"

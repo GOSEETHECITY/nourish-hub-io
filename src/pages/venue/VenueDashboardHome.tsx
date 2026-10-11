@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Package, Leaf, DollarSign, BarChart3, MapPin, FileText } from "lucide-react";
+import { Package, Leaf, DollarSign, BarChart3, MapPin } from "lucide-react";
 import OnboardingChecklist from "@/components/venue/OnboardingChecklist";
 import HoursTaskCard from "@/components/venue/HoursTaskCard";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -77,11 +77,6 @@ export default function VenueDashboardHome() {
   const yearPounds = yearDonations.reduce((s, l) => s + (l.pounds || 0), 0);
   const yearValue = yearDonations.reduce((s, l) => s + (l.estimated_donation_value || 0), 0);
   const yearCo2 = yearPounds * CO2_LBS_PER_LB_FOOD;
-  // Documented donation value since January 1 of the current year.
-  const jan1 = new Date(currentYear, 0, 1);
-  const documentedValueYtd = donations
-    .filter((l) => l.created_at && new Date(l.created_at) >= jan1)
-    .reduce((s, l) => s + Number(l.estimated_donation_value || 0), 0);
   const locMap = Object.fromEntries(locations.map((l) => [l.id, l.name]));
   const formatStatus = (s: string) => s.split("_").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
 
@@ -149,7 +144,7 @@ export default function VenueDashboardHome() {
       )}
 
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         <div className="bg-card rounded-xl border p-5 min-w-0">
           <p className="text-sm text-muted-foreground flex items-center gap-2"><Package className="w-4 h-4 shrink-0" />Donations Made</p>
           <p className="text-3xl font-bold text-foreground mt-2 break-words">{yearCount.toLocaleString()}</p>
@@ -169,11 +164,6 @@ export default function VenueDashboardHome() {
           <p className="text-sm text-muted-foreground flex items-center gap-2"><BarChart3 className="w-4 h-4 shrink-0" />CO₂ Prevented</p>
           <p className="text-3xl font-bold text-foreground mt-2 break-words">{yearCo2.toLocaleString()} lbs</p>
           <p className="text-xs text-muted-foreground mt-1">This year</p>
-        </div>
-        <div className="bg-primary/5 border border-primary/20 rounded-xl p-5 min-w-0 col-span-2 md:col-span-1">
-          <p className="text-sm text-muted-foreground flex items-center gap-2"><FileText className="w-4 h-4 shrink-0" />Documented Donation Value (YTD)</p>
-          <p className="text-3xl font-bold text-foreground mt-2 break-words">${documentedValueYtd.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
-          <p className="text-xs text-muted-foreground mt-1">Since January 1, {currentYear}</p>
         </div>
       </div>
 

@@ -30,7 +30,9 @@ Deno.serve(async (req) => {
       .select("people_fed, testimonial, testimonial_public, photo_urls, submitted_at, nonprofit_id, venue_organization_id")
       .not("submitted_at", "is", null);
 
-    const peopleFed = (surveys ?? []).reduce((s, r: any) => s + Number(r.people_fed ?? 0), 0);
+    // Single source of truth for meals served: impact_reports.meals_served (survey answers sync into it).
+    const { data: mealRows } = await admin.from("impact_reports").select("meals_served");
+    const peopleFed = (mealRows ?? []).reduce((s, r: any) => s + Number(r.meals_served ?? 0), 0);
 
     // meals = pounds * 0.8 (USDA-ish approximation), CO2 = pounds * 2.5 lb CO2e
     const meals = Math.round(pounds * 0.8);

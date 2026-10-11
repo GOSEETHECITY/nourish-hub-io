@@ -1,4 +1,5 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { ORG_PUBLIC_COLUMNS, withOrgPrivateOne } from "@/lib/privateFields";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,6 +37,11 @@ export default function GovernmentListings() {
 
   const orgMap = useMemo(() => Object.fromEntries(orgs.map((o: any) => [o.id, o.name])), [orgs]);
   const filtered = hasRegions ? listings : [];
+  const PAGE_SIZE = 50;
+  const [page, setPage] = useState(0);
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, pageCount - 1);
+  const pageRows = filtered.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
   const formatStatus = (s: string) => s.split("_").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ");
 
   return (
@@ -55,7 +61,7 @@ export default function GovernmentListings() {
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow><TableCell colSpan={5} className="text-center py-12 text-muted-foreground">No food listings found in your assigned regions.</TableCell></TableRow>
-            ) : filtered.slice(0, 50).map((l) => (
+            ) : pageRows.map((l) => (
               <TableRow key={l.id}>
                 <TableCell className="font-medium">{orgMap[l.organization_id] || "—"}</TableCell>
                 <TableCell className="capitalize">{l.food_type?.replace(/_/g, " ") || "—"}</TableCell>
@@ -66,6 +72,18 @@ export default function GovernmentListings() {
             ))}
           </TableBody>
         </Table>
+        {filtered.length > 0 && (
+          <div className="flex items-center justify-between gap-3 border-t p-3 text-sm">
+            <span className="text-muted-foreground">
+              Showing {safePage * PAGE_SIZE + 1}–{safePage * PAGE_SIZE + pageRows.length} of {filtered.length.toLocaleString()}
+            </span>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" disabled={safePage === 0} onClick={() => setPage(safePage - 1)}>Previous</Button>
+              <span className="text-muted-foreground">Page {safePage + 1} of {pageCount}</span>
+              <Button variant="outline" size="sm" disabled={safePage >= pageCount - 1} onClick={() => setPage(safePage + 1)}>Next</Button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

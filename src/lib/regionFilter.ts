@@ -20,10 +20,10 @@ export type RegionFilterable = {
 
 /**
  * Returns true if the row belongs to the given government region assignment.
- * When regions is null/undefined the row is considered in-region (no filter).
+ * Fails closed: when regions is null/undefined or has no constraints, nothing matches.
  */
 export function matchesRegion<T extends RegionFilterable>(row: T, regions: GovernmentRegions): boolean {
-  if (!regions) return true;
+  if (!regions) return false;
 
   const rowState = (row.state || "").toLowerCase().trim();
   const rowCity = (row.city || "").toLowerCase().trim();
@@ -57,11 +57,18 @@ export function matchesRegion<T extends RegionFilterable>(row: T, regions: Gover
   if (regions.counties && regions.counties.length > 0) {
     return regions.counties.some((c) => c.toLowerCase().trim() === rowCounty);
   }
-  // No constraints set → include everything
-  return true;
+  // No constraints set → fail closed, never show nationwide data
+  return false;
 }
 
 export function filterByRegion<T extends RegionFilterable>(rows: T[], regions: GovernmentRegions): T[] {
-  if (!regions) return rows;
+  if (!regions) return [];
   return rows.filter((row) => matchesRegion(row, regions));
+}
+
+/** True when a government region assignment has at least one usable constraint. */
+export function hasConfiguredRegions(regions: GovernmentRegions): boolean {
+  return !!regions && (
+    (!!regions.is_state_wide && !!regions.state) || (regions.cities?.length ?? 0) > 0 || (regions.counties?.length ?? 0) > 0
+  );
 }

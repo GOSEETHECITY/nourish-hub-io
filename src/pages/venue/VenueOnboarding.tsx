@@ -22,11 +22,14 @@ export default function VenueOnboarding() {
     differentPickup: false, pickupAddress: "", pickupInstructions: "", hours_of_operation: "", estimated_surplus_frequency: "",
   });
 
+  const addressComplete = !!locationForm.address.trim() && !!locationForm.city.trim() && /^[A-Za-z]{2,}/.test(locationForm.state.trim()) && /^\d{5}(-\d{4})?$/.test(locationForm.zip.trim());
+
   const [baseline, setBaseline] = useState<SustainabilityBaselineData>(emptySustainabilityBaseline);
 
   const completeOnboarding = useMutation({
     mutationFn: async () => {
       if (!profile?.organization_id) throw new Error("No organization linked to your profile");
+      if (!addressComplete) throw new Error("Please enter a complete address: street, city, state, and a 5-digit ZIP.");
       const pickupAddr = locationForm.differentPickup
         ? locationForm.pickupAddress
         : [locationForm.address, locationForm.city, locationForm.state].filter(Boolean).join(", ");
@@ -81,11 +84,11 @@ export default function VenueOnboarding() {
                 <SelectContent>{LOCATION_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <div><Label>Address</Label><Input value={locationForm.address} onChange={(e) => setLocationForm({ ...locationForm, address: e.target.value })} /></div>
+            <div><Label>Street Address *</Label><Input value={locationForm.address} onChange={(e) => setLocationForm({ ...locationForm, address: e.target.value })} /></div>
             <div className="grid grid-cols-3 gap-4">
-              <div><Label>City</Label><Input value={locationForm.city} onChange={(e) => setLocationForm({ ...locationForm, city: e.target.value })} /></div>
-              <div><Label>State</Label><Input value={locationForm.state} onChange={(e) => setLocationForm({ ...locationForm, state: e.target.value })} /></div>
-              <div><Label>ZIP</Label><Input value={locationForm.zip} onChange={(e) => setLocationForm({ ...locationForm, zip: e.target.value })} /></div>
+              <div><Label>City *</Label><Input value={locationForm.city} onChange={(e) => setLocationForm({ ...locationForm, city: e.target.value })} /></div>
+              <div><Label>State *</Label><Input value={locationForm.state} onChange={(e) => setLocationForm({ ...locationForm, state: e.target.value })} /></div>
+              <div><Label>ZIP *</Label><Input value={locationForm.zip} onChange={(e) => setLocationForm({ ...locationForm, zip: e.target.value })} /></div>
             </div>
             <div><Label>County</Label><Input value={locationForm.county} onChange={(e) => setLocationForm({ ...locationForm, county: e.target.value })} /></div>
             <label className="flex items-center gap-2 text-sm">
@@ -96,7 +99,8 @@ export default function VenueOnboarding() {
             <div><Label>Pickup Instructions</Label><Input value={locationForm.pickupInstructions} onChange={(e) => setLocationForm({ ...locationForm, pickupInstructions: e.target.value })} /></div>
             <div><Label>Hours of Operation</Label><Input value={locationForm.hours_of_operation} onChange={(e) => setLocationForm({ ...locationForm, hours_of_operation: e.target.value })} /></div>
             <div><Label>Estimated Surplus Frequency</Label><Input value={locationForm.estimated_surplus_frequency} onChange={(e) => setLocationForm({ ...locationForm, estimated_surplus_frequency: e.target.value })} /></div>
-            <Button className="w-full" onClick={() => setStep(2)} disabled={!locationForm.name || !locationForm.locationType}>Continue</Button>
+            {!addressComplete && <p className="text-xs text-muted-foreground">Street address, city, state, and a 5-digit ZIP are required.</p>}
+            <Button className="w-full" onClick={() => setStep(2)} disabled={!locationForm.name || !locationForm.locationType || !addressComplete}>Continue</Button>
           </div>
         )}
 

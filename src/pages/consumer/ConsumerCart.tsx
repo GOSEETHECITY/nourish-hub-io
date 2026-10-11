@@ -7,7 +7,34 @@ import ConsumerMobileLayout from "@/components/consumer/ConsumerMobileLayout";
 import { useEffect, useState } from "react";
 import CheckoutCountdown, { startCheckoutHold } from "@/components/consumer/CheckoutCountdown";
 
-const TAX_RATE = 0.065;
+const DEFAULT_TAX_RATE = 0.065;
+
+// Tax comes from the coupon's city record (city_thresholds.tax_rate), matching the server-side checkout.
+function useCartTaxRates(couponIds: string[]) {
+  const [rates, setRates] = useState<Record<string, number>>({});
+  const key = [...couponIds].sort().join(",");
+  useEffect(() => {
+    if (!couponIds.length) return;
+    let cancelled = false;
+    (async () => {
+      const { data: coupons } = await supabase.from("coupons").select("id, location_id").in("id", couponIds);
+      const locIds = [...new Set((coupons || []).map((c: any) => c.location_id).filter(Boolean))];
+      const { data: locs } = locIds.length ? await supabase.from("locations").select("id, city, state").in("id", locIds) : { data: [] as any[] };
+      const { data: cities } = await supabase.from("city_thresholds").select("city, state, tax_rate");
+      const norm = (v?: string | null) => (v || "").toLowerCase().trim();
+      const out: Record<string, number> = {};
+      for (const c of coupons || []) {
+        const loc = (locs || []).find((l: any) => l.id === (c as any).location_id);
+        const city = loc && (cities || []).find((ct: any) => norm(ct.city) === norm(loc.city));
+        out[(c as any).id] = city?.tax_rate != null ? Number(city.tax_rate) : DEFAULT_TAX_RATE;
+      }
+      if (!cancelled) setRates(out);
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+  return rates;
+}
 
 const ConsumerCart = () => {
   const navigate = useNavigate();
@@ -23,7 +50,10 @@ const ConsumerCart = () => {
     return () => window.removeEventListener("gstc-hold", sync);
   }, []);
 
-  const tax = subtotal * TAX_RATE;
+  const taxRates = useCartTaxRates(items.map((i) => i.coupon_id));
+  const tax = items.reduce((s, i) => s + Math.round(i.price * i.quantity * (taxRates[i.coupon_id] ?? DEFAULT_TAX_RATE) * 100) / 100, 0);
+  const rateValues = [...new Set(items.map((i) => taxRates[i.coupon_id] ?? DEFAULT_TAX_RATE))];
+  const taxLabel = rateValues.length === 1 ? `Tax (${+(rateValues[0] * 100).toFixed(3)}%)` : "Tax";
   const total = subtotal + tax;
 
   const handleBuy = async () => {
@@ -85,7 +115,7 @@ const ConsumerCart = () => {
             </button>
             <div className="mt-4 space-y-2 text-sm">
               <div className="flex justify-between"><span className="text-gray-500">Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
-              <div className="flex justify-between"><span className="text-gray-500">Tax (6.5%)</span><span>${tax.toFixed(2)}</span></div>
+              <div className="flex justify-between"><span className="text-gray-500">{taxLabel}</span><span>${tax.toFixed(2)}</span></div>
               <div className="flex justify-between font-bold text-base"><span>Total</span><span className="text-[#F97316]">${total.toFixed(2)}</span></div>
             </div>
             <p className="text-xs text-gray-400 mt-3">* Pick up your order at the restaurant location</p>
