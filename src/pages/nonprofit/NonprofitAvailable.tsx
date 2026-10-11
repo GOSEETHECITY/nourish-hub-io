@@ -7,11 +7,27 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
 import type { FoodListing } from "@/types/database";
+import { geocode } from "@/lib/cityCenter";
+import { haversineMiles, formatDistance } from "@/lib/geo";
 
 export default function NonprofitAvailable() {
   const { profile } = useAuth();
   const queryClient = useQueryClient();
   const [filterFoodType, setFilterFoodType] = useState("all");
+  const [radius, setRadius] = useState("25");
+
+  // The nonprofit's saved address is the origin for distance filtering and sorting.
+  const { data: origin, isFetched: originFetched } = useQuery({
+    queryKey: ["np-origin", profile?.nonprofit_id],
+    queryFn: async () => {
+      const { data } = await supabase.from("nonprofits").select("address, city, state, zip").eq("id", profile!.nonprofit_id!).maybeSingle();
+      const addr = [data?.address, data?.city, data?.state, data?.zip].filter(Boolean).join(", ");
+      if (!addr) return null;
+      return (await geocode(addr)) ?? (data?.city ? await geocode([data.city, data.state].filter(Boolean).join(", ")) : null);
+    },
+    enabled: !!profile?.nonprofit_id,
+    staleTime: Infinity,
+  });
 
   const { data: available = [] } = useQuery({
     queryKey: ["available-donations"],
@@ -54,7 +70,22 @@ export default function NonprofitAvailable() {
     onError: (e) => toast.error(e.message),
   });
 
-  const filtered = filterFoodType === "all" ? available : available.filter((d) => d.food_type === filterFoodType);
+  const withDistance = useMemo(() => available.map((d) => {
+    const lat = d.latitude != null ? Number(d.latitude) : null;
+    const lng = d.longitude != null ? Number(d.longitude) : null;
+    const miles = origin && lat != null && lng != null && Number.isFinite(lat) && Number.isFinite(lng)
+      ? haversineMiles(origin.lat, origin.lng, lat, lng) : null;
+    return { ...d, miles };
+  }), [available, origin]);
+
+  const filtered = useMemo(() => {
+    const maxMiles = radius === "any" ? Infinity : Number(radius);
+    return withDistance
+      .filter((d) => filterFoodType === "all" || d.food_type === filterFoodType)
+      // Without a usable origin we cannot measure distance, so the radius cannot be applied.
+      .filter((d) => !origin || radius === "any" || (d.miles != null && d.miles <= maxMiles))
+      .sort((a, b) => (a.miles ?? Infinity) - (b.miles ?? Infinity));
+  }, [withDistance, filterFoodType, radius, origin]);
 
   return (
     <div className="space-y-6">
@@ -77,7 +108,21 @@ export default function NonprofitAvailable() {
             <SelectItem value="frozen">Frozen</SelectItem>
           </SelectContent>
         </Select>
+        <Select value={radius} onValueChange={setRadius}>
+          <SelectTrigger className="w-[160px]"><SelectValue placeholder="Distance" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="5">Within 5 miles</SelectItem>
+            <SelectItem value="10">Within 10 miles</SelectItem>
+            <SelectItem value="25">Within 25 miles</SelectItem>
+            <SelectItem value="50">Within 50 miles</SelectItem>
+            <SelectItem value="100">Within 100 miles</SelectItem>
+            <SelectItem value="any">Any distance</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
+      {originFetched && !origin && (
+        <p className="text-sm text-muted-foreground">We couldn't locate your saved address, so distances can't be shown. Add a full address in Settings to see the nearest donations first.</p>
+      )}
 
       <div className="bg-card rounded-xl border">
         <div className="overflow-x-auto"><Table>
@@ -88,12 +133,13 @@ export default function NonprofitAvailable() {
               <TableHead>Pounds</TableHead>
               <TableHead>Pickup Window</TableHead>
               <TableHead>Pickup Address</TableHead>
+              <TableHead>Distance</TableHead>
               <TableHead>Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-12 text-muted-foreground">No available donations right now. New posts appear here as venues list surplus.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground">No available donations in this area right now. Try a wider distance, or check back as venues list surplus.</TableCell></TableRow>
             ) : filtered.map((d) => (
               <TableRow key={d.id}>
                 <TableCell className="font-medium">{orgMap[d.organization_id] || "—"}</TableCell>
@@ -101,6 +147,7 @@ export default function NonprofitAvailable() {
                 <TableCell>{d.pounds || "—"}</TableCell>
                 <TableCell>{d.pickup_window_start ? new Date(d.pickup_window_start).toLocaleString([], { dateStyle: "short", timeStyle: "short" }) : "—"}</TableCell>
                 <TableCell className="max-w-[200px] truncate">{d.pickup_address || "—"}</TableCell>
+                <TableCell>{d.miles != null ? formatDistance(d.miles) : "—"}</TableCell>
                 <TableCell>
                   <Button size="sm" onClick={() => claimDonation.mutate(d.id)} disabled={claimDonation.isPending}>Claim</Button>
                 </TableCell>
