@@ -92,6 +92,17 @@ export default function NonprofitClaimed() {
     },
     enabled: !!profile?.nonprofit_id && listingIds.length > 0,
   });
+  const { data: surveys = [] } = useQuery({
+    queryKey: ["np-claim-surveys", profile?.nonprofit_id, listingIds],
+    queryFn: async () => {
+      if (!listingIds.length) return [];
+      const { data } = await supabase.from("impact_surveys").select("food_listing_id, token, submitted_at").in("food_listing_id", listingIds);
+      return data || [];
+    },
+    enabled: !!profile?.nonprofit_id && listingIds.length > 0,
+  });
+  const surveyMap = useMemo(() => Object.fromEntries(surveys.map((s: any) => [s.food_listing_id, s])), [surveys]);
+
   const receiptMap = useMemo(() => {
     const m: Record<string, (typeof receipts)[number]> = {};
     for (const r of receipts) if (!m[r.food_listing_id]) m[r.food_listing_id] = r;
@@ -109,7 +120,8 @@ export default function NonprofitClaimed() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["my-claims"] });
       queryClient.invalidateQueries({ queryKey: ["eligible-for-report"] });
-      toast.success("Marked as picked up");
+      queryClient.invalidateQueries({ queryKey: ["np-claim-surveys"] });
+      toast.success("Marked as picked up — we've emailed you the pickup survey link. You can also open it from this page.");
     },
     onError: (e: any) => toast.error(e.message || "Could not update status"),
   });
@@ -117,13 +129,18 @@ export default function NonprofitClaimed() {
   const submitReport = useMutation({
     mutationFn: async () => {
       if (!profile?.nonprofit_id || !reportListing) throw new Error("Missing data");
-      const { error: insertError } = await supabase.from("impact_reports").insert({
+      const payload = {
         food_listing_id: reportListing.id,
         nonprofit_id: profile.nonprofit_id,
         meals_served: form.meals_served ? Number(form.meals_served) : null,
         date_distributed: form.date_distributed || null,
         notes: form.notes || null,
-      });
+      };
+      // A submitted pickup survey may already have created the report; update it instead of duplicating.
+      const { data: existing } = await supabase.from("impact_reports").select("id").eq("food_listing_id", reportListing.id).maybeSingle();
+      const { error: insertError } = existing
+        ? await supabase.from("impact_reports").update(payload).eq("id", existing.id)
+        : await supabase.from("impact_reports").insert(payload);
       if (insertError) throw insertError;
       const { error: updateError } = await supabase
         .from("food_listings")
@@ -244,6 +261,16 @@ export default function NonprofitClaimed() {
                             >
                               Submit Impact Report
                             </Button>
+                          )}
+                          {surveyMap[d.id] && !surveyMap[d.id].submitted_at && (
+                            <Button size="sm" variant="secondary" asChild>
+                              <a href={`/survey/${surveyMap[d.id].token}`} target="_blank" rel="noopener noreferrer">
+                                <Camera className="w-3.5 h-3.5 mr-1" /> Complete pickup survey + upload photos
+                              </a>
+                            </Button>
+                          )}
+                          {surveyMap[d.id]?.submitted_at && (
+                            <span className="text-xs text-success self-center">Survey submitted</span>
                           )}
                           {receiptMap[d.id] ? (
                             <Button
