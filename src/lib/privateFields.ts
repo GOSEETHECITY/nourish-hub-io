@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
  * from secure lookups that return them only to admins and members.
  */
 export const ORG_PUBLIC_COLUMNS =
-  "id, name, type, primary_contact_name, billing_contact, address, city, state, zip, county, approval_status, created_at, join_code, government_regions, logo_url, business_bio, hours_of_operation, parent_organization_id, stripe_charges_enabled, stripe_payouts_enabled, stripe_details_submitted, platform_fee_percentage, credentials_sent_at, website_url, marketplace_enabled, is_verified";
+  "id, name, type, primary_contact_name, billing_contact, address, city, state, zip, county, approval_status, created_at, join_code, government_regions, logo_url, business_bio, hours_of_operation, parent_organization_id, stripe_charges_enabled, stripe_payouts_enabled, stripe_details_submitted, platform_fee_percentage, credentials_sent_at, website_url, marketplace_enabled, is_verified, is_one_time_event, event_name, event_date";
 
 export const NONPROFIT_PUBLIC_COLUMNS =
   "id, user_id, organization_name, logo_url, website, social_handles, primary_contact, address, city, state, zip, county, operating_hours, cold_storage, refrigeration, cabinetry, food_types_accepted, estimated_weekly_served, population_served, approval_status, created_at, join_code, credentials_sent_at, primary_contact_name, organization_bio, website_url, is_verified";
