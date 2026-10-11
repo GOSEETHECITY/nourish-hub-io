@@ -1,3 +1,4 @@
+import GovWasteGoalCard from "@/components/admin/GovWasteGoalCard";
 import { useState } from "react";
 import { ORG_PUBLIC_COLUMNS, withOrgPrivateOne } from "@/lib/privateFields";
 import { useParams, useNavigate } from "react-router-dom";
@@ -176,6 +177,8 @@ export default function OrganizationDetail() {
           {org.approval_status !== "deactivated" && <Button size="sm" variant="outline" onClick={() => updateStatus.mutate("deactivated")}>Deactivate</Button>}
         </div>
       </div>
+
+      {["municipal_government", "county_government", "state_government", "government_entity"].includes(org.type as string) && <GovWasteGoalCard orgId={org.id} />}
 
       {/* Organization Profile */}
       <section className="bg-card rounded-xl border p-6">

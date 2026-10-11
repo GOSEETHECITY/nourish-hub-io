@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useMemo } from "react";
 import { ORG_PUBLIC_COLUMNS, withOrgPrivateOne } from "@/lib/privateFields";
 import { useQuery } from "@tanstack/react-query";
@@ -77,7 +78,7 @@ export default function GovernmentOrganizations() {
               </TableRow>
             ) : filteredOrgs.map((o) => (
               <TableRow key={o.id}>
-                <TableCell className="font-medium">{o.name}</TableCell>
+                <TableCell className="font-medium"><Link to={`/government/organizations/${o.id}`} className="hover:underline">{o.name}</Link></TableCell>
                 <TableCell>{formatOrgType(o.type)}</TableCell>
                 <TableCell>{o.city || "—"}</TableCell>
                 <TableCell>{o.state || "—"}</TableCell>

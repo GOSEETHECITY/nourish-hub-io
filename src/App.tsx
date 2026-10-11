@@ -79,6 +79,9 @@ import CompleteProfile from "./pages/partner/CompleteProfile";
 import VenueTaxReceipts from "./pages/venue/VenueTaxReceipts";
 import VenueCompliance from "./pages/venue/VenueCompliance";
 import VenueOrders from "./pages/venue/VenueOrders";
+import GovernmentOrganizationDetail from "./pages/government/GovernmentOrganizationDetail";
+import CityCounterWidget from "./pages/CityCounterWidget";
+import VenueTaxCalculator from "./pages/venue/VenueTaxCalculator";
 import VenueQuickLog from "./pages/venue/VenueQuickLog";
 import VenueSchedules from "./pages/venue/VenueSchedules";
 import FranchiseDashboard from "./pages/franchise/FranchiseDashboard";
@@ -279,6 +282,7 @@ const App = () => (
               <Route path="/venue" element={<VenueDashboardHome />} />
               <Route path="/venue/donations" element={<VenueDonations />} />
               <Route path="/venue/quick-log" element={<VenueQuickLog />} />
+              <Route path="/venue/tax-calculator" element={<VenueTaxCalculator />} />
               <Route path="/venue/schedules" element={<VenueSchedules />} />
               <Route path="/venue/marketplace" element={<VenueMarketplace />} />
               <Route path="/venue/impact" element={<VenueImpact />} />
@@ -319,6 +323,7 @@ const App = () => (
               <Route path="/government" element={<GovernmentDashboardHome />} />
               <Route path="/government/listings" element={<GovernmentListings />} />
               <Route path="/government/organizations" element={<GovernmentOrganizations />} />
+              <Route path="/government/organizations/:id" element={<GovernmentOrganizationDetail />} />
               <Route path="/government/nonprofits" element={<GovernmentNonprofits />} />
               <Route path="/government/reports" element={<GovernmentImpactReports />} />
               <Route path="/government/settings" element={<GovernmentSettings />} />
@@ -359,6 +364,7 @@ const App = () => (
 
             {/* Public gated event preview */}
             <Route path="/event-preview/:id" element={<EventPreview />} />
+            <Route path="/widget/meals" element={<CityCounterWidget />} />
 
             {/* District dashboard (public demo, no auth) */}
             <Route element={<DistrictLayout />}>

@@ -1,3 +1,4 @@
+import { IMPACT_FACTORS } from "../_shared/impactMethodology.ts";
 // Refreshes the single-row public.impact_stats snapshot used by /impact.
 // Runs on cron (daily). Requires the CRON_SECRET header.
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -35,8 +36,8 @@ Deno.serve(async (req) => {
     const peopleFed = (mealRows ?? []).reduce((s, r: any) => s + Number(r.meals_served ?? 0), 0);
 
     // meals = pounds * 0.8 (USDA-ish approximation), CO2 = pounds * 2.5 lb CO2e
-    const meals = Math.round(pounds * 0.8);
-    const co2LbsAvoided = Math.round(pounds * 2.5);
+    const meals = Math.round(pounds * IMPACT_FACTORS.MEALS_PER_LB);
+    const co2LbsAvoided = Math.round(pounds * IMPACT_FACTORS.CO2E_LBS_PER_LB);
 
     const platform_totals = {
       pounds_rescued: Math.round(pounds),

@@ -1,3 +1,5 @@
+import ImpactMethodologyNote from "@/components/impact/ImpactMethodologyNote";
+import { estimateImpact } from "@/lib/impactMethodology";
 import { useMemo, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -109,7 +111,7 @@ export default function NonprofitImpactReports() {
   const donationsCount = receivedListings.length;
   // Single source of truth for meals served: impact_reports.meals_served (survey answers sync into it).
   const totalMeals = filteredReports.reduce((s: number, x: any) => s + (x.meals_served || 0), 0);
-  const co2 = Math.round(totalPounds * CO2_LBS_PER_LB_FOOD);
+  const co2 = estimateImpact(totalPounds).co2Lbs;
 
   // Demographic breakdown across surveys
   const demoCounts: Record<string, number> = Object.fromEntries(DEMO_KEYS.map((k) => [k, 0]));
@@ -196,12 +198,13 @@ export default function NonprofitImpactReports() {
         </div>
       </div>
 
+      <ImpactMethodologyNote />
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <StatCard icon={<Package />} label="Pounds Received" value={totalPounds.toLocaleString()} />
         <StatCard icon={<Heart />} label="Donations" value={donationsCount.toLocaleString()} />
-        <StatCard icon={<Users />} label="Meals Served" value={totalMeals.toLocaleString()} />
+        <StatCard icon={<Users />} label="Meals Served (reported)" value={totalMeals.toLocaleString()} />
         <StatCard icon={<DollarSign />} label="Est. FMV" value={`$${totalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}`} />
-        <StatCard icon={<Leaf />} label="CO₂ Prevented" value={`${co2.toLocaleString()} lbs`} />
+        <StatCard icon={<Leaf />} label="Est. CO₂e Prevented" value={`${co2.toLocaleString()} lbs`} />
       </div>
 
       <Tabs defaultValue="chart" className="space-y-4">

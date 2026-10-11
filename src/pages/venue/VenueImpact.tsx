@@ -1,3 +1,5 @@
+import ImpactMethodologyNote from "@/components/impact/ImpactMethodologyNote";
+import { estimateImpact } from "@/lib/impactMethodology";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,18 +37,20 @@ export default function VenueImpact() {
   const totalPounds = listings.reduce((s, l) => s + (l.pounds || 0), 0);
   const totalValue = listings.reduce((s, l) => s + (l.estimated_donation_value || 0), 0);
   const totalMeals = reports.reduce((s, r) => s + (r.meals_served || 0), 0);
-  const co2 = totalPounds * CO2_LBS_PER_LB_FOOD;
-  const water = totalPounds * 108;
-  const trees = co2 / 48;
+  const est = estimateImpact(totalPounds);
+  const co2 = est.co2Lbs;
+  const water = est.waterGal;
+  const trees = est.trees;
 
   const metrics = [
     { label: "Total Pounds Diverted", value: `${totalPounds.toLocaleString()} lbs`, icon: Leaf },
-    { label: "Total Meals Served", value: totalMeals.toLocaleString(), icon: Trophy },
+    { label: "Meals Served (reported)", value: totalMeals.toLocaleString(), icon: Trophy },
+    { label: "Est. Meals Rescued", value: est.meals.toLocaleString(), icon: Trophy },
     { label: "Est. Donation Value", value: `$${totalValue.toLocaleString()}`, icon: Trophy },
-    { label: "CO₂ Prevented", value: `${co2.toLocaleString()} lbs`, icon: Leaf },
-    { label: "Water Saved", value: `${water.toLocaleString()} gal`, icon: Droplets },
+    { label: "Est. CO₂e Prevented", value: `${co2.toLocaleString()} lbs`, icon: Leaf },
+    { label: "Est. Water Saved", value: `${water.toLocaleString()} gal`, icon: Droplets },
     { label: "Landfill Diverted", value: `${totalPounds.toLocaleString()} lbs`, icon: Trash2 },
-    { label: "Equiv. Trees Planted", value: Math.round(trees).toLocaleString(), icon: TreeDeciduous },
+    { label: "Est. Trees Equivalent", value: Math.round(trees).toLocaleString(), icon: TreeDeciduous },
   ];
 
   return (
@@ -64,6 +68,8 @@ export default function VenueImpact() {
           </div>
         ))}
       </div>
+
+      <ImpactMethodologyNote />
 
       {/* Impact Reports */}
       <div className="bg-card rounded-xl border p-6">

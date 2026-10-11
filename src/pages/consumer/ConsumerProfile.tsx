@@ -1,3 +1,4 @@
+import ShareButton from "@/components/consumer/ShareButton";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Pencil, ShoppingBag, MapPin, Users, Trophy } from "lucide-react";
@@ -93,9 +94,14 @@ const ConsumerProfile = () => {
           {BADGE_CATALOG.map(b => {
             const earned = earnedKeys.has(b.key);
             return (
-              <div key={b.key} title={b.name}
-                className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl mx-auto ${earned ? "bg-[#F97316]/10" : "bg-gray-100 opacity-40 blur-[1px]"}`}>
-                {earned ? b.icon : "🔒"}
+              <div key={b.key} className="flex flex-col items-center gap-1">
+                <div title={b.name}
+                  className={`w-16 h-16 rounded-full flex items-center justify-center text-2xl mx-auto ${earned ? "bg-[#F97316]/10" : "bg-gray-100 opacity-40 blur-[1px]"}`}>
+                  {earned ? b.icon : "🔒"}
+                </div>
+                {earned && (
+                  <ShareButton emoji={b.icon} title={`I earned ${b.name}!`} subtitle="Rescuing food and exploring my city" text={`I just earned the ${b.name} badge on GO See The City. Join me!`} path="/app/signup" />
+                )}
               </div>
             );
           })}

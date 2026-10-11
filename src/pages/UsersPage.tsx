@@ -1,3 +1,4 @@
+import { Switch } from "@/components/ui/switch";
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -563,12 +564,13 @@ function ConsumersTab({ onOpenUser }: { onOpenUser: (p: Profile) => void }) {
                 <TableHead>Threshold</TableHead>
                 <TableHead>Progress</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Surplus Selling</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {cityThresholds.length === 0 ? (
-                <TableRow><TableCell colSpan={7} className="text-center py-12 text-muted-foreground">No city data yet</TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} className="text-center py-12 text-muted-foreground">No city data yet</TableCell></TableRow>
               ) : cityThresholds.map((ct) => {
                 const pct = Math.min(100, Math.round((ct.current_consumer_count / ct.threshold) * 100));
                 return (
@@ -582,6 +584,17 @@ function ConsumersTab({ onOpenUser }: { onOpenUser: (p: Profile) => void }) {
                       <span className={`px-2.5 py-0.5 text-xs font-semibold rounded ${ct.marketplace_unlocked ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>
                         {ct.marketplace_unlocked ? "Unlocked" : "Locked"}
                       </span>
+                    </TableCell>
+                    <TableCell>
+                      <Switch
+                        aria-label={`Surplus selling in ${ct.city}`}
+                        checked={!!(ct as any).surplus_selling_enabled}
+                        onCheckedChange={async (v) => {
+                          const { error } = await supabase.from("city_thresholds").update({ surplus_selling_enabled: v } as any).eq("id", ct.id);
+                          if (error) toast.error(error.message);
+                          queryClient.invalidateQueries({ queryKey: ["city-thresholds"] });
+                        }}
+                      />
                     </TableCell>
                     <TableCell>
                       <Button size="sm" variant="outline" onClick={() => { setEditThreshold(ct); setNewThreshold(String(ct.threshold)); }}>Edit Threshold</Button>
