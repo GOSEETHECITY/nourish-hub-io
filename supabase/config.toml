@@ -62,3 +62,5 @@ verify_jwt = false
 verify_jwt = false
 [functions.driver-order-checkout]
 verify_jwt = false
+[functions.venue-journey-alert]
+verify_jwt = false

@@ -70,7 +70,21 @@ const GovernmentSchema = z.object({
   }),
 });
 
-const BodySchema = z.discriminatedUnion("pathway", [VenueSchema, NonprofitSchema, GovernmentSchema]);
+// Lightweight single-event donor (weddings, one-night events, grand openings).
+const OneTimeEventSchema = z.object({
+  pathway: z.literal("one_time_event"),
+  account: AccountSchema,
+  event: z.object({
+    name: z.string().trim().min(1).max(255),
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    address: z.string().trim().min(1).max(255),
+    city: z.string().trim().min(1).max(100),
+    state: z.string().trim().min(2).max(50),
+    zip: z.string().trim().min(3).max(20),
+  }),
+});
+
+const BodySchema = z.discriminatedUnion("pathway", [VenueSchema, NonprofitSchema, GovernmentSchema, OneTimeEventSchema]);
 
 const VENUE_ORG_TYPES = new Set([
   "restaurant", "catering_company", "event", "hotel", "convention_center",
@@ -171,7 +185,37 @@ Deno.serve(async (req) => {
       linkedUserId = user.id;
     }
 
-    if (body.pathway === "venue" || body.pathway === "government") {
+    if (body.pathway === "one_time_event") {
+      const ev = body.event;
+      if (ev.date < new Date().toISOString().slice(0, 10)) return fail("The event date must be today or later.", 400);
+      submissionType = "event";
+      const { data: orgRow, error: orgError } = await admin.from("organizations").insert({
+        name: ev.name, type: "event", primary_contact_name: contactName, primary_contact_email: contactEmail,
+        primary_contact_phone: nn(account.phone), address: ev.address, city: ev.city, state: ev.state, zip: ev.zip,
+        approval_status: "pending", join_code: joinCode("HAR"),
+        is_one_time_event: true, event_name: ev.name, event_date: ev.date,
+      }).select("id").single();
+      if (orgError) throw orgError;
+      organizationId = orgRow.id;
+      undo.push({ table: "organizations", id: orgRow.id });
+
+      const { data: locRow, error: locError } = await admin.from("locations").insert({
+        organization_id: organizationId, name: ev.name, address: ev.address, city: ev.city, state: ev.state, zip: ev.zip,
+        pickup_address: [ev.address, ev.city, ev.state, ev.zip].join(", "), location_type: "event",
+        approval_status: "pending", contact_name: contactName, contact_email: contactEmail, contact_phone: nn(account.phone),
+      }).select("id").single();
+      if (locError) throw locError;
+      undo.push({ table: "locations", id: locRow.id });
+
+      const { error: profileError } = await admin.from("profiles").update({
+        first_name: account.firstName, last_name: account.lastName, email: contactEmail,
+        phone: nn(account.phone), organization_id: organizationId, location_id: locRow.id,
+      }).eq("id", user.id);
+      if (profileError) throw profileError;
+      linkedUserId = user.id;
+      const { error: roleError } = await admin.from("user_roles").insert({ user_id: user.id, role: "venue_partner" });
+      if (roleError) throw roleError;
+    } else if (body.pathway === "venue" || body.pathway === "government") {
       const isGov = body.pathway === "government";
       const type = isGov ? body.org.type : body.org.type;
       if (!isGov && !VENUE_ORG_TYPES.has(type)) return fail("Please choose a valid organization type.", 400);
@@ -255,7 +299,7 @@ Deno.serve(async (req) => {
 
     // Surface the application in the existing admin approval queue.
     const { error: subError } = await admin.from("onboarding_submissions").insert({
-      organization_name: body.org.name,
+      organization_name: body.pathway === "one_time_event" ? `${body.event.name} (one-time event, ${body.event.date})` : body.org.name,
       organization_type: submissionType,
       contact_name: contactName,
       contact_email: contactEmail,
@@ -274,9 +318,9 @@ Deno.serve(async (req) => {
           audience: "admins",
           category: "new_partner_application",
           urgent: false,
-          subject: `New partner application: ${body.org.name}`,
+          subject: `New partner application: ${body.pathway === "one_time_event" ? body.event.name + " (one-time event)" : body.org.name}`,
           text: `A new ${submissionType.replace(/_/g, " ")} application is awaiting review.\n\n`
-            + `Organization: ${body.org.name}\nType: ${submissionType}\n`
+            + `Organization: ${body.pathway === "one_time_event" ? body.event.name + " — one-time event on " + body.event.date : body.org.name}\nType: ${submissionType}\n`
             + `Contact: ${contactName}\nEmail: ${contactEmail}`,
         },
       });
