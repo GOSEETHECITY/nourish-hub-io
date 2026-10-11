@@ -14,6 +14,7 @@ import PasswordInput from "@/components/ui/password-input";
 import AvatarUploader from "@/components/AvatarUploader";
 import { getLogoSignedUrl } from "@/lib/orgProfile";
 import type { Nonprofit } from "@/types/database";
+import DonationAlertSettings from "@/components/nonprofit/DonationAlertSettings";
 
 const MAX_LOGO_BYTES = 2 * 1024 * 1024;
 const ALLOWED_LOGO_TYPES = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"];
@@ -158,6 +159,8 @@ export default function NonprofitSettings() {
           </div>
         </section>
       )}
+
+      {profile?.nonprofit_id && <DonationAlertSettings nonprofitId={profile.nonprofit_id} />}
 
       <section className="bg-card rounded-xl border p-6 space-y-4">
         <h2 className="text-lg font-bold text-foreground">Your Profile</h2>

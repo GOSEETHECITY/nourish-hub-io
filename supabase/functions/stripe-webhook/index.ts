@@ -43,6 +43,13 @@ Deno.serve(async (req) => {
         const meta = s.metadata ?? {};
         const pi = typeof s.payment_intent === "string" ? s.payment_intent : s.payment_intent?.id ?? null;
         const amountTotal = s.amount_total ?? 0;
+        // Nonprofit driver orders: mark paid so the admin fulfillment queue can dispatch.
+        if (meta.kind === "driver_order" && meta.driver_order_id) {
+          await admin.from("driver_orders")
+            .update({ status: "paid", paid_at: new Date().toISOString(), stripe_payment_intent_id: pi })
+            .eq("id", meta.driver_order_id).eq("status", "awaiting_payment");
+          break;
+        }
         // Idempotency: Stripe may redeliver this event; skip if already recorded.
         if (pi) {
           const { data: existing } = await admin.from("consumer_orders")

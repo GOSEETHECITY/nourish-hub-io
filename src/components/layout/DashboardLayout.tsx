@@ -2,7 +2,7 @@ import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Building2, UtensilsCrossed, Heart, CalendarDays,
   Store, BarChart3, Users, CreditCard, Headphones, Settings, LogOut,
-  Search, MapPin, ChevronDown, ChevronRight, Menu, X, FileText, Package,
+  Search, MapPin, ChevronDown, ChevronRight, Menu, X, FileText, Package, Truck, AlertTriangle,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -22,6 +22,8 @@ const mainNav = [
     ],
   },
   { icon: Package, label: "All Donations", path: "/admin/donations" },
+  { icon: Truck, label: "Driver Orders", path: "/admin/driver-orders" },
+  { icon: AlertTriangle, label: "Pickup Problems", path: "/admin/pickup-issues" },
   { icon: Heart, label: "Nonprofits", path: "/nonprofits" },
   { icon: CalendarDays, label: "Events", path: "/events" },
   { icon: MapPin, label: "Regions", path: "/regions" },

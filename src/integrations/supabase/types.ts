@@ -767,6 +767,97 @@ export type Database = {
           },
         ]
       }
+      driver_orders: {
+        Row: {
+          admin_notes: string | null
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          dispatched_at: string | null
+          estimated_fee_cents: number
+          food_listing_id: string | null
+          fulfillment_mode: string
+          id: string
+          nonprofit_id: string
+          paid_at: string | null
+          pickup_kind: string
+          pickup_notes: string | null
+          provider: string
+          scheduled_date: string | null
+          status: string
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
+          uber_deeplink: string | null
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          dispatched_at?: string | null
+          estimated_fee_cents?: number
+          food_listing_id?: string | null
+          fulfillment_mode?: string
+          id?: string
+          nonprofit_id: string
+          paid_at?: string | null
+          pickup_kind?: string
+          pickup_notes?: string | null
+          provider?: string
+          scheduled_date?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          uber_deeplink?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          dispatched_at?: string | null
+          estimated_fee_cents?: number
+          food_listing_id?: string | null
+          fulfillment_mode?: string
+          id?: string
+          nonprofit_id?: string
+          paid_at?: string | null
+          pickup_kind?: string
+          pickup_notes?: string | null
+          provider?: string
+          scheduled_date?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          uber_deeplink?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "driver_orders_food_listing_id_fkey"
+            columns: ["food_listing_id"]
+            isOneToOne: false
+            referencedRelation: "food_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_orders_nonprofit_id_fkey"
+            columns: ["nonprofit_id"]
+            isOneToOne: false
+            referencedRelation: "nonprofits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "driver_orders_nonprofit_id_fkey"
+            columns: ["nonprofit_id"]
+            isOneToOne: false
+            referencedRelation: "nonprofits_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_checkins: {
         Row: {
           checked_in_at: string | null
@@ -1498,6 +1589,60 @@ export type Database = {
           },
         ]
       }
+      nonprofit_alert_settings: {
+        Row: {
+          alert_email: string | null
+          alert_phone: string | null
+          created_at: string
+          email_enabled: boolean
+          latitude: number | null
+          longitude: number | null
+          nonprofit_id: string
+          radius_miles: number
+          sms_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          alert_email?: string | null
+          alert_phone?: string | null
+          created_at?: string
+          email_enabled?: boolean
+          latitude?: number | null
+          longitude?: number | null
+          nonprofit_id: string
+          radius_miles?: number
+          sms_enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          alert_email?: string | null
+          alert_phone?: string | null
+          created_at?: string
+          email_enabled?: boolean
+          latitude?: number | null
+          longitude?: number | null
+          nonprofit_id?: string
+          radius_miles?: number
+          sms_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nonprofit_alert_settings_nonprofit_id_fkey"
+            columns: ["nonprofit_id"]
+            isOneToOne: true
+            referencedRelation: "nonprofits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nonprofit_alert_settings_nonprofit_id_fkey"
+            columns: ["nonprofit_id"]
+            isOneToOne: true
+            referencedRelation: "nonprofits_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       nonprofit_locations: {
         Row: {
           address: string | null
@@ -2190,6 +2335,86 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      pickup_issues: {
+        Row: {
+          created_at: string
+          description: string | null
+          driver_order_id: string | null
+          food_listing_id: string | null
+          id: string
+          issue_type: string
+          nonprofit_id: string | null
+          reported_by: string | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          source: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          driver_order_id?: string | null
+          food_listing_id?: string | null
+          id?: string
+          issue_type: string
+          nonprofit_id?: string | null
+          reported_by?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          driver_order_id?: string | null
+          food_listing_id?: string | null
+          id?: string
+          issue_type?: string
+          nonprofit_id?: string | null
+          reported_by?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pickup_issues_driver_order_id_fkey"
+            columns: ["driver_order_id"]
+            isOneToOne: false
+            referencedRelation: "driver_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pickup_issues_food_listing_id_fkey"
+            columns: ["food_listing_id"]
+            isOneToOne: false
+            referencedRelation: "food_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pickup_issues_nonprofit_id_fkey"
+            columns: ["nonprofit_id"]
+            isOneToOne: false
+            referencedRelation: "nonprofits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pickup_issues_nonprofit_id_fkey"
+            columns: ["nonprofit_id"]
+            isOneToOne: false
+            referencedRelation: "nonprofits_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -3134,13 +3359,6 @@ export type Database = {
           id: string
         }[]
       }
-      coupon_tax_rates: {
-        Args: { p_coupon_ids: string[] }
-        Returns: {
-          coupon_id: string
-          tax_rate: number
-        }[]
-      }
       create_consumer_order: {
         Args: { p_coupon_id: string; p_quantity: number }
         Returns: string
@@ -3152,6 +3370,7 @@ export type Database = {
       }
       ensure_own_referral_code: { Args: never; Returns: string }
       expire_pending_orders: { Args: never; Returns: number }
+      flag_missed_pickups: { Args: never; Returns: number }
       gen_pickup_code: { Args: never; Returns: string }
       gen_referral_code: { Args: never; Returns: string }
       get_impact_survey_by_token: {
