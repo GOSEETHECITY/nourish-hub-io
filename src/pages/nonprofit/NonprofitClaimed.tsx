@@ -414,7 +414,7 @@ export default function NonprofitClaimed() {
           )}
         </DialogContent>
       </Dialog>
-      <PickupMethodDialog open={!!driverFor} onOpenChange={(o) => !o && setDriverFor(null)} listingId={driverFor} onBeforeDriver={async () => true} />
+      <PickupMethodDialog open={!!driverFor} onOpenChange={(o) => !o && setDriverFor(null)} listingId={driverFor} onSelfPickup={() => setDriverFor(null)} onBeforeDriver={async () => true} />
       <PickupMethodDialog open={bulkOpen} onOpenChange={setBulkOpen} bulk />
       <ReportProblemDialog open={!!problemFor} onOpenChange={(o) => !o && setProblemFor(null)} listingId={problemFor} />
     </div>

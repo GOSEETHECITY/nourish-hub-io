@@ -1,4 +1,4 @@
-import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
+import { Truck, AlertTriangle, Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Building2, UtensilsCrossed, Heart, CalendarDays,
   Store, BarChart3, Users, CreditCard, Headphones, Settings, LogOut,
@@ -22,6 +22,8 @@ const mainNav = [
     ],
   },
   { icon: Package, label: "All Donations", path: "/admin/donations" },
+  { icon: Truck, label: "Driver Orders", path: "/admin/driver-orders" },
+  { icon: AlertTriangle, label: "Pickup Problems", path: "/admin/pickup-issues" },
   { icon: Heart, label: "Nonprofits", path: "/nonprofits" },
   { icon: CalendarDays, label: "Events", path: "/events" },
   { icon: MapPin, label: "Regions", path: "/regions" },
