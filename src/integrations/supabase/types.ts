@@ -116,6 +116,180 @@ export type Database = {
         }
         Relationships: []
       }
+      agreement_signatures: {
+        Row: {
+          agreement_title: string
+          application_id: string | null
+          authorized_attestation: boolean
+          body_sha256: string
+          consent_to_electronic: boolean
+          id: string
+          ip_address: string | null
+          nonprofit_id: string | null
+          organization_id: string | null
+          signed_at: string
+          signed_body: string
+          signed_by_user_id: string | null
+          signer_email: string
+          signer_name: string
+          signer_title: string
+          template_id: string
+          template_version: number
+          user_agent: string | null
+        }
+        Insert: {
+          agreement_title: string
+          application_id?: string | null
+          authorized_attestation: boolean
+          body_sha256: string
+          consent_to_electronic: boolean
+          id?: string
+          ip_address?: string | null
+          nonprofit_id?: string | null
+          organization_id?: string | null
+          signed_at?: string
+          signed_body: string
+          signed_by_user_id?: string | null
+          signer_email: string
+          signer_name: string
+          signer_title: string
+          template_id: string
+          template_version: number
+          user_agent?: string | null
+        }
+        Update: {
+          agreement_title?: string
+          application_id?: string | null
+          authorized_attestation?: boolean
+          body_sha256?: string
+          consent_to_electronic?: boolean
+          id?: string
+          ip_address?: string | null
+          nonprofit_id?: string | null
+          organization_id?: string | null
+          signed_at?: string
+          signed_body?: string
+          signed_by_user_id?: string | null
+          signer_email?: string
+          signer_name?: string
+          signer_title?: string
+          template_id?: string
+          template_version?: number
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agreement_signatures_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "partner_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agreement_signatures_nonprofit_id_fkey"
+            columns: ["nonprofit_id"]
+            isOneToOne: false
+            referencedRelation: "nonprofits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agreement_signatures_nonprofit_id_fkey"
+            columns: ["nonprofit_id"]
+            isOneToOne: false
+            referencedRelation: "nonprofits_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agreement_signatures_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agreement_signatures_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agreement_signatures_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "agreement_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agreement_templates: {
+        Row: {
+          body: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_current: boolean
+          nonprofit_id: string | null
+          org_kind: string
+          organization_id: string | null
+          title: string
+          version: number
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_current?: boolean
+          nonprofit_id?: string | null
+          org_kind: string
+          organization_id?: string | null
+          title: string
+          version: number
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_current?: boolean
+          nonprofit_id?: string | null
+          org_kind?: string
+          organization_id?: string | null
+          title?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agreement_templates_nonprofit_id_fkey"
+            columns: ["nonprofit_id"]
+            isOneToOne: false
+            referencedRelation: "nonprofits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agreement_templates_nonprofit_id_fkey"
+            columns: ["nonprofit_id"]
+            isOneToOne: false
+            referencedRelation: "nonprofits_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agreement_templates_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agreement_templates_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       app_config: {
         Row: {
           key: string
@@ -1926,16 +2100,21 @@ export type Database = {
           created_at: string
           credentials_sent_at: string | null
           ein: string | null
+          ein_check_result: Json | null
+          ein_last_checked_at: string | null
           estimated_weekly_served: number | null
           food_types_accepted: Database["public"]["Enums"]["food_type"][] | null
           id: string
+          is_active: boolean
           is_verified: boolean | null
           join_code: string | null
           logo_url: string | null
           operating_hours: string | null
           organization_bio: string | null
           organization_name: string
+          paused_reason: string | null
           population_served: string | null
+          posting_paused: boolean
           primary_contact: string | null
           primary_contact_email: string | null
           primary_contact_name: string | null
@@ -1960,18 +2139,23 @@ export type Database = {
           created_at?: string
           credentials_sent_at?: string | null
           ein?: string | null
+          ein_check_result?: Json | null
+          ein_last_checked_at?: string | null
           estimated_weekly_served?: number | null
           food_types_accepted?:
             | Database["public"]["Enums"]["food_type"][]
             | null
           id?: string
+          is_active?: boolean
           is_verified?: boolean | null
           join_code?: string | null
           logo_url?: string | null
           operating_hours?: string | null
           organization_bio?: string | null
           organization_name: string
+          paused_reason?: string | null
           population_served?: string | null
+          posting_paused?: boolean
           primary_contact?: string | null
           primary_contact_email?: string | null
           primary_contact_name?: string | null
@@ -1996,18 +2180,23 @@ export type Database = {
           created_at?: string
           credentials_sent_at?: string | null
           ein?: string | null
+          ein_check_result?: Json | null
+          ein_last_checked_at?: string | null
           estimated_weekly_served?: number | null
           food_types_accepted?:
             | Database["public"]["Enums"]["food_type"][]
             | null
           id?: string
+          is_active?: boolean
           is_verified?: boolean | null
           join_code?: string | null
           logo_url?: string | null
           operating_hours?: string | null
           organization_bio?: string | null
           organization_name?: string
+          paused_reason?: string | null
           population_served?: string | null
+          posting_paused?: boolean
           primary_contact?: string | null
           primary_contact_email?: string | null
           primary_contact_name?: string | null
@@ -2349,6 +2538,7 @@ export type Database = {
           government_regions: Json | null
           hours_of_operation: Json | null
           id: string
+          is_active: boolean
           is_one_time_event: boolean
           is_verified: boolean | null
           join_code: string | null
@@ -2356,7 +2546,9 @@ export type Database = {
           marketplace_enabled: boolean | null
           name: string
           parent_organization_id: string | null
+          paused_reason: string | null
           platform_fee_percentage: number
+          posting_paused: boolean
           primary_contact_email: string | null
           primary_contact_name: string | null
           primary_contact_phone: string | null
@@ -2383,6 +2575,7 @@ export type Database = {
           government_regions?: Json | null
           hours_of_operation?: Json | null
           id?: string
+          is_active?: boolean
           is_one_time_event?: boolean
           is_verified?: boolean | null
           join_code?: string | null
@@ -2390,7 +2583,9 @@ export type Database = {
           marketplace_enabled?: boolean | null
           name: string
           parent_organization_id?: string | null
+          paused_reason?: string | null
           platform_fee_percentage?: number
+          posting_paused?: boolean
           primary_contact_email?: string | null
           primary_contact_name?: string | null
           primary_contact_phone?: string | null
@@ -2417,6 +2612,7 @@ export type Database = {
           government_regions?: Json | null
           hours_of_operation?: Json | null
           id?: string
+          is_active?: boolean
           is_one_time_event?: boolean
           is_verified?: boolean | null
           join_code?: string | null
@@ -2424,7 +2620,9 @@ export type Database = {
           marketplace_enabled?: boolean | null
           name?: string
           parent_organization_id?: string | null
+          paused_reason?: string | null
           platform_fee_percentage?: number
+          posting_paused?: boolean
           primary_contact_email?: string | null
           primary_contact_name?: string | null
           primary_contact_phone?: string | null
@@ -2454,6 +2652,143 @@ export type Database = {
           },
         ]
       }
+      partner_applications: {
+        Row: {
+          address: string | null
+          admin_notes: string | null
+          agreement_bypassed: boolean
+          applicant_user_id: string | null
+          assisted_by: string | null
+          city: string | null
+          contact_email: string
+          contact_name: string
+          contact_phone: string | null
+          contact_title: string | null
+          created_at: string
+          created_nonprofit_id: string | null
+          created_organization_id: string | null
+          current_step: number
+          docs_status: string
+          ein: string | null
+          ein_result: Json | null
+          ein_status: string
+          event_date: string | null
+          event_name: string | null
+          id: string
+          org_kind: string
+          organization_name: string
+          organization_type: string | null
+          rejection_reason: string | null
+          resume_token: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          state: string | null
+          status: string
+          submitted_at: string | null
+          updated_at: string
+          zip: string | null
+        }
+        Insert: {
+          address?: string | null
+          admin_notes?: string | null
+          agreement_bypassed?: boolean
+          applicant_user_id?: string | null
+          assisted_by?: string | null
+          city?: string | null
+          contact_email: string
+          contact_name: string
+          contact_phone?: string | null
+          contact_title?: string | null
+          created_at?: string
+          created_nonprofit_id?: string | null
+          created_organization_id?: string | null
+          current_step?: number
+          docs_status?: string
+          ein?: string | null
+          ein_result?: Json | null
+          ein_status?: string
+          event_date?: string | null
+          event_name?: string | null
+          id?: string
+          org_kind: string
+          organization_name: string
+          organization_type?: string | null
+          rejection_reason?: string | null
+          resume_token?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          state?: string | null
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          zip?: string | null
+        }
+        Update: {
+          address?: string | null
+          admin_notes?: string | null
+          agreement_bypassed?: boolean
+          applicant_user_id?: string | null
+          assisted_by?: string | null
+          city?: string | null
+          contact_email?: string
+          contact_name?: string
+          contact_phone?: string | null
+          contact_title?: string | null
+          created_at?: string
+          created_nonprofit_id?: string | null
+          created_organization_id?: string | null
+          current_step?: number
+          docs_status?: string
+          ein?: string | null
+          ein_result?: Json | null
+          ein_status?: string
+          event_date?: string | null
+          event_name?: string | null
+          id?: string
+          org_kind?: string
+          organization_name?: string
+          organization_type?: string | null
+          rejection_reason?: string | null
+          resume_token?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          state?: string | null
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          zip?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_applications_created_nonprofit_id_fkey"
+            columns: ["created_nonprofit_id"]
+            isOneToOne: false
+            referencedRelation: "nonprofits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_applications_created_nonprofit_id_fkey"
+            columns: ["created_nonprofit_id"]
+            isOneToOne: false
+            referencedRelation: "nonprofits_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_applications_created_organization_id_fkey"
+            columns: ["created_organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_applications_created_organization_id_fkey"
+            columns: ["created_organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       partner_credentials: {
         Row: {
           created_at: string
@@ -2477,6 +2812,96 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      partner_documents: {
+        Row: {
+          application_id: string | null
+          created_at: string
+          doc_type: string
+          expires_on: string | null
+          file_name: string | null
+          file_path: string
+          id: string
+          last_reminder_at: string | null
+          nonprofit_id: string | null
+          organization_id: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          application_id?: string | null
+          created_at?: string
+          doc_type: string
+          expires_on?: string | null
+          file_name?: string | null
+          file_path: string
+          id?: string
+          last_reminder_at?: string | null
+          nonprofit_id?: string | null
+          organization_id?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          application_id?: string | null
+          created_at?: string
+          doc_type?: string
+          expires_on?: string | null
+          file_name?: string | null
+          file_path?: string
+          id?: string
+          last_reminder_at?: string | null
+          nonprofit_id?: string | null
+          organization_id?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_documents_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "partner_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_documents_nonprofit_id_fkey"
+            columns: ["nonprofit_id"]
+            isOneToOne: false
+            referencedRelation: "nonprofits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_documents_nonprofit_id_fkey"
+            columns: ["nonprofit_id"]
+            isOneToOne: false
+            referencedRelation: "nonprofits_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_documents_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_documents_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations_public"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       partner_leads: {
         Row: {

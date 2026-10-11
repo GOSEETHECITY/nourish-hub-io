@@ -37,6 +37,8 @@ import SendInvites from "./pages/admin/SendInvites";
 import PendingApprovals from "./pages/admin/PendingApprovals";
 import AccountsList from "./pages/admin/AccountsList";
 import PartnerSignup from "./pages/marketing/PartnerSignup";
+import PartnerApply from "./pages/marketing/PartnerApply";
+import OnboardingQueue from "./pages/admin/OnboardingQueue";
 import OrganizationDetail from "./pages/OrganizationDetail";
 import LocationDetail from "./pages/LocationDetail";
 import FoodListingsDonations from "./pages/FoodListingsDonations";
@@ -212,7 +214,9 @@ const App = () => (
             <Route path="/get-started/:eventSlug" element={<EventGetStarted />} />
             <Route path="/partners/business/signup" element={<BusinessSignup />} />
             <Route path="/partners/nonprofit/signup" element={<NonprofitSignup />} />
-            <Route path="/partner-signup" element={<PartnerSignup />} />
+            <Route path="/partner-signup" element={<PartnerApply />} />
+            <Route path="/partner-apply" element={<PartnerApply />} />
+            <Route path="/partner-signup-legacy" element={<PartnerSignup />} />
 
             {/* Public auth routes */}
             <Route path="/login" element={<Login />} />
@@ -238,6 +242,7 @@ const App = () => (
               <Route path="/admin/pickup-issues" element={<AdminPickupIssues />} />
               <Route path="/organizations" element={<Organizations />} />
               <Route path="/admin/leads" element={<LeadsInbox />} />
+              <Route path="/admin/onboarding" element={<OnboardingQueue />} />
 
               <Route path="/admin/organizations-bulk-import" element={<BulkImportOrganizations />} />
               <Route path="/admin/send-invites" element={<SendInvites />} />
