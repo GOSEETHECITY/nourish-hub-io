@@ -3,3 +3,5 @@
 - Normalize stored news article brand copy in the presentation layer only, preserving article records, slugs, image URLs, and destinations.
 - Keep desktop marketing dropdown hover boundaries on the trigger-and-menu wrapper with a transparent gap bridge so mouse movement into a menu does not close it; retain focus, Escape, and arrow-key support.
 - Organization and nonprofit private columns (contact email/phone, Stripe ID, EIN, document URLs) are not granted to signed-in users; read them only through the get_organization_private / get_nonprofit_private lookups via src/lib/privateFields.ts, and add new safe columns to both the column GRANT and the public column lists — why: column grants hide private data from other tenants while admins/members still get it.
+
+- Impact estimate factors (meals, CO2e, water, trees, car miles) live only in src/lib/impactMethodology.ts, mirrored for edge functions in supabase/functions/_shared/impactMethodology.ts, and every impact display shows ImpactMethodologyNote — why: all portals must show the same numbers and labels.
