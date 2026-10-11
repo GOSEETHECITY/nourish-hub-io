@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import type { FoodListing } from "@/types/database";
 import TaxReceiptDialog from "@/components/tax-receipts/TaxReceiptDialog";
 import { openReceiptPdf } from "@/lib/taxReceipts";
-import { FileText, Clock, AlertTriangle, List } from "lucide-react";
+import { FileText, Clock, AlertTriangle, List, Camera } from "lucide-react";
 import DonationLineItems from "@/components/donations/DonationLineItems";
 
 function ReceiptCountdown({ pickedUpAt }: { pickedUpAt: string | null | undefined }) {
