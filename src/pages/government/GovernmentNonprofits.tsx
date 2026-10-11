@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { filterByRegion, type GovernmentRegions } from "@/lib/regionFilter";
+import { filterByRegion, hasConfiguredRegions, type GovernmentRegions } from "@/lib/regionFilter";
 import type { Nonprofit, Organization } from "@/types/database";
 
 // Government users should only see nonprofits in their assigned region.
@@ -50,6 +50,11 @@ export default function GovernmentNonprofits() {
           Approved nonprofits in your assigned region (read only)
         </p>
       </div>
+      {myOrg !== undefined && !hasConfiguredRegions(regions) && (
+        <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-foreground">
+          No regions are configured for your account, so nothing can be shown. Please contact an admin to set up your jurisdiction.
+        </div>
+      )}
       <div className="bg-card rounded-xl border">
         <Table>
           <TableHeader>
