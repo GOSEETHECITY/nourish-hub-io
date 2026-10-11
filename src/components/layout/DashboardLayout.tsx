@@ -1,8 +1,8 @@
-import { Truck, AlertTriangle, Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
+import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard, Building2, UtensilsCrossed, Heart, CalendarDays,
   Store, BarChart3, Users, CreditCard, Headphones, Settings, LogOut,
-  Search, MapPin, ChevronDown, ChevronRight, Menu, X, FileText, Package,
+  Search, MapPin, ChevronDown, ChevronRight, Menu, X, FileText, Package, Truck, AlertTriangle,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
