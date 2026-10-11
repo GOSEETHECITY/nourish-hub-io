@@ -43,7 +43,7 @@ export function downloadGovImpactPdf(d: GovPdfInput) {
     doc.setFontSize(12); doc.setFont("helvetica", "bold"); doc.text("Waste-reduction goal", M, y); doc.setFont("helvetica", "normal"); y += 14;
     doc.setFontSize(10);
     doc.text(`${d.goal.progressLbs.toLocaleString()} of ${d.goal.goalLbs.toLocaleString()} lbs (${pct}%) · ${d.goal.periodStart} to ${d.goal.periodEnd}`, M, y); y += 8;
-    doc.setFillColor(230); doc.rect(M, y, W - M * 2, 8, "F");
+    doc.setFillColor(230, 230, 230); doc.rect(M, y, W - M * 2, 8, "F");
     doc.setFillColor(60, 120, 80); doc.rect(M, y, (W - M * 2) * pct / 100, 8, "F"); y += 24;
   }
 
