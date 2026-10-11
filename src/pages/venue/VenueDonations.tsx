@@ -175,7 +175,7 @@ export default function VenueDonations() {
   };
 
 
-  const uploadPhotos = async (orgId: string, listingId: string): Promise<string[]> => {
+  const uploadPhotos = async (orgId: string, listingId: string, uploadedPaths: string[]): Promise<string[]> => {
     if (!photoFiles.length) return [];
     const urls: string[] = [];
     for (const file of photoFiles) {
@@ -185,6 +185,7 @@ export default function VenueDonations() {
         contentType: file.type, upsert: false,
       });
       if (error) throw error;
+      uploadedPaths.push(path);
       const { data: signed } = await supabase.storage.from("donation-photos").createSignedUrl(path, 60 * 60 * 24 * 365);
       if (signed?.signedUrl) urls.push(signed.signedUrl);
     }
@@ -211,6 +212,13 @@ export default function VenueDonations() {
         && new Date(form.pickup_window_end).getTime() <= new Date(form.pickup_window_start).getTime()) {
         throw new Error("Pickup end time must be after the pickup start time");
       }
+      const nowMs = Date.now();
+      if (!form.pickup_window_start || new Date(form.pickup_window_start).getTime() <= nowMs) {
+        throw new Error("Pickup start must be a future date and time");
+      }
+      if (!form.pickup_window_end || new Date(form.pickup_window_end).getTime() <= nowMs) {
+        throw new Error("Pickup end must be a future date and time");
+      }
 
       let flashPriceCents: number | null = isFlash && form.is_free_to_public ? 0 : null;
       if (isFlash && !form.is_free_to_public) {
@@ -225,11 +233,16 @@ export default function VenueDonations() {
       // Upload photos first — we don't have listing id yet, so use a temp folder
       const tempId = crypto.randomUUID();
       let photoUrls: string[] = [];
+      const uploadedPaths: string[] = [];
       try {
-        photoUrls = await uploadPhotos(profile.organization_id, tempId);
+        photoUrls = await uploadPhotos(profile.organization_id, tempId, uploadedPaths);
+      } catch (err) {
+        if (uploadedPaths.length) await supabase.storage.from("donation-photos").remove(uploadedPaths);
+        throw err;
       } finally {
         setUploading(false);
       }
+      try {
 
       const { data: inserted, error } = await supabase.from("food_listings").insert({
         location_id: locId,
@@ -264,6 +277,11 @@ export default function VenueDonations() {
           await supabase.from("food_listings").delete().eq("id", inserted.id);
           throw new Error(`Could not save donation items, so the donation was not posted: ${liErr.message}`);
         }
+      }
+      } catch (err) {
+        // Abandoned post: delete any photos already uploaded so no orphaned files are left behind.
+        if (uploadedPaths.length) await supabase.storage.from("donation-photos").remove(uploadedPaths);
+        throw err;
       }
     },
     onSuccess: () => {
@@ -444,8 +462,8 @@ export default function VenueDonations() {
             )}
 
             <div className="grid grid-cols-2 gap-4">
-              <div><Label>Pickup Start *</Label><Input type="datetime-local" value={form.pickup_window_start} onChange={(e) => setForm({ ...form, pickup_window_start: e.target.value })} /></div>
-              <div><Label>Pickup End *</Label><Input type="datetime-local" value={form.pickup_window_end} onChange={(e) => setForm({ ...form, pickup_window_end: e.target.value })} /></div>
+              <div><Label>Pickup Start *</Label><Input type="datetime-local" min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)} value={form.pickup_window_start} onChange={(e) => setForm({ ...form, pickup_window_start: e.target.value })} /></div>
+              <div><Label>Pickup End *</Label><Input type="datetime-local" min={form.pickup_window_start || new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)} value={form.pickup_window_end} onChange={(e) => setForm({ ...form, pickup_window_end: e.target.value })} /></div>
             </div>
 
             {/* ITEMIZED LINES — always shown */}
