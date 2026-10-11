@@ -767,6 +767,108 @@ export type Database = {
           },
         ]
       }
+      donation_schedules: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          days_of_week: number[]
+          estimated_pounds: number
+          event_dates: string[]
+          event_label: string | null
+          food_type: Database["public"]["Enums"]["food_type"]
+          id: string
+          item_description: string
+          location_id: string
+          name: string
+          notes: string | null
+          organization_id: string
+          pickup_duration_hours: number
+          post_hour: number
+          recurrence: string
+          timezone: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          days_of_week?: number[]
+          estimated_pounds?: number
+          event_dates?: string[]
+          event_label?: string | null
+          food_type?: Database["public"]["Enums"]["food_type"]
+          id?: string
+          item_description?: string
+          location_id: string
+          name: string
+          notes?: string | null
+          organization_id: string
+          pickup_duration_hours?: number
+          post_hour?: number
+          recurrence?: string
+          timezone?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          days_of_week?: number[]
+          estimated_pounds?: number
+          event_dates?: string[]
+          event_label?: string | null
+          food_type?: Database["public"]["Enums"]["food_type"]
+          id?: string
+          item_description?: string
+          location_id?: string
+          name?: string
+          notes?: string | null
+          organization_id?: string
+          pickup_duration_hours?: number
+          post_hour?: number
+          recurrence?: string
+          timezone?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "donation_schedules_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "donation_schedules_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations_government"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "donation_schedules_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "donation_schedules_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "donation_schedules_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       driver_orders: {
         Row: {
           admin_notes: string | null
@@ -1051,7 +1153,9 @@ export type Database = {
       }
       food_listings: {
         Row: {
+          claimed_at: string | null
           created_at: string
+          en_route_at: string | null
           estimated_donation_value: number | null
           flash_price_cents: number | null
           food_type: Database["public"]["Enums"]["food_type"] | null
@@ -1064,6 +1168,8 @@ export type Database = {
           longitude: number | null
           nonprofit_claimed_id: string | null
           notes: string | null
+          occurrence_date: string | null
+          on_site_at: string | null
           organization_id: string
           photo_urls: string[] | null
           picked_up_at: string | null
@@ -1071,10 +1177,13 @@ export type Database = {
           pickup_window_end: string | null
           pickup_window_start: string | null
           pounds: number | null
+          recurring_schedule_id: string | null
           status: Database["public"]["Enums"]["listing_status"]
         }
         Insert: {
+          claimed_at?: string | null
           created_at?: string
+          en_route_at?: string | null
           estimated_donation_value?: number | null
           flash_price_cents?: number | null
           food_type?: Database["public"]["Enums"]["food_type"] | null
@@ -1087,6 +1196,8 @@ export type Database = {
           longitude?: number | null
           nonprofit_claimed_id?: string | null
           notes?: string | null
+          occurrence_date?: string | null
+          on_site_at?: string | null
           organization_id: string
           photo_urls?: string[] | null
           picked_up_at?: string | null
@@ -1094,10 +1205,13 @@ export type Database = {
           pickup_window_end?: string | null
           pickup_window_start?: string | null
           pounds?: number | null
+          recurring_schedule_id?: string | null
           status?: Database["public"]["Enums"]["listing_status"]
         }
         Update: {
+          claimed_at?: string | null
           created_at?: string
+          en_route_at?: string | null
           estimated_donation_value?: number | null
           flash_price_cents?: number | null
           food_type?: Database["public"]["Enums"]["food_type"] | null
@@ -1110,6 +1224,8 @@ export type Database = {
           longitude?: number | null
           nonprofit_claimed_id?: string | null
           notes?: string | null
+          occurrence_date?: string | null
+          on_site_at?: string | null
           organization_id?: string
           photo_urls?: string[] | null
           picked_up_at?: string | null
@@ -1117,6 +1233,7 @@ export type Database = {
           pickup_window_end?: string | null
           pickup_window_start?: string | null
           pounds?: number | null
+          recurring_schedule_id?: string | null
           status?: Database["public"]["Enums"]["listing_status"]
         }
         Relationships: [
@@ -2163,9 +2280,12 @@ export type Database = {
           county: string | null
           created_at: string
           credentials_sent_at: string | null
+          event_date: string | null
+          event_name: string | null
           government_regions: Json | null
           hours_of_operation: Json | null
           id: string
+          is_one_time_event: boolean
           is_verified: boolean | null
           join_code: string | null
           logo_url: string | null
@@ -2194,9 +2314,12 @@ export type Database = {
           county?: string | null
           created_at?: string
           credentials_sent_at?: string | null
+          event_date?: string | null
+          event_name?: string | null
           government_regions?: Json | null
           hours_of_operation?: Json | null
           id?: string
+          is_one_time_event?: boolean
           is_verified?: boolean | null
           join_code?: string | null
           logo_url?: string | null
@@ -2225,9 +2348,12 @@ export type Database = {
           county?: string | null
           created_at?: string
           credentials_sent_at?: string | null
+          event_date?: string | null
+          event_name?: string | null
           government_regions?: Json | null
           hours_of_operation?: Json | null
           id?: string
+          is_one_time_event?: boolean
           is_verified?: boolean | null
           join_code?: string | null
           logo_url?: string | null
@@ -3373,6 +3499,7 @@ export type Database = {
       flag_missed_pickups: { Args: never; Returns: number }
       gen_pickup_code: { Args: never; Returns: string }
       gen_referral_code: { Args: never; Returns: string }
+      generate_scheduled_donations: { Args: never; Returns: number }
       get_impact_survey_by_token: {
         Args: { p_token: string }
         Returns: {
@@ -3436,7 +3563,9 @@ export type Database = {
       gov_region_listings: {
         Args: never
         Returns: {
+          claimed_at: string | null
           created_at: string
+          en_route_at: string | null
           estimated_donation_value: number | null
           flash_price_cents: number | null
           food_type: Database["public"]["Enums"]["food_type"] | null
@@ -3449,6 +3578,8 @@ export type Database = {
           longitude: number | null
           nonprofit_claimed_id: string | null
           notes: string | null
+          occurrence_date: string | null
+          on_site_at: string | null
           organization_id: string
           photo_urls: string[] | null
           picked_up_at: string | null
@@ -3456,6 +3587,7 @@ export type Database = {
           pickup_window_end: string | null
           pickup_window_start: string | null
           pounds: number | null
+          recurring_schedule_id: string | null
           status: Database["public"]["Enums"]["listing_status"]
         }[]
         SetofOptions: {
