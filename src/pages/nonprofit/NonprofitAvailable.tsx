@@ -71,8 +71,8 @@ export default function NonprofitAvailable() {
   });
 
   const withDistance = useMemo(() => available.map((d) => {
-    const lat = d.latitude != null ? Number(d.latitude) : null;
-    const lng = d.longitude != null ? Number(d.longitude) : null;
+    const lat = (d as any).latitude != null ? Number((d as any).latitude) : null;
+    const lng = (d as any).longitude != null ? Number((d as any).longitude) : null;
     const miles = origin && lat != null && lng != null && Number.isFinite(lat) && Number.isFinite(lng)
       ? haversineMiles(origin.lat, origin.lng, lat, lng) : null;
     return { ...d, miles };
