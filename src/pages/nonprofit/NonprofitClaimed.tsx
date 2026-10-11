@@ -176,6 +176,18 @@ export default function NonprofitClaimed() {
     onError: (e: any) => toast.error(e.message || "Could not submit report"),
   });
 
+  const setStage = useMutation({
+    mutationFn: async ({ id, stage }: { id: string; stage: "en_route_at" | "on_site_at" }) => {
+      const { error } = await supabase.from("food_listings").update({ [stage]: new Date().toISOString() } as any).eq("id", id).eq("status", "claimed");
+      if (error) throw error;
+    },
+    onSuccess: (_d, v) => {
+      queryClient.invalidateQueries({ queryKey: ["my-claims"] });
+      toast.success(v.stage === "en_route_at" ? "The venue knows you're on the way" : "The venue knows you've arrived");
+    },
+    onError: (e: any) => toast.error(e.message || "Could not update"),
+  });
+
   const cancelClaim = useMutation({
     mutationFn: async (listingId: string) => {
       const { error } = await supabase
@@ -273,6 +285,12 @@ export default function NonprofitClaimed() {
                           <Button size="sm" variant="ghost" onClick={() => setProblemFor(d.id)}>
                             <Flag className="w-3.5 h-3.5 mr-1" /> Report a problem
                           </Button>
+                          {!(d as any).en_route_at && !(d as any).on_site_at && (
+                            <Button size="sm" variant="outline" onClick={() => setStage.mutate({ id: d.id, stage: "en_route_at" })} disabled={setStage.isPending}>On my way</Button>
+                          )}
+                          {!(d as any).on_site_at && (
+                            <Button size="sm" variant="outline" onClick={() => setStage.mutate({ id: d.id, stage: "on_site_at" })} disabled={setStage.isPending}>I'm on site</Button>
+                          )}
                           <Button
                             size="sm"
                             variant="outline"

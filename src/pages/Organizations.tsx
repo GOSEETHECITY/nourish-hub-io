@@ -318,7 +318,16 @@ export default function Organizations() {
             ) : filtered.map((org) => (
               <TableRow key={org.id} className="cursor-pointer" onClick={() => navigate(`/organizations/${org.id}`)}>
                 <TableCell className="font-medium">{org.name}</TableCell>
-                <TableCell>{formatOrgType(org.type)}</TableCell>
+                <TableCell>
+                  {(org as any).is_one_time_event ? (
+                    <span className="inline-flex flex-col">
+                      <span className="px-2 py-0.5 rounded text-xs font-semibold bg-chart-4/15 text-chart-4 w-fit">One-time event</span>
+                      <span className="text-xs text-muted-foreground mt-0.5">
+                        {(org as any).event_date || "No date"}{(org as any).event_date && new Date().toISOString().slice(0, 10) > (org as any).event_date ? " · dormant after event" : ""}
+                      </span>
+                    </span>
+                  ) : formatOrgType(org.type)}
+                </TableCell>
                 <TableCell>{org.primary_contact_name || "—"}</TableCell>
                 <TableCell>{org.primary_contact_email || "—"}</TableCell>
                 <TableCell>{locationCounts[org.id] || 0}</TableCell>

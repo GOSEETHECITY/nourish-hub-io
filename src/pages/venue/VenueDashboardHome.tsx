@@ -1,3 +1,7 @@
+import DonationJourneyTracker from "@/components/venue/DonationJourneyTracker";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Zap } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -100,6 +104,12 @@ export default function VenueDashboardHome() {
         <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
         <p className="text-sm text-muted-foreground mt-1">Overview of your food listings and impact</p>
       </div>
+
+      <div className="flex flex-wrap gap-2">
+        <Button asChild size="lg"><Link to="/venue/quick-log"><Zap className="w-4 h-4 mr-1" /> Log a donation in 30 seconds</Link></Button>
+      </div>
+
+      {profile?.organization_id && <DonationJourneyTracker orgId={profile.organization_id} />}
 
       <OnboardingChecklist />
 

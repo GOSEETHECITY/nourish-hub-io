@@ -79,6 +79,8 @@ import CompleteProfile from "./pages/partner/CompleteProfile";
 import VenueTaxReceipts from "./pages/venue/VenueTaxReceipts";
 import VenueCompliance from "./pages/venue/VenueCompliance";
 import VenueOrders from "./pages/venue/VenueOrders";
+import VenueQuickLog from "./pages/venue/VenueQuickLog";
+import VenueSchedules from "./pages/venue/VenueSchedules";
 import FranchiseDashboard from "./pages/franchise/FranchiseDashboard";
 import PublicImpact from "./pages/marketing/PublicImpact";
 import ConsumerFlashDetail from "./pages/consumer/ConsumerFlashDetail";
@@ -276,6 +278,8 @@ const App = () => (
             >
               <Route path="/venue" element={<VenueDashboardHome />} />
               <Route path="/venue/donations" element={<VenueDonations />} />
+              <Route path="/venue/quick-log" element={<VenueQuickLog />} />
+              <Route path="/venue/schedules" element={<VenueSchedules />} />
               <Route path="/venue/marketplace" element={<VenueMarketplace />} />
               <Route path="/venue/impact" element={<VenueImpact />} />
               <Route path="/venue/tax-receipts" element={<VenueTaxReceipts />} />
