@@ -59,6 +59,15 @@ export default function NonprofitImpactReports() {
     enabled: !!npId && listingIds.length > 0,
   });
 
+  const { data: mealReports = [] } = useQuery({
+    queryKey: ["np-meal-reports", npId],
+    queryFn: async () => {
+      const { data } = await supabase.from("impact_reports").select("food_listing_id, meals_served, created_at").eq("nonprofit_id", npId!);
+      return data || [];
+    },
+    enabled: !!npId,
+  });
+
   const { data: receipts = [] } = useQuery({
     queryKey: ["np-receipts", npId, listingIds.length],
     queryFn: async () => {
@@ -91,13 +100,15 @@ export default function NonprofitImpactReports() {
 
   const filteredListings = listings.filter((l) => inRange(l.created_at));
   const filteredSurveys = surveys.filter((s: any) => inRange(s.submitted_at));
+  const filteredReports = mealReports.filter((r: any) => inRange(r.created_at));
 
   // Stats
   const receivedListings = filteredListings.filter((l) => ["picked_up", "completed"].includes(l.status));
   const totalPounds = receivedListings.reduce((s, l) => s + (l.pounds || 0), 0);
   const totalValue = receivedListings.reduce((s, l) => s + Number(l.estimated_donation_value || 0), 0);
   const donationsCount = receivedListings.length;
-  const totalMeals = filteredSurveys.reduce((s: number, x: any) => s + (x.people_fed || 0), 0);
+  // Single source of truth for meals served: impact_reports.meals_served (survey answers sync into it).
+  const totalMeals = filteredReports.reduce((s: number, x: any) => s + (x.meals_served || 0), 0);
   const co2 = Math.round(totalPounds * CO2_LBS_PER_LB_FOOD);
 
   // Demographic breakdown across surveys
@@ -270,7 +281,7 @@ export default function NonprofitImpactReports() {
                   <span>{s.food_condition_good ? "Food condition: good" : "Condition issue reported"}</span>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                  <div><span className="text-muted-foreground">People fed: </span><span className="font-semibold">{s.people_fed ?? "—"}</span></div>
+                  <div><span className="text-muted-foreground">Meals served: </span><span className="font-semibold">{s.people_fed ?? "—"}</span></div>
                   <div className="md:col-span-2"><span className="text-muted-foreground">Demographics: </span>{(s.demographics || []).join(", ") || "—"}</div>
                 </div>
                 {s.testimonial && <p className="text-sm italic mt-2 border-l-2 border-primary pl-3">"{s.testimonial}"</p>}
