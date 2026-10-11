@@ -14,6 +14,9 @@ import TaxReceiptDialog from "@/components/tax-receipts/TaxReceiptDialog";
 import { openReceiptPdf } from "@/lib/taxReceipts";
 import { FileText, Clock, AlertTriangle, List, Camera } from "lucide-react";
 import DonationLineItems from "@/components/donations/DonationLineItems";
+import PickupMethodDialog from "@/components/nonprofit/PickupMethodDialog";
+import ReportProblemDialog from "@/components/nonprofit/ReportProblemDialog";
+import { Truck, CalendarPlus, Flag } from "lucide-react";
 
 function ReceiptCountdown({ pickedUpAt }: { pickedUpAt: string | null | undefined }) {
   if (!pickedUpAt) return null;
@@ -50,6 +53,20 @@ export default function NonprofitClaimed() {
   const [receiptListing, setReceiptListing] = useState<FoodListing | null>(null);
   const [itemsListing, setItemsListing] = useState<FoodListing | null>(null);
   const [form, setForm] = useState({ meals_served: "", date_distributed: "", notes: "" });
+  const [driverFor, setDriverFor] = useState<string | null>(null);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [problemFor, setProblemFor] = useState<string | null>(null);
+  const { data: driverOrders = [] } = useQuery({
+    queryKey: ["np-driver-orders", profile?.nonprofit_id],
+    queryFn: async () => (await (supabase as any).from("driver_orders").select("id, food_listing_id, provider, pickup_kind, scheduled_date, status, estimated_fee_cents").eq("nonprofit_id", profile!.nonprofit_id!).order("created_at", { ascending: false })).data || [],
+    enabled: !!profile?.nonprofit_id,
+  });
+  const driverMap = useMemo(() => {
+    const m: Record<string, any> = {};
+    for (const o of driverOrders as any[]) if (o.food_listing_id && o.status !== "awaiting_payment" && o.status !== "cancelled" && !m[o.food_listing_id]) m[o.food_listing_id] = o;
+    return m;
+  }, [driverOrders]);
+  const bulkOrders = (driverOrders as any[]).filter((o) => o.pickup_kind === "monthly_bulk" && o.status !== "awaiting_payment");
 
   const { data: claimed = [] } = useQuery({
     queryKey: ["my-claims", profile?.nonprofit_id],
@@ -190,6 +207,21 @@ export default function NonprofitClaimed() {
         </p>
       </div>
 
+      <div className="flex justify-end">
+        <Button variant="outline" onClick={() => setBulkOpen(true)}><CalendarPlus className="w-4 h-4 mr-1" /> Schedule monthly bulk pickup</Button>
+      </div>
+      {bulkOrders.length > 0 && (
+        <div className="bg-card rounded-xl border p-4 space-y-2">
+          <h2 className="font-semibold text-foreground">Scheduled bulk pickups</h2>
+          {bulkOrders.map((o: any) => (
+            <div key={o.id} className="flex justify-between text-sm">
+              <span>{o.scheduled_date} · {o.provider === "uber" ? "Uber" : "DoorDash"}</span>
+              <span className="capitalize text-muted-foreground">{o.status.replace(/_/g, " ")}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="bg-card rounded-xl border">
         <div className="overflow-x-auto"><Table>
           <TableHeader>
@@ -231,6 +263,16 @@ export default function NonprofitClaimed() {
                       </Button>
                       {isClaimed && (
                         <>
+                          {driverMap[d.id] ? (
+                            <span className="text-xs text-primary self-center inline-flex items-center gap-1"><Truck className="w-3 h-3" /> Driver {driverMap[d.id].status.replace(/_/g, " ")}</span>
+                          ) : (
+                            <Button size="sm" variant="outline" onClick={() => setDriverFor(d.id)}>
+                              <Truck className="w-3.5 h-3.5 mr-1" /> Order a driver
+                            </Button>
+                          )}
+                          <Button size="sm" variant="ghost" onClick={() => setProblemFor(d.id)}>
+                            <Flag className="w-3.5 h-3.5 mr-1" /> Report a problem
+                          </Button>
                           <Button
                             size="sm"
                             variant="outline"
@@ -372,6 +414,9 @@ export default function NonprofitClaimed() {
           )}
         </DialogContent>
       </Dialog>
+      <PickupMethodDialog open={!!driverFor} onOpenChange={(o) => !o && setDriverFor(null)} listingId={driverFor} onBeforeDriver={async () => true} />
+      <PickupMethodDialog open={bulkOpen} onOpenChange={setBulkOpen} bulk />
+      <ReportProblemDialog open={!!problemFor} onOpenChange={(o) => !o && setProblemFor(null)} listingId={problemFor} />
     </div>
   );
 }
