@@ -1,3 +1,5 @@
+import ImpactMethodologyNote from "@/components/impact/ImpactMethodologyNote";
+import { estimateImpact } from "@/lib/impactMethodology";
 import { useState, useMemo } from "react";
 import { ORG_PUBLIC_COLUMNS, NONPROFIT_PUBLIC_COLUMNS, withOrgPrivate, withNonprofitPrivate } from "@/lib/privateFields";
 import { useQuery } from "@tanstack/react-query";
@@ -60,11 +62,12 @@ export default function Impact() {
   const totalPounds = filteredListings.reduce((s, l) => s + (l.pounds || 0), 0);
   const totalMeals = reports.reduce((s, r) => s + (r.meals_served || 0), 0);
   const totalValue = filteredListings.reduce((s, l) => s + (l.estimated_donation_value || 0), 0);
-  const co2 = totalPounds * CO2_LBS_PER_LB_FOOD;
-  const water = totalPounds * 108;
-  const landfill = totalPounds;
-  const trees = co2 / 48;
-  const carMiles = co2 / 0.000404;
+  const est = estimateImpact(totalPounds);
+  const co2 = est.co2Lbs;
+  const water = est.waterGal;
+  const landfill = est.landfillLbs;
+  const trees = est.trees;
+  const carMiles = est.carMiles;
 
   // Rankings
   const orgRanking = useMemo(() => {
@@ -92,17 +95,18 @@ export default function Impact() {
 
   const metrics = [
     { label: "Total Pounds Diverted", value: `${totalPounds.toLocaleString()} lbs`, icon: Leaf },
-    { label: "Total Meals Served", value: totalMeals.toLocaleString(), icon: Trophy },
+    { label: "Meals Served (reported)", value: totalMeals.toLocaleString(), icon: Trophy },
     { label: "Est. Donation Value", value: `$${totalValue.toLocaleString()}`, icon: Trophy },
-    { label: "CO₂ Prevented", value: `${co2.toLocaleString()} lbs`, icon: Leaf },
-    { label: "Water Saved", value: `${water.toLocaleString()} gal`, icon: Droplets },
-    { label: "Landfill Diverted", value: `${landfill.toLocaleString()} lbs`, icon: Trash2 },
-    { label: "Equiv. Trees Planted", value: Math.round(trees).toLocaleString(), icon: TreeDeciduous },
-    { label: "Equiv. Car Miles Removed", value: Math.round(carMiles).toLocaleString(), icon: Car },
+    { label: "Est. CO₂e Prevented", value: `${co2.toLocaleString()} lbs`, icon: Leaf },
+    { label: "Est. Water Saved", value: `${water.toLocaleString()} gal`, icon: Droplets },
+    { label: "Est. Landfill Diverted", value: `${landfill.toLocaleString()} lbs`, icon: Trash2 },
+    { label: "Est. Trees Equivalent", value: Math.round(trees).toLocaleString(), icon: TreeDeciduous },
+    { label: "Est. Car Miles Equivalent", value: Math.round(carMiles).toLocaleString(), icon: Car },
   ];
 
   return (
     <div className="space-y-6">
+      <ImpactMethodologyNote />
       <div>
         <h1 className="text-2xl font-bold text-foreground">Impact</h1>
         <p className="text-sm text-muted-foreground mt-1">Platform-wide impact metrics and environmental data</p>

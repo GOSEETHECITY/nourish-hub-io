@@ -238,6 +238,7 @@ export type Database = {
           id: string
           marketplace_unlocked: boolean
           state: string | null
+          surplus_selling_enabled: boolean
           tax_rate: number
           threshold: number
         }
@@ -248,6 +249,7 @@ export type Database = {
           id?: string
           marketplace_unlocked?: boolean
           state?: string | null
+          surplus_selling_enabled?: boolean
           tax_rate?: number
           threshold?: number
         }
@@ -258,6 +260,7 @@ export type Database = {
           id?: string
           marketplace_unlocked?: boolean
           state?: string | null
+          surplus_selling_enabled?: boolean
           tax_rate?: number
           threshold?: number
         }
@@ -602,10 +605,13 @@ export type Database = {
       }
       coupons: {
         Row: {
+          converted_listing_id: string | null
           coupon_active_end: string | null
           coupon_active_start: string | null
           created_at: string
           description: string | null
+          donate_at: string | null
+          donate_unsold: boolean
           id: string
           latitude: number | null
           location_id: string
@@ -622,10 +628,13 @@ export type Database = {
           title: string
         }
         Insert: {
+          converted_listing_id?: string | null
           coupon_active_end?: string | null
           coupon_active_start?: string | null
           created_at?: string
           description?: string | null
+          donate_at?: string | null
+          donate_unsold?: boolean
           id?: string
           latitude?: number | null
           location_id: string
@@ -642,10 +651,13 @@ export type Database = {
           title: string
         }
         Update: {
+          converted_listing_id?: string | null
           coupon_active_end?: string | null
           coupon_active_start?: string | null
           created_at?: string
           description?: string | null
+          donate_at?: string | null
+          donate_unsold?: boolean
           id?: string
           latitude?: number | null
           location_id?: string
@@ -662,6 +674,13 @@ export type Database = {
           title?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "coupons_converted_listing_id_fkey"
+            columns: ["converted_listing_id"]
+            isOneToOne: false
+            referencedRelation: "food_listings"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "coupons_location_id_fkey"
             columns: ["location_id"]
@@ -1283,6 +1302,51 @@ export type Database = {
             foreignKeyName: "food_listings_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: false
+            referencedRelation: "organizations_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gov_waste_goals: {
+        Row: {
+          created_at: string
+          goal_lbs: number
+          organization_id: string
+          period_end: string
+          period_start: string
+          set_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          goal_lbs: number
+          organization_id: string
+          period_end: string
+          period_start: string
+          set_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          goal_lbs?: number
+          organization_id?: string
+          period_end?: string
+          period_start?: string
+          set_by?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gov_waste_goals_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gov_waste_goals_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
             referencedRelation: "organizations_public"
             referencedColumns: ["id"]
           },
@@ -3485,6 +3549,7 @@ export type Database = {
           id: string
         }[]
       }
+      convert_unsold_coupons: { Args: never; Returns: number }
       create_consumer_order: {
         Args: { p_coupon_id: string; p_quantity: number }
         Returns: string
@@ -3650,6 +3715,14 @@ export type Database = {
           p_type: string
         }
         Returns: undefined
+      }
+      public_city_impact: {
+        Args: { p_city: string; p_state: string }
+        Returns: {
+          donations: number
+          pounds: number
+          reported_meals: number
+        }[]
       }
       release_flash_reservation: {
         Args: { p_reason?: string; p_reservation_id: string }

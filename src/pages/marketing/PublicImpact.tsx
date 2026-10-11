@@ -1,3 +1,4 @@
+import ImpactMethodologyNote from "@/components/impact/ImpactMethodologyNote";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import MarketingNav from "@/components/marketing/MarketingNav";
@@ -53,10 +54,10 @@ export default function PublicImpact() {
         <section aria-label="Platform totals" className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-14">
           {[
             ["Pounds rescued", fmt(t.pounds_rescued)],
-            ["Meals provided", fmt(t.meals_provided)],
-            ["People fed", fmt(t.people_fed)],
-            ["Fair market value", `$${fmt(t.donation_value_usd)}`],
-            ["CO2 avoided (lbs)", fmt(t.co2_lbs_avoided)],
+            ["Est. meals rescued", fmt(t.meals_provided)],
+            ["Meals served (reported)", fmt(t.people_fed)],
+            ["Est. fair market value", `$${fmt(t.donation_value_usd)}`],
+            ["Est. CO2e avoided (lbs)", fmt(t.co2_lbs_avoided)],
             ["Total donations", fmt(t.total_donations)],
           ].map(([label, value]) => (
             <div key={label} className="rounded-xl border bg-card p-6">
@@ -65,6 +66,8 @@ export default function PublicImpact() {
             </div>
           ))}
         </section>
+
+        <ImpactMethodologyNote className="-mt-10 mb-14" />
 
         <section aria-label="City breakdown" className="mb-14">
           <h2 className="font-serif text-3xl mb-4">Top cities</h2>
