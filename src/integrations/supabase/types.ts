@@ -238,6 +238,7 @@ export type Database = {
           id: string
           marketplace_unlocked: boolean
           state: string | null
+          tax_rate: number
           threshold: number
         }
         Insert: {
@@ -247,6 +248,7 @@ export type Database = {
           id?: string
           marketplace_unlocked?: boolean
           state?: string | null
+          tax_rate?: number
           threshold?: number
         }
         Update: {
@@ -256,6 +258,7 @@ export type Database = {
           id?: string
           marketplace_unlocked?: boolean
           state?: string | null
+          tax_rate?: number
           threshold?: number
         }
         Relationships: []
@@ -3131,6 +3134,13 @@ export type Database = {
           id: string
         }[]
       }
+      coupon_tax_rates: {
+        Args: { p_coupon_ids: string[] }
+        Returns: {
+          coupon_id: string
+          tax_rate: number
+        }[]
+      }
       create_consumer_order: {
         Args: { p_coupon_id: string; p_quantity: number }
         Returns: string
@@ -3318,6 +3328,10 @@ export type Database = {
           p_token: string
         }
         Returns: string
+      }
+      tax_rate_for_location: {
+        Args: { p_location_id: string }
+        Returns: number
       }
       update_own_profile: {
         Args: { p_first_name?: string; p_last_name?: string; p_phone?: string }
