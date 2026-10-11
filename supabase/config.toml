@@ -58,3 +58,7 @@ verify_jwt = false
 
 [functions.send-pickup-survey]
 verify_jwt = false
+[functions.nonprofit-donation-alerts]
+verify_jwt = false
+[functions.driver-order-checkout]
+verify_jwt = false
