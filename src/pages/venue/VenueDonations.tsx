@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import type { FoodListing, Location, FoodType } from "@/types/database";
 import { openReceiptPdf } from "@/lib/taxReceipts";
 import { hasRealHours } from "@/lib/orgProfile";
+import { useVenuePostingGate } from "@/hooks/useVenuePostingGate";
 
 
 const FOOD_TYPES: { value: FoodType; label: string }[] = [
@@ -155,8 +156,10 @@ export default function VenueDonations() {
   });
   const hoursSet = hasRealHours(orgHours);
 
+  const postingGate = useVenuePostingGate(profile?.organization_id);
   const openDialog = () => {
-    if (!hasBaseline || !hoursSet) {
+    if (postingGate.dormant) { toast.error("This one-time event account is no longer active because the event has passed."); return; }
+    if (!postingGate.isOneTime && (!hasBaseline || !hoursSet)) {
       const missing = [
         !hasBaseline ? "complete your sustainability baseline" : null,
         !hoursSet ? "set your operating hours in Settings" : null,
