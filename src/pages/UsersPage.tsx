@@ -1,3 +1,4 @@
+import { Switch } from "@/components/ui/switch";
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -590,7 +591,7 @@ function ConsumersTab({ onOpenUser }: { onOpenUser: (p: Profile) => void }) {
                         checked={!!(ct as any).surplus_selling_enabled}
                         onCheckedChange={async (v) => {
                           const { error } = await supabase.from("city_thresholds").update({ surplus_selling_enabled: v } as any).eq("id", ct.id);
-                          if (error) toast({ title: "Could not update", description: error.message, variant: "destructive" });
+                          if (error) toast.error(error.message);
                           queryClient.invalidateQueries({ queryKey: ["city-thresholds"] });
                         }}
                       />
