@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import MarketingNav from "@/components/marketing/MarketingNav";
 import MarketingFooter from "@/components/marketing/MarketingFooter";
@@ -7,7 +6,6 @@ import ApplicationWizard from "@/components/onboarding/ApplicationWizard";
 export default function PartnerApply() {
   const [params, setParams] = useSearchParams();
   const token = params.get("resume");
-  useEffect(() => { document.title = "Become a Partner | Hariet.AI"; }, []);
   return (
     <div className="min-h-screen bg-background text-foreground">
       <MarketingNav />
