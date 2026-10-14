@@ -7,11 +7,17 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
-import PasswordInput from "@/components/ui/password-input";
 import type { OrgCategory } from "../Signup";
 import SignupShell from "./SignupShell";
 import ConfirmationScreen from "./ConfirmationScreen";
 import { SIGNUP_CATEGORY_TO_ORG_TYPE, CATEGORY_TO_ORG_TYPES } from "@/lib/constants";
+import {
+  SignupPasswordFields,
+  SignatureStep,
+  DocumentsStep,
+  uploadSignupDocuments,
+  type SigState,
+} from "./SignupSteps";
 
 interface Props { category: OrgCategory; onBack: () => void; }
 
@@ -24,6 +30,9 @@ export default function VenueSignup({ category, onBack }: Props) {
 
   const [account, setAccount] = useState({ firstName: "", lastName: "", email: "", phone: "", password: "", confirmPassword: "" });
   const [org, setOrg] = useState({ name: "", type: defaultOrgType });
+  const [sig, setSig] = useState<SigState>({ name: "", title: "", authorized: false, consent: false, templateId: null });
+  const [docFiles, setDocFiles] = useState<Record<string, File | null>>({});
+  const [docExpiry, setDocExpiry] = useState<Record<string, string>>({});
 
   const handleSubmit = async () => {
     if (account.password !== account.confirmPassword) { toast.error("Passwords do not match"); return; }
@@ -50,27 +59,31 @@ export default function VenueSignup({ category, onBack }: Props) {
       if (!authData.user) throw new Error("Signup failed");
       if (!authData.session) throw new Error("An account with this email already exists.");
 
-      // Organization / profile / role writes happen server-side with the
-      // service role: RLS intentionally blocks them from the client.
+      // Upload insurance, then complete signup (signature + documents are
+      // written server-side by complete-partner-signup).
+      const documents = await uploadSignupDocuments(docFiles, docExpiry);
+
       const { data: result, error: fnError } = await supabase.functions.invoke("complete-partner-signup", {
         body: {
           pathway: "venue",
           account: { firstName: account.firstName, lastName: account.lastName, phone: account.phone },
           org: { name: org.name, type: org.type },
+          signature: { template_id: sig.templateId, signer_name: sig.name.trim(), signer_title: sig.title.trim() },
+          documents,
         },
       });
       if (fnError) throw new Error((result as any)?.error || fnError.message);
       if (result?.error) throw new Error(result.error);
 
       await supabase.auth.signOut();
-      setStep(3);
+      setStep(5);
     } catch (e: any) { toast.error(e.message || "Signup failed"); } finally { setLoading(false); }
   };
 
-  if (step === 3) return <ConfirmationScreen message="Your application has been submitted and is pending approval. We will email you once an admin has reviewed it, and you can sign in as soon as you are approved." />;
+  if (step === 5) return <ConfirmationScreen message="Your application has been submitted and is pending approval. We will email you once an admin has reviewed it." />;
 
   return (
-    <SignupShell currentStep={step} totalSteps={2}>
+    <SignupShell currentStep={step} totalSteps={4}>
       {step === 1 && (
         <div className="space-y-4">
           <div className="flex items-center gap-2">
@@ -83,8 +96,12 @@ export default function VenueSignup({ category, onBack }: Props) {
           </div>
           <div><Label>Email *</Label><Input type="email" autoComplete="off" value={account.email} onChange={(e) => setAccount({ ...account, email: e.target.value })} /></div>
           <div><Label>Phone</Label><Input type="tel" autoComplete="off" value={account.phone} onChange={(e) => setAccount({ ...account, phone: e.target.value })} /></div>
-          <div><Label>Password *</Label><PasswordInput autoComplete="new-password" value={account.password} onChange={(e) => setAccount({ ...account, password: e.target.value })} placeholder="••••••••" /></div>
-          <div><Label>Confirm Password *</Label><PasswordInput autoComplete="new-password" value={account.confirmPassword} onChange={(e) => setAccount({ ...account, confirmPassword: e.target.value })} placeholder="••••••••" /></div>
+          <SignupPasswordFields
+            password={account.password}
+            confirmPassword={account.confirmPassword}
+            onPasswordChange={(v) => setAccount({ ...account, password: v })}
+            onConfirmChange={(v) => setAccount({ ...account, confirmPassword: v })}
+          />
           <Button className="w-full" onClick={() => setStep(2)} disabled={!account.firstName || !account.lastName || !account.email || !account.password || !account.confirmPassword}>Continue</Button>
         </div>
       )}
@@ -100,14 +117,22 @@ export default function VenueSignup({ category, onBack }: Props) {
               <SelectContent>{(CATEGORY_TO_ORG_TYPES[category] || []).map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent>
             </Select>
           </div>
-          <p className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-3">
-            You will add your address, locations and pickup details once your application is approved.
-          </p>
           <div className="flex gap-3">
             <Button variant="outline" className="flex-1" onClick={() => setStep(1)}>Back</Button>
-            <Button className="flex-1" onClick={handleSubmit} disabled={loading || !org.name || !org.type}>{loading ? "Submitting..." : "Submit Application"}</Button>
+            <Button className="flex-1" onClick={() => setStep(3)} disabled={!org.name || !org.type}>Continue</Button>
           </div>
         </div>
+      )}
+
+      {step === 3 && (
+        <SignatureStep pathway="venue" sig={sig} setSig={setSig} onBack={() => setStep(2)} onContinue={() => setStep(4)} />
+      )}
+
+      {step === 4 && (
+        <>
+          <DocumentsStep files={docFiles} setFiles={setDocFiles} expiry={docExpiry} setExpiry={setDocExpiry} required onBack={() => setStep(3)} onContinue={handleSubmit} />
+          {loading && <p className="text-sm text-muted-foreground text-center">Submitting your application…</p>}
+        </>
       )}
     </SignupShell>
   );

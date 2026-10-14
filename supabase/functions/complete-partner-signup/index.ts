@@ -1,4 +1,5 @@
-// Completes venue / nonprofit / government partner signup with the service role.
+// Completes venue / nonprofit / government / one-time-event partner signup
+// with the service role.
 //
 // Client-side signup cannot do this work: RLS forbids a role-less user from
 // creating an organization, and the `profiles` UPDATE policy blocks changing
@@ -6,12 +7,15 @@
 // verified JWT. The account itself is created client-side first (supabase
 // auth.signUp), so a signed-out visitor can complete the whole flow.
 //
-// Only the account, the org (or nonprofit) row, the profile link and the role
-// are created. Address, locations, pickup details and the sustainability
-// baseline are collected later, after approval.
+// Creates: the account link, the org (or nonprofit) row, the profile link,
+// the role, the e-signature record (agreement_signatures is immutable, so it
+// is written here, never from the client), the EIN result (nonprofit), and
+// the uploaded partner documents. Address, locations, pickup details and the
+// sustainability baseline are collected later, after approval.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.98.0";
 import { z } from "https://esm.sh/zod@3.23.8";
 import { alertFatalError } from "../_shared/ops.ts";
+import { currentTemplate, sha256Hex } from "../_shared/onboarding.ts";
 
 const ALLOWED_ORIGINS = [
   "https://hariet.ai",
@@ -43,6 +47,29 @@ const AccountSchema = z.object({
   phone: z.string().trim().max(40).optional().nullable(),
 });
 
+// E-signature collected during signup. Written server-side only:
+// agreement_signatures is immutable and has no client write grants.
+const SignatureSchema = z.object({
+  template_id: z.string().uuid(),
+  signer_name: z.string().trim().min(3).max(120),
+  signer_title: z.string().trim().min(2).max(120),
+});
+
+// EIN verification result from the signup EIN step (nonprofit only).
+const EinSchema = z.object({
+  ein: z.string().regex(/^\d{9}$/),
+  ein_status: z.enum(["verified", "needs_help"]),
+  irs_name: z.string().max(255).optional().nullable(),
+});
+
+// Documents uploaded to storage during submit, registered here.
+const DocumentSchema = z.object({
+  doc_type: z.string().regex(/^[a-z0-9_]{2,40}$/),
+  path: z.string().max(300),
+  file_name: z.string().max(200),
+  expires_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+});
+
 const VenueSchema = z.object({
   pathway: z.literal("venue"),
   account: AccountSchema,
@@ -50,6 +77,8 @@ const VenueSchema = z.object({
     name: z.string().trim().min(1).max(255),
     type: z.string().trim().min(1).max(64),
   }),
+  signature: SignatureSchema,
+  documents: z.array(DocumentSchema).min(1),
 });
 
 const NonprofitSchema = z.object({
@@ -58,6 +87,9 @@ const NonprofitSchema = z.object({
   org: z.object({
     name: z.string().trim().min(1).max(255),
   }),
+  ein: EinSchema,
+  signature: SignatureSchema,
+  documents: z.array(DocumentSchema).min(1),
 });
 
 const GovernmentSchema = z.object({
@@ -68,6 +100,8 @@ const GovernmentSchema = z.object({
     name: z.string().trim().min(1).max(255),
     type: z.enum(["municipal_government", "county_government", "state_government"]),
   }),
+  signature: SignatureSchema,
+  documents: z.array(DocumentSchema).optional().default([]),
 });
 
 // Lightweight single-event donor (weddings, one-night events, grand openings).
@@ -82,6 +116,8 @@ const OneTimeEventSchema = z.object({
     state: z.string().trim().min(2).max(50),
     zip: z.string().trim().min(3).max(20),
   }),
+  signature: SignatureSchema,
+  documents: z.array(DocumentSchema).min(1),
 });
 
 const BodySchema = z.discriminatedUnion("pathway", [VenueSchema, NonprofitSchema, GovernmentSchema, OneTimeEventSchema]);
@@ -295,6 +331,95 @@ Deno.serve(async (req) => {
         .from("user_roles")
         .insert({ user_id: user.id, role: "nonprofit_partner" });
       if (roleError) throw roleError;
+    }
+
+    // E-signature: written server-side only (agreement_signatures is immutable,
+    // no client write grants). The template is re-fetched to guard against
+    // signing a stale version.
+    {
+      const templateKind =
+        body.pathway === "nonprofit"
+          ? "nonprofit"
+          : body.pathway === "one_time_event"
+            ? "one_time_event"
+            : "venue";
+      const tpl = await currentTemplate(admin, { org_kind: templateKind });
+      if (!tpl || tpl.id !== body.signature.template_id) {
+        throw new Error("The agreement was updated. Please review the latest version and sign again.");
+      }
+      const ip =
+        (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim() ||
+        req.headers.get("cf-connecting-ip") ||
+        null;
+      const signedAt = new Date().toISOString();
+      const record = `${tpl.title}\nVersion ${tpl.version}\n\n${tpl.body}`;
+      const hash = await sha256Hex(
+        `${record}\n---\n${body.signature.signer_name}|${body.signature.signer_title}|${contactEmail}|${signedAt}|${ip ?? ""}`,
+      );
+      const { error: sigError } = await admin.from("agreement_signatures").insert({
+        organization_id: organizationId,
+        nonprofit_id: nonprofitId,
+        template_id: tpl.id,
+        template_version: tpl.version,
+        agreement_title: tpl.title,
+        signed_body: record,
+        body_sha256: hash,
+        signer_name: body.signature.signer_name,
+        signer_title: body.signature.signer_title,
+        signer_email: contactEmail,
+        authorized_attestation: true,
+        consent_to_electronic: true,
+        ip_address: ip,
+        user_agent: req.headers.get("user-agent")?.slice(0, 400) ?? null,
+        signed_by_user_id: user.id,
+        signed_at: signedAt,
+      });
+      if (sigError) throw sigError;
+    }
+
+    // EIN result for nonprofits (verified at the signup EIN step).
+    if (body.pathway === "nonprofit" && nonprofitId) {
+      const { error: einError } = await admin
+        .from("nonprofits")
+        .update({
+          ein: body.ein.ein,
+          ein_status: body.ein.ein_status,
+          ein_check_result: {
+            irs_name: body.ein.irs_name ?? null,
+            checked_at: new Date().toISOString(),
+          },
+          ein_last_checked_at: new Date().toISOString(),
+        })
+        .eq("id", nonprofitId);
+      if (einError) throw einError;
+    }
+
+    // Partner documents (insurance). Files were uploaded to storage during
+    // submit; verify each one landed, then register it against the new org.
+    // partner_documents rows cascade-delete with the org on rollback.
+    for (const doc of body.documents ?? []) {
+      if (!doc.path.startsWith(`${user.id}/`)) throw new Error("Invalid document upload.");
+      const parts = doc.path.split("/");
+      const { data: files } = await admin.storage
+        .from("partner-documents")
+        .list(parts[0], { search: parts.slice(1).join("/") });
+      if (!files?.length) throw new Error("A document upload was not found. Please try again.");
+      if (doc.doc_type === "insurance") {
+        if (!doc.expires_on) throw new Error("Enter the expiration date shown on the certificate of insurance.");
+        if (new Date(doc.expires_on) <= new Date()) {
+          throw new Error("The insurance certificate has already expired. Please upload a current one.");
+        }
+      }
+      const { error: docError } = await admin.from("partner_documents").insert({
+        organization_id: organizationId,
+        nonprofit_id: nonprofitId,
+        doc_type: doc.doc_type,
+        file_path: doc.path,
+        file_name: doc.file_name,
+        expires_on: doc.expires_on ?? null,
+        status: "submitted",
+      });
+      if (docError) throw docError;
     }
 
     // Surface the application in the existing admin approval queue.
