@@ -398,7 +398,9 @@ Deno.serve(async (req) => {
     // submit; verify each one landed, then register it against the new org.
     // partner_documents rows cascade-delete with the org on rollback.
     for (const doc of body.documents ?? []) {
-      if (!doc.path.startsWith(`${user.id}/`)) throw new Error("Invalid document upload.");
+      // Uploads happen pre-signup under an unguessable signup/<uuid>/ prefix
+      // (no user id exists yet). Validate the shape to block path traversal.
+      if (!/^signup\/[0-9a-f-]{36}\//.test(doc.path)) throw new Error("Invalid document upload.");
       const parts = doc.path.split("/");
       const { data: files } = await admin.storage
         .from("partner-documents")
