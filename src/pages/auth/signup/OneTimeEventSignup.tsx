@@ -39,13 +39,15 @@ export default function OneTimeEventSignup({ onBack }: { onBack: () => void }) {
       });
       if (vErr) throw vErr;
       if (v && !v.valid) { toast.error(v.errors?.join("; ") || "Validation failed"); setLoading(false); return; }
+      // Upload insurance BEFORE creating the auth account: a failed upload
+      // must never orphan an account the applicant cannot retry.
+      const documents = await uploadSignupDocuments(docFiles, docExpiry);
+
       const { data: auth, error: authErr } = await supabase.auth.signUp({
         email: a.email, password: a.password, options: { data: { first_name: a.firstName, last_name: a.lastName } },
       });
       if (authErr) throw authErr;
       if (!auth.session) throw new Error("An account with this email already exists.");
-
-      const documents = await uploadSignupDocuments(docFiles, docExpiry);
 
       const { data: r, error: fnErr } = await supabase.functions.invoke("complete-partner-signup", {
         body: {

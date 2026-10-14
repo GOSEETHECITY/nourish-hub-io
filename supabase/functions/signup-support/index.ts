@@ -1,13 +1,21 @@
 // Lightweight helpers for the online (self-serve) partner signup flow.
 //
-// Actions:
-//   verify_ein      (public)  — checks an EIN against ProPublica/IRS records.
-//   doc_upload_url  (auth)    — mints a signed upload URL for a partner document.
+// Both actions are PUBLIC (no sign-in yet at signup time):
+//   verify_ein      — checks an EIN against ProPublica/IRS records.
+//   doc_upload_url  — mints a signed upload URL for a partner document.
 //
-// Document registration happens inside complete-partner-signup at submit time,
-// so uploads here are keyed by the applicant's user id and verified there.
+// Uploads happen BEFORE the auth account is created, so a failed upload
+// never orphans an account. Uploaded files live under an unguessable
+// `signup/<uuid>/` prefix and are only linked to an organization when
+// complete-partner-signup registers them at submit time; anything never
+// referenced stays orphaned and inert.
+//
+// Abuse controls (no auth available pre-signup): per-IP rate limits, a
+// PDF/image allowlist, and a 10 MB cap on the eventual upload. The signed
+// URL itself is single-use and short-lived (Supabase default).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.98.0";
 import { checkEin, onboardingCors, serviceClient } from "../_shared/onboarding.ts";
+import { makeRateLimiter, clientIp } from "../_shared/ops.ts";
 
 const ALLOWED_ORIGINS = [
   "https://hariet.ai",
@@ -30,6 +38,11 @@ function cors(req: Request): Record<string, string> {
   };
 }
 
+// 10 EIN checks per IP per minute (parity with validate-signup).
+const einLimiter = makeRateLimiter(10, 60_000);
+// 10 document upload preparations per IP per 10 minutes.
+const uploadLimiter = makeRateLimiter(10, 600_000);
+
 Deno.serve(async (req) => {
   const headers = { ...cors(req), "Content-Type": "application/json" };
   if (req.method === "OPTIONS") return new Response(null, { headers: cors(req) });
@@ -47,6 +60,9 @@ Deno.serve(async (req) => {
   const db = serviceClient();
 
   if (action === "verify_ein") {
+    if (einLimiter(clientIp(req))) {
+      return json({ error: "Too many attempts. Please wait a minute and try again." }, 429);
+    }
     const ein = String(body.ein ?? "").replace(/\D/g, "");
     if (ein.length !== 9) {
       return json({ error: "Enter your 9-digit EIN (for example 12-3456789)." }, 400);
@@ -62,25 +78,18 @@ Deno.serve(async (req) => {
     return json({ ok: true, ein_status: r.status, reason: r.reason, irs_name: r.name ?? null });
   }
 
-  // ---- Authenticated actions below ----
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader) return json({ error: "Sign in required." }, 401);
-  const userClient = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!, {
-    global: { headers: { Authorization: authHeader } },
-  });
-  const {
-    data: { user },
-  } = await userClient.auth.getUser();
-  if (!user) return json({ error: "Sign in required." }, 401);
-
   if (action === "doc_upload_url") {
+    if (uploadLimiter(clientIp(req))) {
+      return json({ error: "Too many uploads. Please wait a few minutes and try again." }, 429);
+    }
     const name = String(body.file_name ?? "file")
       .replace(/[^a-zA-Z0-9._-]/g, "_")
       .slice(-80);
     if (!/\.(pdf|png|jpe?g|webp|heic)$/i.test(name)) {
       return json({ error: "Upload a PDF or image file." }, 400);
     }
-    const path = `${user.id}/${crypto.randomUUID()}-${name}`;
+    // No user id yet (pre-signup): key by an unguessable signup-scoped prefix.
+    const path = `signup/${crypto.randomUUID()}/${name}`;
     const { data, error } = await db.storage.from("partner-documents").createSignedUploadUrl(path);
     if (error || !data) return json({ error: "Could not prepare upload. Please try again." }, 500);
     return json({ ok: true, path, token: data.token });

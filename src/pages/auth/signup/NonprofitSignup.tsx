@@ -56,6 +56,10 @@ export default function NonprofitSignup({ onBack }: Props) {
         return;
       }
 
+      // Upload insurance BEFORE creating the auth account: a failed upload
+      // must never orphan an account the applicant cannot retry.
+      const documents = await uploadSignupDocuments(docFiles, docExpiry);
+
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: account.email,
         password: account.password,
@@ -64,8 +68,6 @@ export default function NonprofitSignup({ onBack }: Props) {
       if (authError) throw authError;
       if (!authData.user) throw new Error("Signup failed");
       if (!authData.session) throw new Error("An account with this email already exists.");
-
-      const documents = await uploadSignupDocuments(docFiles, docExpiry);
 
       const { data: result, error: fnError } = await supabase.functions.invoke("complete-partner-signup", {
         body: {

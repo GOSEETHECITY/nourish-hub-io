@@ -51,6 +51,10 @@ export default function VenueSignup({ category, onBack }: Props) {
       if (valError) throw valError;
       if (valResult && !valResult.valid) { toast.error(valResult.errors?.join("; ") || "Validation failed"); setLoading(false); return; }
 
+      // Upload insurance BEFORE creating the auth account: a failed upload
+      // must never orphan an account the applicant cannot retry.
+      const documents = await uploadSignupDocuments(docFiles, docExpiry);
+
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: account.email, password: account.password,
         options: { data: { first_name: account.firstName, last_name: account.lastName } },
@@ -58,10 +62,6 @@ export default function VenueSignup({ category, onBack }: Props) {
       if (authError) throw authError;
       if (!authData.user) throw new Error("Signup failed");
       if (!authData.session) throw new Error("An account with this email already exists.");
-
-      // Upload insurance, then complete signup (signature + documents are
-      // written server-side by complete-partner-signup).
-      const documents = await uploadSignupDocuments(docFiles, docExpiry);
 
       const { data: result, error: fnError } = await supabase.functions.invoke("complete-partner-signup", {
         body: {

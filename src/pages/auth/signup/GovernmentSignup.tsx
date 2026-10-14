@@ -52,6 +52,10 @@ export default function GovernmentSignup({ onBack }: Props) {
       if (valError) throw valError;
       if (valResult && !valResult.valid) { toast.error(valResult.errors?.join("; ") || "Validation failed"); setLoading(false); return; }
 
+      // Upload documents BEFORE creating the auth account: a failed upload
+      // must never orphan an account the applicant cannot retry.
+      const documents = await uploadSignupDocuments(docFiles, docExpiry);
+
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: account.email, password: account.password,
         options: { data: { first_name: account.firstName, last_name: account.lastName } },
@@ -59,8 +63,6 @@ export default function GovernmentSignup({ onBack }: Props) {
       if (authError) throw authError;
       if (!authData.user) throw new Error("Signup failed");
       if (!authData.session) throw new Error("An account with this email already exists.");
-
-      const documents = await uploadSignupDocuments(docFiles, docExpiry);
 
       // Role assignment (invitation gated) and all organization / profile
       // writes run server-side with the service role.

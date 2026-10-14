@@ -6,6 +6,9 @@ verify_jwt = false
 [functions.validate-signup]
 verify_jwt = false
 
+[functions.signup-support]
+verify_jwt = false
+
 [functions.seed-test-data]
 verify_jwt = false
 
